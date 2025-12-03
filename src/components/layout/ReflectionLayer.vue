@@ -12,11 +12,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
+// 检测是否为移动设备
 const isMobile = ref(false)
 const checkDevice = () => {
   isMobile.value = window.innerWidth < 768
 }
 
+// 初始化检测
 onMounted(() => {
   checkDevice()
   window.addEventListener('resize', checkDevice)
@@ -31,7 +33,7 @@ const updateMaskPositions = () => {
   const header = document.querySelector('.title-bar, .mobile-header')
   const nav = !isMobile.value ? document.querySelector('.nav-panel') : null
   const content = document.querySelector('.content-view')
-
+  // 计算并设置 CSS 变量
   if (header) {
     const rect = header.getBoundingClientRect()
     document.documentElement.style.setProperty(
@@ -54,9 +56,11 @@ const updateMaskPositions = () => {
               ${rect.left + padding}px ${rect.bottom - padding}px)`,
     )
   } else {
+    // 移动端移除 nav 相关变量
     document.documentElement.style.removeProperty('--nav-clip')
   }
 
+  // 内容区
   if (content) {
     const rect = content.getBoundingClientRect()
     document.documentElement.style.setProperty(
@@ -68,9 +72,10 @@ const updateMaskPositions = () => {
     )
   }
 }
-
+// 监听元素大小变化以更新遮罩位置
 let resizeObserver: ResizeObserver | null = null
 
+// 初始化时更新位置并添加监听
 onMounted(() => {
   updateMaskPositions()
   window.addEventListener('scroll', updateMaskPositions, { passive: true })
@@ -83,6 +88,7 @@ onMounted(() => {
   elements.forEach((el) => resizeObserver?.observe(el))
 })
 
+// 清理监听器
 onUnmounted(() => {
   window.removeEventListener('scroll', updateMaskPositions)
   window.removeEventListener('resize', updateMaskPositions)

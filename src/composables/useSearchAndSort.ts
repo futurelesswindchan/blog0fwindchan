@@ -27,6 +27,7 @@ const defaultSortButtons = {
   },
 } as const
 
+// 搜索和排序组合函数
 export function useSearchAndSort<T>(options: {
   items: T[] | Ref<T[]> | ComputedRef<T[]>
   searchFields: (item: T) => string[]

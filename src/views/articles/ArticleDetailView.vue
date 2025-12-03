@@ -60,10 +60,11 @@ import '@/styles/articleInfo.css'
 import '@/styles/pageHeader.css'
 import '@/styles/codeBlock.css'
 
+// 设置存储
 const settingsStore = useSettingsStore()
-
 const route = useRoute()
 const articleStore = useArticleStore()
+
 const { isDarkTheme, formatDate, markdownOptions: baseMarkdownOptions } = useArticleContent()
 const { codeHighlightOptions } = useCodeHighlight()
 
@@ -72,27 +73,27 @@ const markdownOptions = {
   ...codeHighlightOptions,
 }
 
+// 确定文章类型
 const type = computed(() => {
   if (route.path.includes('/articles/topics/')) return 'topics'
   if (route.path.includes('/articles/novels/')) return 'novels'
   return 'frontend'
 })
 
-// 修复点 1：直接访问 state 中的 currentArticle
+// 当前文章信息
 const article = computed(() => articleStore.currentArticle)
-
-// 修复点 2：内容直接从 article 中获取
 const articleContent = computed(() => article.value?.content || '')
 const { estimateWords } = useArticleInfo(articleContent)
 
+// 当前文章 ID
 const currentId = computed(() => route.params.id as string)
 const articles = computed(() => articleStore.getArticleList(type.value) || [])
-
 const { prevArticle, nextArticle } = useArticleNavigation({
   articles,
   currentId,
 })
 
+// 组件挂载时，获取文章列表和当前文章
 onMounted(async () => {
   await articleStore.fetchArticleIndex()
   if (typeof route.params.id === 'string') {
@@ -103,6 +104,7 @@ onMounted(async () => {
   }
 })
 
+// 监听路由参数变化，动态加载文章
 watch(
   () => route.params.id,
   async (id) => {

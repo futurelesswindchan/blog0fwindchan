@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { defineProps } from 'vue'
 
+// 定义组件的 props
 defineProps({
   message: { type: String, default: '已保存' },
   type: { type: String, default: 'success' },
@@ -54,21 +55,20 @@ defineProps({
 }
 
 .cute-toast.success {
-  background: #e6f9f0; /* light green base for light theme */
+  background: #e6f9f0;
   color: #064e3b;
 }
 .cute-toast.warn {
-  background: #fff4e6; /* light amber */
+  background: #fff4e6;
   color: #663c00;
 }
 .cute-toast.error {
-  background: #ffecec; /* light red */
+  background: #ffecec;
   color: #7f1d1d;
 }
 
-/* Dark theme overrides */
 .dark-theme .cute-toast.success {
-  background: #052e1f; /* darker green */
+  background: #052e1f;
   color: #bff0d8;
 }
 .dark-theme .cute-toast.warn {

@@ -10,5 +10,5 @@
   },
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "python.analysis.typeCheckingMode": "basic"
+  "python.analysis.typeCheckingMode": "standard"
 }

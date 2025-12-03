@@ -55,11 +55,13 @@ const router = useRouter()
 const articleStore = useArticleStore()
 const { formatDate } = useArticleContent()
 
+// 小说文章列表
 const articles = computed(() => {
   const list = articleStore.getArticleList('novels') || []
   return list.map((a) => ({ ...a, category: 'novels' as const }))
 })
 
+// 搜索和排序
 const { searchText, filteredItems } = useSearchAndSort({
   items: articles.value,
   searchFields: (article) => [article.title],
@@ -67,12 +69,14 @@ const { searchText, filteredItems } = useSearchAndSort({
   sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
 })
 
+// 组件挂载时，获取小说文章列表
 onMounted(async () => {
   if (!(articleStore.getArticleList('novels') || []).length) {
     await articleStore.fetchArticleIndex()
   }
 })
 
+// 阅读文章
 const readArticle = (id: string) => {
   router.push({ name: 'NovelsArticle', params: { id } })
 }

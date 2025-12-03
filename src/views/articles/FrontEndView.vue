@@ -64,7 +64,7 @@ import '@/styles/typeWriter.css'
 const router = useRouter()
 const articleStore = useArticleStore()
 
-// 确保数据加载后再进行排序
+// 前端文章列表
 const articles = computed(() => {
   const list = articleStore.getArticleList('frontend') || []
   return list.map((article) => ({
@@ -73,7 +73,7 @@ const articles = computed(() => {
   }))
 })
 
-// 搜索和排序逻辑
+// 搜索和排序
 const { searchText, filteredItems, sortButton } = useSearchAndSort({
   items: articles.value,
   searchFields: (article) => [article.title],
@@ -81,7 +81,7 @@ const { searchText, filteredItems, sortButton } = useSearchAndSort({
   sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
 })
 
-// 确保组件挂载时加载数据
+// 组件挂载时，获取前端文章列表
 onMounted(async () => {
   if (!(articleStore.getArticleList('frontend') || []).length) {
     await articleStore.fetchArticleIndex()

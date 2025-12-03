@@ -66,7 +66,7 @@ const router = useRouter()
 const articleStore = useArticleStore()
 const { formatDate } = useArticleContent()
 
-// 获取 topics 文章列表
+// 文章列表
 const articles = computed(() => {
   const list = articleStore.getArticleList('topics') || []
   return list.map((article) => ({

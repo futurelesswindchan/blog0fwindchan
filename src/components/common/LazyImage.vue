@@ -23,6 +23,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import type { CSSProperties } from 'vue'
 
+// 定义组件的 props
 const props = defineProps<{
   src: string
   alt?: string
@@ -30,6 +31,7 @@ const props = defineProps<{
   containerStyle?: CSSProperties
 }>()
 
+// 组件内部状态
 const containerRef = ref<HTMLElement | null>(null)
 const currentSrc = ref('')
 const isLoaded = ref(false)
@@ -38,6 +40,7 @@ let observer: IntersectionObserver | null = null
 let retryCount = 0
 const MAX_RETRIES = 3
 
+// 图片加载成功处理
 const onLoad = () => {
   requestAnimationFrame(() => {
     isLoaded.value = true
@@ -45,6 +48,7 @@ const onLoad = () => {
   })
 }
 
+// 图片加载失败处理
 const onError = () => {
   hasError.value = true
   if (retryCount < MAX_RETRIES) {
@@ -56,6 +60,7 @@ const onError = () => {
   }
 }
 
+// 设置 Intersection Observer 以实现懒加载
 const setupIntersectionObserver = () => {
   if (!containerRef.value) return
 
@@ -81,10 +86,12 @@ const setupIntersectionObserver = () => {
   observer.observe(containerRef.value)
 }
 
+// 组件挂载和卸载时的处理
 onMounted(() => {
   setupIntersectionObserver()
 })
 
+// 组件卸载时清理 Intersection Observer
 onUnmounted(() => {
   if (observer) {
     observer.disconnect()

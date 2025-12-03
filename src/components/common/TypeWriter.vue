@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue' // 移除未使用的 onMounted
+import { ref, computed, watch } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 
 interface Props {
@@ -25,6 +25,7 @@ interface Props {
   chunkDelay?: number // 每块文字之间的延迟
 }
 
+// 定义组件属性及默认值
 const props = withDefaults(defineProps<Props>(), {
   enabled: true,
   speed: 50,
@@ -36,6 +37,7 @@ const props = withDefaults(defineProps<Props>(), {
   chunkDelay: 50,
 })
 
+// 组件状态
 const contentRef = ref<HTMLElement | null>(null)
 const currentIndex = ref(0)
 const isTyping = ref(false)
@@ -64,6 +66,7 @@ const startTyping = () => {
   isTyping.value = true
   showCursor.value = true
 
+  // 打字函数
   const type = () => {
     if (currentIndex.value < props.text.length) {
       currentIndex.value = Math.min(currentIndex.value + props.chunkSize, props.text.length)

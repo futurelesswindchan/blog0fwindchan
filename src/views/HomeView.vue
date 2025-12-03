@@ -179,7 +179,7 @@ const features = [
   {
     icon: 'fa-laptop-code',
     title: '技术手札',
-    desc: '前端开发笔记与心得',
+    desc: '网站开发笔记与心得',
     bgImage: cardBg4,
     route: '/articles/frontend',
   },

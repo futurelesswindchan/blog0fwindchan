@@ -56,6 +56,7 @@ const router = useRouter()
 const route = useRoute()
 const adminStore = useAdminStore()
 
+// 异步处理登录逻辑
 const handleLogin = async () => {
   loading.value = true
   errorMsg.value = ''

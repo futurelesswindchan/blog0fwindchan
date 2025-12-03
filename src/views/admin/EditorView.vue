@@ -224,6 +224,7 @@ const savePost = async () => {
       }
     }
   } catch (error: unknown) {
+    // 下面这一大陀都是处理错误信息用的
     let errorMsg = '未知错误'
     if (error instanceof Error) {
       errorMsg = error.message

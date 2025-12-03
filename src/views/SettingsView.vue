@@ -47,7 +47,6 @@
       <button type="button" @click="reset">恢复默认</button>
     </div>
 
-    <!-- toast manager (renders stacked toasts at bottom-left) -->
     <ToastManager />
   </div>
 </template>

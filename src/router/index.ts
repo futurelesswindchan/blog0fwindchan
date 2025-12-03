@@ -4,6 +4,7 @@ import { useFriendStore } from '@/views/stores/friendStore'
 import { useArtworkStore } from '@/views/stores/artworkStore'
 import { useAdminStore } from '@/views/stores/adminStore'
 
+// 扩展路由元信息类型以包含 title 字段
 declare module 'vue-router' {
   interface RouteMeta {
     title?: string

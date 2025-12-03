@@ -19,15 +19,11 @@ import { useToast } from '../../composables/useToast'
 
 const { toasts, removeToast } = useToast()
 
-const baseOffset = 16 // px from bottom for the first toast
-const gap = 72 // vertical spacing per toast (approx height + margin)
+const baseOffset = 16 // 初始偏移量
+const gap = 72 // 每个 toast 之间的间距
 
+// 这里处理每个 toast 消失后的清理工作
 function handleAfterLeave(id: number) {
-  // ensure removal if still present
   removeToast(id)
 }
 </script>
-
-<style scoped>
-/* The manager itself doesn't need extra styles — positioning handled by each toast's offset */
-</style>

@@ -22,6 +22,7 @@ export const useAdminStore = defineStore('admin', () => {
       access_token.value = response.data.access_token
       refresh_token.value = response.data.refresh_token
 
+      // 将 token 存储到 localStorage 以实现持久化
       localStorage.setItem('access_token', access_token.value!)
       localStorage.setItem('refresh_token', refresh_token.value!)
 

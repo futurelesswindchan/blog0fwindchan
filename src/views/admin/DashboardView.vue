@@ -69,10 +69,12 @@ const allArticles = computed(() => {
   )
 })
 
+// 组件挂载时，获取文章列表
 onMounted(() => {
   articleStore.fetchArticleIndex()
 })
 
+// 编辑文章
 const editArticle = (article: ArticleSummary & { category: string }) => {
   // 跳转到我们即将改造的 Editor 路由
   router.push({
@@ -81,6 +83,7 @@ const editArticle = (article: ArticleSummary & { category: string }) => {
   })
 }
 
+// 删除文章
 const deleteArticle = async (article: ArticleSummary & { category: string }) => {
   if (confirm(`确定要删除文章《${article.title}》吗？这个操作不可撤销！`)) {
     try {

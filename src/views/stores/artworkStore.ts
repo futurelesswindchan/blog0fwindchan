@@ -24,6 +24,7 @@ export const useArtworkStore = defineStore('artwork', () => {
   // 使用 Promise 来防止并发请求的锁
   let fetchPromise: Promise<void> | null = null
 
+  // 获取作品列表
   const fetchArtworks = async () => {
     if (loaded.value) return
     if (fetchPromise) return fetchPromise

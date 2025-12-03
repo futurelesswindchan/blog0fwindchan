@@ -56,6 +56,7 @@ const { isDarkTheme } = defineProps<{
   isDarkTheme: boolean
 }>()
 
+// 组件内部状态
 const emit = defineEmits(['close', 'toggle-theme'])
 const isClosing = ref(false)
 
@@ -109,15 +110,12 @@ const onAnimationEnd = () => {
   flex-direction: column;
   transform: translateX(0);
   transition: none;
-  /* 移除可能影响动画的属性 */
   transform-origin: unset;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  /* 禁用移动端点击高亮 */
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
-  /* 提高性能 */
   will-change: transform;
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 8px;

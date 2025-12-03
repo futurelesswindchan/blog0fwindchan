@@ -14,6 +14,7 @@ export interface Friend {
 // 直接使用相对路径，Vite 代理会自动处理
 const API_BASE_URL = '/api'
 
+// 好友链接数据存储
 export const useFriendStore = defineStore('friend', () => {
   const friends = ref<Friend[]>([])
   const loading = ref(false)

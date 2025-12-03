@@ -32,6 +32,7 @@ const defaultMarkdownOptions: MarkdownOptions = {
   html: true,
 }
 
+// 使用带默认值的 props
 const props = withDefaults(defineProps<Props>(), {
   enabled: true,
   speed: 30,
@@ -44,6 +45,7 @@ const currentIndex = ref(0)
 const isTyping = ref(false)
 const showCursor = ref(true)
 
+// 计算当前显示的内容
 const displayContent = computed(() => {
   return props.content.slice(0, currentIndex.value)
 })
@@ -53,11 +55,13 @@ const finalContent = computed(() => {
   return props.enabled ? displayContent.value : props.content
 })
 
+// 开始打字机动画
 const startTyping = () => {
   currentIndex.value = 0
   isTyping.value = true
   showCursor.value = true
 
+  // 递归函数实现打字效果
   const type = () => {
     if (currentIndex.value < props.content.length) {
       currentIndex.value = Math.min(currentIndex.value + props.chunkSize, props.content.length)
@@ -72,9 +76,11 @@ const startTyping = () => {
     }
   }
 
+  // 启动打字机动画
   setTimeout(type, props.initialDelay)
 }
 
+// 监听 content 变化，重新开始打字机动画
 watch(
   () => props.content,
   () => {

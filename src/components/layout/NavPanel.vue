@@ -46,11 +46,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
+// 定义组件属性
 const props = defineProps<{
   isExpanded: boolean
   isDarkTheme?: boolean
 }>()
 
+// 定义组件事件
 defineEmits(['toggle', 'toggle-theme'])
 
 const isHovered = ref(false)
@@ -74,7 +76,7 @@ const navItems = [
   { path: '/friends', iconType: ['fas', 'paw'], label: '友情链接', matchPrefix: true },
   { path: '/settings', iconType: ['fas', 'cog'], label: '设置界面', matchPrefix: true },
 ]
-
+// 切换按钮图标计算属性
 const toggleIcon = computed(() =>
   props.isExpanded ? 'fa-angle-double-left' : 'fa-angle-double-right',
 )
