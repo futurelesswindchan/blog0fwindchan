@@ -1,76 +1,83 @@
-# 风风博客开发心得（一）：项目总览与实现对照
+# 风风博客开发心得（一）：项目总览与架构解析
 
-> 本文为系列第一篇，概述项目目标、技术选型与源码对应位置。内容已与仓库源码逐文件校对（例如 `src/main.ts`、`src/App.vue`、`public/article` 目录）。
+> 本文为系列开篇，旨在概述项目当前的全栈架构、核心技术选型及源码的对应关系。内容已与最新的前后端代码完全对齐。
 
-## 项目目标
+## 1. 项目目标与现状
 
-风风博客是面向技术分享与轻量创作的个人站点，目标重点为：
+风风博客是一个功能完备、设计精良的全栈个人站点。项目初始目标是构建一个支持多种内容形态、阅读体验优秀的前端应用，现已演进为一个包含**在线内容管理系统 (CMS)** 的动态网站。
 
-- 支持多种内容形态（技术文章、原创故事、插画画廊）；
-- 稳定的 Markdown 渲染与代码高亮，保证阅读体验；
-- 在桌面与移动端都提供一致且流畅的阅读交互；
-- 代码可维护、类型安全，并便于在 CI/CD 中构建与测试。
+- **前端**: 一个基于 Vue 3 的高度定制化的单页面应用 (SPA)，负责所有用户交互和内容展示。
+- **后端**: 一个基于 Flask 的轻量级 API 服务器，负责数据持久化、业务逻辑和安全认证。
 
-## 技术栈与实现要点（与代码文件对应）
+## 2. 技术栈与实现要点
 
-- **框架与工具**：Vue 3（Composition API）、TypeScript、Vite。对应入口：`src/main.ts`、`src/App.vue`。
-- **状态管理**：Pinia（stores 在 `src/views/stores` 与 `src/stores` 下）。
-- **路由**：Vue Router 4，路由配置在 `src/router/index.ts`。
-- **内容渲染**：项目通过 `markdown-it` 渲染 Markdown，渲染相关逻辑位于 `src/composables/useArticleContent.ts`。
-- **代码高亮**：使用 `highlight.js`，封装在 `src/composables/useCodeHighlight.ts`，并在文章渲染流程中调用。
-- **组件与样式**：通用组件位于 `src/components/common`，布局相关在 `src/components/layout`（例如 `ReflectionLayer.vue`、`NavPanel.vue` 等）。样式在 `src/styles/` 目录。
-- **自定义指令**：例如打字机效果在 `src/directives/typeWriterDirective.ts`。
+### 2.1 前端 (Frontend) - `src/`
 
-## 后端与数据迁移
+- **核心框架**: Vue 3 (Composition API) + TypeScript + Vite。项目入口为 `src/main.ts`。
+- **状态管理**: Pinia。全局状态（如主题）存放于 `src/stores/`，业务状态（如文章、认证）存放于 `src/views/stores/` (例如 `articleStore.ts`, `adminStore.ts`)。
+- **HTTP 通信**: Axios。所有与后端 API 的交互都通过一个集成了**拦截器**的 Axios 实例 (`src/api/index.ts`)，自动处理 JWT Token 的发送与刷新。
+- **路由**: Vue Router 4。路由配置见 `src/router/index.ts`，包含**路由守卫**以实现后台权限控制。
 
-- 后端为 Flask + SQLite（见 `backend/app.py`），使用 SQLAlchemy 管理模型。
-- 项目提供数据初始化脚本 `backend/init_db.py`，会读取 `public/` 下的示例数据（Markdown / JSON / 图片）并生成数据库（`backend/instance` 下的 SQLite 文件）。
+### 2.2 后端 (Backend) - `backend/`
 
-## 仓库结构（关键片段）
+- **核心框架**: Flask。主程序位于 `backend/app.py`，包含了所有 API 路由定义。
+- **数据库与ORM**: SQLite + SQLAlchemy (2.0 风格)。所有数据模型（User, Article 等）均在 `app.py` 中定义。
+- **安全认证**: Flask-JWT-Extended。提供标准的 JWT 签发、验证与刷新机制，通过 `@jwt_required()` 装饰器保护后台 API。
 
+## 3. 核心功能与代码对应
+
+- **Markdown 渲染**: 前端使用 `markdown-it` 渲染从 API 获取的 Markdown 字符串。渲染逻辑封装在 `src/composables/useArticleContent.ts`，代码高亮由 `highlight.js` 实现 (`useCodeHighlight.ts`)。
+- **内容管理系统 (CMS)**:
+  - **视图**: 位于 `src/views/admin/`，包含登录页 (`LoginView`)、管理仪表盘 (`DashboardView`) 和核心的编辑器 (`EditorView`)。
+  - **所见即所得**: 编辑器通过“编辑/预览”模式切换，预览时复用前台的 `<ContentTypeWriter>` 组件，保证了后台创作与前台阅读的视觉一致性。
+- **数据流 (Data Flow)**:
+  1.  **用户操作** 触发组件事件。
+  2.  **Pinia Store** 调用 `src/api/index.ts` 中的 `api` 实例。
+  3.  **Axios** 发送 HTTP 请求到后端 Flask API。
+  4.  **Flask** 处理请求，通过 SQLAlchemy 与 SQLite 数据库交互。
+
+## 4. 数据初始化 (Data Seeding)
+
+为了方便新用户快速搭建一个内容丰富的演示站点，项目采用“数据播种”机制：
+
+- **种子数据**: `public/` 目录下存放了所有示例文章的 Markdown 源文件和图片资源。
+- **迁移脚本**: `backend/init_db.py` 脚本负责读取这些种子数据，并将其一次性批量写入 SQLite 数据库。
+- **数据库文件**: 最终生成的数据库 `blog.db` 位于 `backend/instance/` 目录，并被 `.gitignore` 忽略。
+
+## 5. 开发与启动
+
+项目需同时运行前后端服务。
+
+### 5.1 启动后端
+
+```bash
+# 在 backend/ 目录下
+pip install -r requirements.txt  # 安装依赖
+flask create-admin               # 创建管理员账户
+python init_db.py                # (可选) 填充示例数据
+python app.py                    # 启动服务
 ```
-public/                     # 静态内容：文章 Markdown、插画与索引 JSON
-src/                        # 前端源码（Vue 3 + TS）
-	├─ components/            # 通用与布局组件
-	├─ composables/           # 组合式函数（useArticleContent, useCodeHighlight 等）
-	├─ directives/            # 自定义指令（typeWriterDirective）
-	├─ router/                # 路由配置
-	├─ styles/                # 全局样式
-	└─ views/                 # 页面视图与文章相关子视图
-backend/                    # Flask 后端（API + 数据迁移脚本）
-```
 
-## 主要页面与代码对应
+### 5.2 启动前端
 
-- **首页（`HomeView`）**：聚合最新文章与导航入口，位于 `src/views/HomeView.vue`。
-- **技术文章**：由 `useArticleContent` 读取 `public/article` 的 Markdown，`useCodeHighlight` 给代码块上色，组件 `ContentTypeWriter`（`src/components/common/ContentTypeWriter.vue`）负责排版/动画。
-- **原创故事 / 章节**：以 JSON 索引 + Markdown 章节文件组织（`public/article/novels`），按需加载并由 store 管理阅读状态。
-- **插画画廊**：资源索引在 `public/artwork/index.json`，画廊组件和 `artworkStore` 负责懒加载与占位显示（`src/components/common/LazyImage.vue`）。
-- **设置 / 主题**：`useSettingsStore` 管理主题开关与持久化（`localStorage`）。
-
-## 开发与测试（可在仓库直接运行）
-
-- 安装前端依赖并运行开发服务器：
-
-```powershell
+```bash
+# 在项目根目录下
 npm install
 npm run dev
 ```
 
-- 常用脚本（见 `package.json`）：`dev`、`build`、`type-check`、`test:unit`（Vitest）、`test:e2e`（Playwright）。
-- 启动后端（Python 环境）：
+_注：详细的启动指南请参考根目录的 `README.md`。_
 
-```powershell
-cd backend; python -m venv .venv; .\.venv\Scripts\activate; pip install -r requirements.txt; python init_db.py; python app.py
-```
+## 6. 小结与后续方向
 
-（注：仓库内 `README.md` 提供更详细的启动与迁移说明。）
+经过七个月的持续开发，项目已经从一个纯前端应用，成功演进为一个包含安全认证和在线内容管理功能的动态网站。
 
-## 小结与后续方向
+后续文章将深入探讨：
 
-本文与仓库源码逐文件核对，指出了渲染、组件、存储及后端迁移脚本的对应位置。后续文章将深入：主题/样式实现、Markdown 渲染管线、组件交互与性能优化、以及如何把静态示例数据迁移到 SQLite 并对接 API。
+- **CMS 设计**: 如何实现“编辑/预览”无缝切换的用户体验。
+- **JWT 认证**: 前后端如何配合实现 Token 的自动刷新与安全校验。
 
 ---
 
-没有未来的小风酱 著（已与源码对照）
-2025-12-02
+> 没有未来的小风酱 著
+> 2025-12-03 (已与全栈架构同步)

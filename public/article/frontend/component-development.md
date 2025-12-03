@@ -91,5 +91,5 @@ export function useArticleNavigation({ articles, currentId }) {
 
 ---
 
-> 没有未来的小风酱 著（已对照源码校准）
-> 2025-11-7
+> 没有未来的小风酱 著
+> 2025-12-1 (已与全栈架构同步)

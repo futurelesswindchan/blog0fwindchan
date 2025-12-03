@@ -1,8 +1,7 @@
 <template>
   <div class="friends-view-container">
-    <section class="friends-view">
+    <div class="friends-view">
       <h2 class="page-title">Friends</h2>
-
       <div class="filter-bar glass-container">
         <input
           v-model="searchText"
@@ -15,7 +14,6 @@
           {{ sortButton.label }}
         </button>
       </div>
-
       <div v-if="friendStore.loading" class="loading">加载中...</div>
       <div v-else-if="friendStore.error" class="error">{{ friendStore.error }}</div>
       <div v-else>
@@ -41,7 +39,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
@@ -130,21 +128,7 @@ onErrorCaptured((err, instance, info) => {
   text-decoration: none;
   color: inherit;
   text-align: center;
-  width: 100%;
-  height: 100%;
-}
 
-.avatar {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-:deep(.lazy-image-container) {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  overflow: hidden;
   border: 2px solid var(--accent-color);
   margin-bottom: 1rem;
 }

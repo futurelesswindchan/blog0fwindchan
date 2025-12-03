@@ -159,5 +159,5 @@ export function useArticleInfo(content: Ref<string> | ComputedRef<string>) {
 
 ---
 
-> 没有未来的小风酱 著（已同步到源码注释与说明）
-> 2025-11-7
+> 没有未来的小风酱 著
+> 2025-12-1 (已与全栈架构同步)

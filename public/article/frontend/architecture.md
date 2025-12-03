@@ -102,5 +102,5 @@ const router = createRouter({ ... , scrollBehavior: () => ({ top: 0, left: 0, be
 
 ---
 
-> 没有未来的小风酱 著（已与源码实现对照）
-> 2025-11-7
+> 没有未来的小风酱 著
+> 2025-12-1 (已与全栈架构同步)

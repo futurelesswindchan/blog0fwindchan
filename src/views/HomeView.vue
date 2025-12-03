@@ -9,9 +9,9 @@
       <div class="vcard-container">
         <div class="vcard">
           <div class="vcard-content">
-            <a href="#" class="vcard-title"> Ff's Blog </a>
+            <a href="#" class="vcard-title">windchan!</a>
             <h2 class="vcard-contact">
-              唔~这都被你发现啦awa...<br />本网站还在更新中哦0v0！&emsp;上次更新在2025/06/29
+              唔~这都被你发现啦awa...<br />本网站还在更新中哦0v0！&emsp;项目始于2025/04/14！
             </h2>
             <span class="vcard-desc">
               恭喜你发现了传说中的OAO...？！！<br />风酱的网站qwq...?!<br /><br />
@@ -46,7 +46,7 @@
       <div class="mobile-vcard">
         <div class="mobile-vcard__content">
           <div class="mobile-vcard__text">
-            <a href="#" class="vcard-title mobile-vcard-title">Ff's Blog</a>
+            <a href="#" class="vcard-title mobile-vcard-title">windchan!</a>
             <h4 class="mobile-vcard-contact">
               <div class="mobile-vcard__qrcode">
                 <LazyImage
@@ -86,7 +86,7 @@
             />
           </div>
           <div class="tablet-vcard__text">
-            <a href="#" class="vcard-title tablet-vcard-title">Ff's Blog</a>
+            <a href="#" class="vcard-title tablet-vcard-title">windchan!</a>
             <h4 class="tablet-vcard-contact">
               <br />恭喜你发现了传说中的OAO...？！！ <br />风风博客qwq...?!
               <br />虽然大家都喜欢咕咕咕...（小声） <br />不过迟早有一天会更新的！ヾ(•ω•`)
