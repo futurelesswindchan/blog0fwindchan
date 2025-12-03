@@ -1,0 +1,70 @@
+# Logs & System
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Dependency directories
+node_modules
+dist
+dist-ssr
+coverage
+*.local
+
+# IDE & Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build & Cache
+*.tsbuildinfo
+.eslintcache
+
+# Testing
+test-results/
+playwright-report/
+/cypress/videos/
+/cypress/screenshots/
+
+# --- Backend (Python/Flask) ---
+
+# Virtual Environments (Do not upload)
+backend/venv/
+venv/
+.venv/
+env/
+
+# Python Cache & Compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Flask Instance Folder (Databases usually live here)
+# We ignore the actual DB file but keep the folder structure via README instructions
+backend/instance/
+instance/
+
+# Database files
+*.sqlite3
+*.db
+
+# Environment Variables (Secrets)
+.env
+.flaskenv
+
+# Uploads (Ignore content, keep folder)
+backend/uploads/*
+!backend/uploads/.gitkeep
