@@ -404,42 +404,39 @@ def delete_article(slug: str):
 
 @app.cli.command("create-admin")
 def create_admin():
-    """
-    命令行工具：创建管理员账户。
-
-    使用示例：在项目目录运行 `flask create-admin`，按提示输入用户名和密码。
-    """
+    """命令行工具：创建管理员账户。"""
+    
+    # --- 注意这里啦！ ---
+    # 在执行任何数据库操作之前，先确保所有表都已创建。
+    # 这让 create-admin 命令变得自给自足，不再依赖于是否先运行了 python app.py
+    print("确保数据库表已创建...")
+    db.create_all()
+    print("完成。")
+    # --- 修复结束 ---
 
     from getpass import getpass
     import sys
-
     username = input("请输入管理员用户名 (例如 admin): ")
-    password = getpass("请输入密码: ")
+    password = getpass("请输入密码: ") 
     password2 = getpass("请再次输入密码: ")
-
     if password != password2:
         print("两次密码不一致！")
         sys.exit(1)
-
-    # 检查用户是否已存在
     user = User.query.filter_by(username=username).first()
     if user:
         print(f"用户 '{username}' 已存在。")
         sys.exit(1)
-
     new_user = User(username=username)
     new_user.set_password(password)
-
     db.session.add(new_user)
     db.session.commit()
-
     print(f"管理员 '{username}' 创建成功！")
 
 
 if __name__ == "__main__":
-    # 启动前确保数据库表已创建（在 app 上下文中执行）
     with app.app_context():
+        # 这里保留 db.create_all() 也是一个好习惯，
+        # 它能确保直接运行 `python app.py` 时也能创建表。
+        # 这个操作是幂等的，即如果表已存在，它不会重复创建。
         db.create_all()
-
-    # 启动开发服务器（仅用于本地开发）
     app.run(debug=True, port=5000)
