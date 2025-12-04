@@ -4,7 +4,7 @@
 >
 > A highly customizable, aesthetic full-stack personal blog built with Vue 3, TypeScript & Flask.
 
-![示例图片](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview.pngg)
+![示例图片](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview.png)
 
 ---
 
