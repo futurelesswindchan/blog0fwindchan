@@ -76,10 +76,6 @@ class User(db.Model):
     username: Mapped[str] = mapped_column(String(80), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
 
-    def __init__(self, username: str) -> None:
-        # 初始化仅设置用户名；密码通过 `set_password` 单独设置
-        self.username = username
-
     def set_password(self, password: str) -> None:
         """使用 werkzeug 的 `generate_password_hash` 生成密码哈希并保存。"""
         self.password_hash = generate_password_hash(password)
@@ -99,10 +95,6 @@ class Category(db.Model):
     - name: 分类展示名称
     - articles: 关联的文章列表（SQLAlchemy 关系）
     """
-
-    def __init__(self, slug: str, name: str) -> None:
-        self.slug = slug
-        self.name = name
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     slug: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
@@ -135,22 +127,6 @@ class Article(db.Model):
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
 
-    def __init__(
-        self,
-        slug: str,
-        title: str,
-        date: str,
-        content: Optional[str],
-        category_id: int,
-        uid: Optional[str] = None,
-    ) -> None:
-        self.slug = slug
-        self.title = title
-        self.date = date
-        self.content = content
-        self.category_id = category_id
-        self.uid = uid
-
     def to_dict_simple(self) -> Dict[str, Any]:
         """简化的字典表示，适用于文章索引展示。"""
         return {"id": self.slug, "uid": self.uid, "title": self.title, "date": self.date}
@@ -162,13 +138,6 @@ class Friend(db.Model):
 
     - tags 使用 JSON 字段保存字符串数组（例如 ['dev', 'blog']）
     """
-
-    def __init__(self, name: str, desc: Optional[str], url: Optional[str], avatar: Optional[str], tags: Optional[List[str]]) -> None:
-        self.name = name
-        self.desc = desc
-        self.url = url
-        self.avatar = avatar
-        self.tags = tags
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -192,13 +161,6 @@ class Artwork(db.Model):
     """
     插画 / 作品模型，用于前端展示个人插画或作品集。
     """
-
-    def __init__(self, title: Optional[str], thumbnail: Optional[str], fullsize: Optional[str], description: Optional[str], date: Optional[str]) -> None:
-        self.title = title
-        self.thumbnail = thumbnail
-        self.fullsize = fullsize
-        self.description = description
-        self.date = date
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
