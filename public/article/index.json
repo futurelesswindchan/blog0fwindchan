@@ -3,88 +3,109 @@
     {
       "id": "about-blog",
       "uid": "frontend-1",
-      "title": "关于此博客的情况总览",
+      "title": "1.关于此博客的情况总览",
       "date": "2025-06-20",
       "content": "/article/frontend/about-blog.md"
     },
     {
       "id": "architecture",
       "uid": "frontend-2",
-      "title": "前端架构设计与页面布局",
+      "title": "2.前端架构设计与页面布局",
       "date": "2025-06-21",
       "content": "/article/frontend/architecture.md"
     },
     {
       "id": "routing",
       "uid": "frontend-3",
-      "title": "路由与页面导航实现",
+      "title": "3.路由与页面导航实现",
       "date": "2025-06-22",
       "content": "/article/frontend/routing.md"
     },
     {
       "id": "rendering",
       "uid": "frontend-4",
-      "title": "文章内容渲染与 Markdown 支持",
+      "title": "4.文章内容渲染与 Markdown 支持",
       "date": "2025-06-23",
       "content": "/article/frontend/rendering.md"
     },
     {
       "id": "data-management",
       "uid": "frontend-5",
-      "title": "数据管理与状态同步",
+      "title": "5.数据管理与状态同步",
       "date": "2025-06-24",
       "content": "/article/frontend/data-management.md"
     },
     {
       "id": "responsive-design",
       "uid": "frontend-6",
-      "title": "响应式与移动端适配",
+      "title": "6.响应式与移动端适配",
       "date": "2025-06-25",
       "content": "/article/frontend/responsive-design.md"
     },
     {
       "id": "theme",
       "uid": "frontend-7",
-      "title": "主题与美术风格实现",
+      "title": "7.主题与美术风格实现",
       "date": "2025-06-26",
       "content": "/article/frontend/theme.md"
     },
     {
       "id": "component-development",
       "uid": "frontend-8",
-      "title": "组件开发与复用经验",
+      "title": "8.组件开发与复用经验",
       "date": "2025-06-27",
       "content": "/article/frontend/component-development.md"
     },
     {
       "id": "backend-refactoring",
       "uid": "frontend-9",
-      "title": "后端重构与数据迁移实战",
+      "title": "9.后端重构与数据迁移实战",
       "date": "2025-12-02",
       "content": "/article/frontend/backend-refactoring.md"
     },
     {
       "id": "admin-panel-jwt-authentication",
       "uid": "frontend-10",
-      "title": "后台管理与 JWT 安全认证",
+      "title": "10.后台管理与 JWT 安全认证",
       "date": "2025-12-03",
       "content": "/article/frontend/admin-panel-jwt-authentication.md"
+    },
+    {
+      "id": "fucked-serachbar",
+      "uid": "frontend-11",
+      "title": "（番外）搜索栏引发的血案",
+      "date": "2025-06-27",
+      "content": "/article/topics/fucked-serachbar.md"
     }
   ],
   "topics": [
     {
-      "id": "fucked-serachbar",
+      "id": "how-to-customize-blog",
       "uid": "topics-1",
-      "title": "搜索栏引发的血案",
-      "date": "2025-06-27",
-      "content": "/article/topics/fucked-serachbar.md"
+      "title": "个性定制：打造专属于你的赛博小屋w(ﾟДﾟ)w",
+      "date": "2025-12-04",
+      "content": "/article/topics/how-to-customize-blog.md"
     },
     {
       "id": "how-to-add-color",
       "uid": "topics-2",
-      "title": "如何为自己的文章增添色彩？",
+      "title": "创作技巧：如何为自己的文章增添色彩？",
       "date": "2025-06-28",
       "content": "/article/topics/how-to-add-color.md"
+    },
+    {
+      "id": "how-to-deploy-on-vps",
+      "uid": "topics-3",
+      "title": "博客上云：如何在 VPS 上部署个人博客？",
+      "date": "2025-12-04",
+      "content": "/article/topics/how-to-deploy-on-vps.md"
+    },
+    {
+      "id": "how-to-update-and-maintain",
+      "uid": "topics-4",
+      "title": "日常维护：如何更新与照顾你线上的博客",
+      "date": "2025-12-04",
+      "content": "/article/topics/how-to-update-and-maintain.md"
     }
   ],
   "novels": [
