@@ -108,6 +108,7 @@ const deleteArticle = async (article: ArticleSummary & { category: string }) => 
 </script>
 
 <style scoped>
+/* 公共样式 - 浅色深色共享的布局和尺寸 */
 .dashboard-container {
   width: 100%;
   min-height: inherit;
@@ -121,7 +122,6 @@ const deleteArticle = async (article: ArticleSummary & { category: string }) => 
 }
 
 .action-area {
-  color: black;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,6 +131,7 @@ const deleteArticle = async (article: ArticleSummary & { category: string }) => 
   transition: all 0.3s var(--aero-animation);
   padding: 0 0.5rem;
   text-decoration: none;
+  color: black;
 }
 
 .dark-theme .action-area {
@@ -142,25 +143,37 @@ const deleteArticle = async (article: ArticleSummary & { category: string }) => 
   background-color: rgb(0, 119, 255);
 }
 
+.action-area:hover i {
+  transform: translateX(3px);
+  color: white;
+}
+
 .action-area i {
   font-size: 1.2em;
   transition: transform 0.3s var(--aero-animation);
   color: var(--accent-color);
 }
 
-.action-area:hover i {
-  transform: translateX(3px);
-  color: white;
+/* glass-container 公共样式 */
+.glass-container {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
 }
 
-.dark-theme .action-area {
-  border-left-color: rgba(255, 255, 255, 0.05);
+.dark-theme .glass-container {
+  background: rgba(30, 30, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.dark-theme .action-area:hover {
-  background-color: rgb(0, 119, 255);
-}
-
+/* 文章列表区域 */
 .article-list-wrapper {
   margin: 2rem 0 0 0;
   padding: 1rem;
@@ -171,12 +184,13 @@ const deleteArticle = async (article: ArticleSummary & { category: string }) => 
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  color: inherit;
 }
 
 .article-table th,
 .article-table td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .dark-theme .article-table th,
@@ -185,54 +199,157 @@ const deleteArticle = async (article: ArticleSummary & { category: string }) => 
 }
 
 .article-table th {
-  font-weight: bold;
+  font-weight: 600;
   color: var(--accent-color);
+  background: rgba(0, 119, 255, 0.08);
+  border-bottom: 2px solid rgba(0, 119, 255, 0.2);
 }
 
+.dark-theme .article-table th {
+  background: rgba(0, 119, 255, 0.08);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.article-table tr {
+  transition: background-color 0.2s ease;
+}
+
+.article-table tr:hover {
+  background: rgba(0, 119, 255, 0.05);
+}
+
+.dark-theme .article-table tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* 分类标签 */
 .category-badge {
-  background: rgba(0, 119, 255, 0.2);
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
+  background: rgba(0, 119, 255, 0.15);
+  color: #0077ff;
+  border: 1px solid rgba(0, 119, 255, 0.3);
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
   font-size: 0.8rem;
+  font-weight: 500;
   text-transform: capitalize;
+  display: inline-block;
 }
 
+.dark-theme .category-badge {
+  color: #a0c8ff;
+}
+
+/* 操作按钮 */
 .action-cell {
   display: flex;
   gap: 0.5rem;
 }
 
 .action-btn {
-  background: transparent;
-  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   color: var(--text-color-secondary);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark-theme .action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #b0b0b0;
 }
 
 .action-btn:hover {
-  border-color: currentColor;
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .edit-btn:hover {
   color: #43e97b;
+  border-color: rgba(67, 233, 123, 0.3);
 }
+
 .delete-btn:hover {
   color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
+/* 加载状态和错误消息 */
+.loading-wrapper,
+.error-message {
+  color: inherit;
+  padding: 1rem;
+  text-align: center;
+  border-radius: 8px;
+}
+
+.loading-wrapper {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+.dark-theme .loading-wrapper {
+  background: rgba(30, 30, 40, 0.7);
+}
+
+.error-message {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
 }
 
 /* 响应式调整 */
 @media (max-width: 768px) {
+  .dashboard-content {
+    padding: 0.5rem;
+    margin: 1rem auto;
+  }
+
+  .article-list-wrapper {
+    margin: 1rem 0 0 0;
+    padding: 0.5rem;
+  }
+
+  .article-table th,
+  .article-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .category-badge {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .action-cell {
+    gap: 0.25rem;
+  }
+
+  .action-btn {
+    width: 30px;
+    height: 30px;
+  }
+
   .action-area {
     width: 60px;
     padding: 0;
     background: rgba(255, 255, 255, 0.1);
+  }
+
+  .dark-theme .action-area {
+    background: rgba(0, 0, 0, 0.1);
   }
 
   .action-area:active {
@@ -242,13 +359,22 @@ const deleteArticle = async (article: ArticleSummary & { category: string }) => 
   .action-area i {
     font-size: 1.4em;
   }
+}
 
-  .dark-theme .action-area {
-    background: rgba(0, 0, 0, 0.1);
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
+  .article-table {
+    font-size: 0.9rem;
   }
 
-  .dark-theme .action-area:active {
-    background: rgba(0, 119, 255, 0.2);
+  .article-table th,
+  .article-table td {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .category-badge {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
   }
 }
 </style>
