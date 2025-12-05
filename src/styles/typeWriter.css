@@ -9,7 +9,7 @@
   transform: translateY(30px);
   transition: all 0.6s var(--aero-animation);
   transition-delay: var(--item-delay, 0ms);
-  pointer-events: none;
+  pointer-events: auto; /* 允许交互，动画不再阻塞点击 */
 }
 
 /* 卡片出现动画 */
@@ -32,6 +32,16 @@
   width: auto;
   animation: typing-text var(--typing-duration, 0.8s) steps(var(--text-length, 20))
     var(--text-delay, 0ms) both;
+}
+
+/* 在需要时可以暂停打字动画（通过根元素加类 .typing-paused） */
+.type-writer.typing-paused .chapter-item h3 {
+  animation-play-state: paused !important;
+}
+
+/* 暂停光标闪烁 */
+.type-writer.typing-paused .typing-cursor {
+  animation-play-state: paused !important;
 }
 
 /* 动画完成状态 */

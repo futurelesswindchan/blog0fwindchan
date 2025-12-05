@@ -28,9 +28,9 @@
         class="chapter-list type-writer"
         v-type-writer="{
           mode: 'both',
-          delay: 300,
-          elementDelay: 300,
-          textDelay: 400,
+          delay: 200,
+          elementDelay: 200,
+          textDelay: 300,
         }"
       >
         <div
@@ -75,7 +75,10 @@ const articles = computed(() => {
 
 // 搜索和排序
 const { searchText, filteredItems, sortButton } = useSearchAndSort({
-  items: articles.value,
+  // 这里原本是`articles.value`，现在已修正为`articles`
+  // 确保传递的是计算属性本身，而不是其值
+  // 否则会导致响应式更新失效
+  items: articles,
   searchFields: (article) => [article.title],
   sortType: 'date',
   sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -104,6 +107,10 @@ const readArticle = (articleId: string) => {
 
 <style scoped>
 .chapter-item::before {
-  background: radial-gradient(circle at top right, rgba(129, 134, 139, 0.5), transparent);
+  background: radial-gradient(circle at top right, rgba(70, 181, 255, 0.9), transparent);
+}
+
+.dark-theme .chapter-item::before {
+  background: radial-gradient(circle at top right, rgba(6, 112, 218, 0.9), transparent);
 }
 </style>

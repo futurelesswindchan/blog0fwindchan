@@ -23,7 +23,16 @@
 
       <div v-else-if="articleStore.error" class="error-message">{{ articleStore.error }}</div>
 
-      <div v-else class="chapter-list">
+      <div
+        v-else
+        class="chapter-list type-writer"
+        v-type-writer="{
+          mode: 'both',
+          delay: 200,
+          elementDelay: 200,
+          textDelay: 300,
+        }"
+      >
         <div
           v-for="article in filteredItems"
           :key="article.id"
@@ -47,9 +56,11 @@ import { useRouter } from 'vue-router'
 import { useArticleStore } from '@/views/stores/articleStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import { useArticleContent } from '@/composables/useArticleContent'
+import { vTypeWriter } from '@/directives/typeWriterDirective'
 import '@/styles/storyCard.css'
 import '@/styles/pageHeader.css'
 import '@/styles/searchBar.css'
+import '@/styles/typeWriter.css'
 
 const router = useRouter()
 const articleStore = useArticleStore()
@@ -63,7 +74,10 @@ const articles = computed(() => {
 
 // 搜索和排序
 const { searchText, filteredItems } = useSearchAndSort({
-  items: articles.value,
+  // 这里原本是`articles.value`，现在已修正为`articles`
+  // 确保传递的是计算属性本身，而不是其值
+  // 否则会导致响应式更新失效
+  items: articles,
   searchFields: (article) => [article.title],
   sortType: 'date',
   sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -84,6 +98,10 @@ const readArticle = (id: string) => {
 
 <style scoped>
 .chapter-item::before {
-  background: radial-gradient(circle at top right, rgba(200, 120, 80, 0.12), transparent);
+  background: radial-gradient(circle at top right, rgba(19, 193, 158, 0.9), transparent);
+}
+
+.dark-theme .chapter-item::before {
+  background: radial-gradient(circle at top right, rgba(16, 122, 100, 0.9), transparent);
 }
 </style>
