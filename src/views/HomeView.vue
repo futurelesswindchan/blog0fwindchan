@@ -897,12 +897,6 @@ p {
   -webkit-tap-highlight-color: transparent;
 }
 
-.contact-section__card:hover {
-  transform: translateY(-3px);
-  filter: brightness(1.1) saturate(1.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
 .contact-section__icon {
   font-size: 2.5em;
   margin-bottom: 12px;
@@ -912,6 +906,20 @@ p {
 .contact-section__text {
   font-size: 1rem;
   text-align: center;
+}
+
+.contact-section__card:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.1) saturate(1.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.contact-section:hover .fa-github {
+  filter: brightness(5);
+}
+
+.dark-theme .contact-section:hover .fa-github {
+  filter: brightness(0.5);
 }
 
 /* 图标特定颜色 */

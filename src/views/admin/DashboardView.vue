@@ -88,9 +88,14 @@ const deleteArticle = async (article: ArticleSummary & { category: string }) => 
   if (confirm(`确定要删除文章《${article.title}》吗？这个操作不可撤销！`)) {
     try {
       await api.delete(`/articles/${article.id}`)
-      // 删除成功后，从前端列表里移除，实现即时刷新
-      // 注意：这里只是一个简单的UI刷新，更稳健的做法是重新 fetchArticleIndex
-      articleStore.fetchArticleIndex() // 重新获取列表
+      // 这里做了更新 store 的操作，移除被删除的文章
+
+      articleStore.$patch((state) => {
+        const list = state.articles[article.category]
+        if (list) {
+          state.articles[article.category] = list.filter((item) => item.id !== article.id)
+        }
+      })
     } catch (error: unknown) {
       if (error instanceof Error) {
         alert('删除失败: ' + error.message)

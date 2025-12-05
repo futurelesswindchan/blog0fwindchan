@@ -146,7 +146,7 @@ import TypeWriter from '@/components/common/TypeWriter.vue'
 import ReflectionLayer from './ReflectionLayer.vue'
 
 // 修改图片导入
-const logo = 'favicon.png'
+const logo = '/favicon.png'
 const lightWallpaper = '/assets/images/wallpaper.webp'
 const darkWallpaper = '/assets/images/dark-theme-wallpaper.webp'
 
