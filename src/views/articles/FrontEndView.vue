@@ -18,11 +18,11 @@
 
       <div v-if="articleStore.isLoading" class="loading-wrapper glass-container">
         <i class="fas fa-circle-notch fa-spin"></i>
-        <span>加载文章列表中...</span>
+        <span>加载中...</span>
       </div>
-      <div v-else-if="articleStore.error" class="error-message">
-        {{ articleStore.error }}
-      </div>
+
+      <div v-else-if="articleStore.error" class="error-message">{{ articleStore.error }}</div>
+
       <div
         v-else
         class="chapter-list type-writer"
@@ -46,6 +46,27 @@
           <i class="fas fa-chevron-right"></i>
         </div>
       </div>
+
+      <!-- ✨ 新增：分页组件 -->
+      <div v-if="pagination.totalPages > 1" class="pagination-controls glass-container">
+        <button
+          @click="pagination.prevPage"
+          :disabled="pagination.currentPage === 1"
+          class="pagination-btn"
+        >
+          <i class="fas fa-chevron-left"></i> 上一页
+        </button>
+        <span class="pagination-info">
+          第 {{ pagination.currentPage }} 页 / 共 {{ pagination.totalPages }} 页
+        </span>
+        <button
+          @click="pagination.nextPage"
+          :disabled="pagination.currentPage === pagination.totalPages"
+          class="pagination-btn"
+        >
+          下一页 <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -60,6 +81,7 @@ import '@/styles/storyCard.css'
 import '@/styles/pageHeader.css'
 import '@/styles/searchBar.css'
 import '@/styles/typeWriter.css'
+import '@/styles/pagination.css'
 
 const router = useRouter()
 const articleStore = useArticleStore()
@@ -73,15 +95,13 @@ const articles = computed(() => {
   }))
 })
 
-// 搜索和排序
-const { searchText, filteredItems, sortButton } = useSearchAndSort({
-  // 这里原本是`articles.value`，现在已修正为`articles`
-  // 确保传递的是计算属性本身，而不是其值
-  // 否则会导致响应式更新失效
+// ✨ 修改：解构出 pagination
+const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   items: articles,
   searchFields: (article) => [article.title],
   sortType: 'date',
   sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  itemsPerPage: 6, //
 })
 
 // 组件挂载时，获取前端文章列表
