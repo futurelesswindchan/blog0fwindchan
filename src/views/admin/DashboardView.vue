@@ -14,7 +14,7 @@
       <div v-if="articleStore.isLoading" class="loading-wrapper">加载中...</div>
       <div v-else-if="articleStore.error" class="error-message">{{ articleStore.error }}</div>
 
-      <div v-else class="article-list-wrapper glass-container">
+      <div v-else class="article-list-wrapper">
         <table class="article-table">
           <thead>
             <tr>
@@ -154,30 +154,17 @@ const deleteArticle = async (article: ArticleSummary & { category: string }) => 
   color: var(--accent-color);
 }
 
-/* glass-container 公共样式 */
-.glass-container {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-}
-
-.dark-theme .glass-container {
-  background: rgba(30, 30, 40, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
 /* 文章列表区域 */
 .article-list-wrapper {
   margin: 2rem 0 0 0;
   padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.75);
+  border-radius: 8px;
   overflow-x: auto;
+}
+
+.dark-theme .article-list-wrapper {
+  background-color: rgba(0, 0, 0, 0.75);
 }
 
 .article-table {

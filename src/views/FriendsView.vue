@@ -17,8 +17,9 @@
       <div v-if="friendStore.loading" class="loading">加载中...</div>
       <div v-else-if="friendStore.error" class="error">{{ friendStore.error }}</div>
       <div v-else>
+        <!-- 列表容器 -->
         <div class="friend-grid">
-          <div v-for="link in filteredLinks" :key="link.id" class="friend-card glass-container">
+          <div v-for="link in filteredItems" :key="link.id" class="friend-card glass-container">
             <a :href="link.url" target="_blank" class="friend-link">
               <LazyImage
                 :src="link.avatar"
@@ -38,6 +39,25 @@
             </a>
           </div>
         </div>
+
+        <!-- 分页控制栏 -->
+        <div class="pagination-bar" v-if="pagination.totalPages > 1">
+          <button
+            class="page-btn"
+            :disabled="pagination.currentPage === 1"
+            @click="pagination.prevPage"
+          >
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="page-info">{{ pagination.currentPage }} / {{ pagination.totalPages }}</span>
+          <button
+            class="page-btn"
+            :disabled="pagination.currentPage === pagination.totalPages"
+            @click="pagination.nextPage"
+          >
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -49,21 +69,19 @@ import LazyImage from '@/components/common/LazyImage.vue'
 import { useFriendStore } from '@/views/stores/friendStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import '@/styles/searchBar.css'
+import '@/styles/pagination.css'
 
 const friendStore = useFriendStore()
 const friends = computed(() => friendStore.friends)
 
-const {
-  searchText,
-  filteredItems: filteredLinks,
-  sortButton,
-} = useSearchAndSort({
-  items: friends, // 传 computed，保证响应式和类型安全
+// ✨ 修改：解构出 pagination
+const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
+  items: friends,
   searchFields: (friend) => [friend.name, friend.desc],
   sortType: 'alpha',
   sortBy: (a, b) => a.name.localeCompare(b.name),
+  itemsPerPage: 4, //
 })
-
 // 页面挂载时确保数据已加载
 onMounted(async () => {
   await friendStore.fetchFriends()

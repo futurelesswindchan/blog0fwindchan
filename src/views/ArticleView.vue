@@ -97,7 +97,6 @@ const goToArticle = (routeName: string) => {
 </script>
 
 <style scoped>
-/* 尽量还原原 tech 风格（映射到 article-* 类名） */
 .article-view-container {
   width: 100%;
   min-height: inherit;

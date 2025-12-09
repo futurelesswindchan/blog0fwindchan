@@ -14,8 +14,9 @@
         <div v-else-if="artworkStore.error" class="error">{{ artworkStore.error }}</div>
         <div v-else>
           <div class="gallery-container">
+            <!-- 这里改为遍历分页后的数据 paginatedArtworks -->
             <div
-              v-for="artwork in filteredArtworks"
+              v-for="artwork in filteredItems"
               :key="artwork.id"
               class="artwork-card"
               @click="showPreview(artwork)"
@@ -33,6 +34,28 @@
               </div>
             </div>
           </div>
+
+          <!-- 分页控制栏 -->
+          <div class="pagination-bar" v-if="pagination.totalPages > 1">
+            <button
+              class="page-btn"
+              :disabled="pagination.currentPage === 1"
+              @click="pagination.prevPage"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="page-info"
+              >{{ pagination.currentPage }} / {{ pagination.totalPages }}</span
+            >
+            <button
+              class="page-btn"
+              :disabled="pagination.currentPage === pagination.totalPages"
+              @click="pagination.nextPage"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+
           <!-- 预览模态框 -->
           <Teleport to="body">
             <div v-if="previewArtwork" class="preview-modal" @click.self="closePreview">
@@ -73,6 +96,7 @@ import { useArtworkStore } from '@/views/stores/artworkStore'
 import type { Artwork } from '@/views/stores/artworkStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import '@/styles/searchBar.css'
+import '@/styles/pagination.css'
 
 // 获取 store
 const artworkStore = useArtworkStore()
@@ -81,15 +105,13 @@ const artworkStore = useArtworkStore()
 const artworks = computed(() => artworkStore.artworks)
 
 // 搜索与排序（必须传 computed）
-const {
-  searchText,
-  filteredItems: filteredArtworks,
-  sortButton,
-} = useSearchAndSort({
+// ✨ 修改：解构出 pagination
+const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   items: artworks,
   searchFields: (artwork) => [artwork.title],
   sortType: 'date',
   sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  itemsPerPage: 8, //
 })
 
 // 页面加载时确保数据已加载
@@ -100,15 +122,15 @@ onMounted(async () => {
 // 预览状态
 const previewArtwork = ref<Artwork | null>(null)
 
-// 当前预览索引（基于 filteredArtworks，保证和当前视图一致）
+// 当前预览索引：基于 allFilteredArtworks (全量数据)，保证可以跨页切换预览
 const currentIndex = computed(() => {
   if (!previewArtwork.value) return -1
-  return filteredArtworks.value.findIndex((art) => art.id === previewArtwork.value?.id)
+  return filteredItems.value.findIndex((art) => art.id === previewArtwork.value?.id)
 })
 
 // 导航状态
 const canNavigatePrev = computed(() => currentIndex.value > 0)
-const canNavigateNext = computed(() => currentIndex.value < filteredArtworks.value.length - 1)
+const canNavigateNext = computed(() => currentIndex.value < filteredItems.value.length - 1)
 
 // 预览控制
 function showPreview(artwork: Artwork) {
@@ -119,8 +141,8 @@ function closePreview() {
 }
 function navigatePreview(direction: 1 | -1) {
   const newIndex = currentIndex.value + direction
-  if (newIndex >= 0 && newIndex < filteredArtworks.value.length) {
-    previewArtwork.value = filteredArtworks.value[newIndex]
+  if (newIndex >= 0 && newIndex < filteredItems.value.length) {
+    previewArtwork.value = filteredItems.value[newIndex]
   }
 }
 

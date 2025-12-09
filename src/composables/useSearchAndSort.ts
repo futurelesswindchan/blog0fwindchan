@@ -21,8 +21,8 @@ const defaultSortButtons = {
       desc: 'fa-sort-numeric-up',
     },
     label: {
-      asc: '最早发布',
-      desc: '最新发布',
+      asc: '从新到旧',
+      desc: '从旧到新',
     },
   },
 } as const
