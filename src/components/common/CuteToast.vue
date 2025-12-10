@@ -8,8 +8,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
-
 // 定义组件的 props
 defineProps({
   message: { type: String, default: '已保存' },

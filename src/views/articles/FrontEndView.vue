@@ -7,14 +7,12 @@
       <h2 class="page-title">网站开发笔记</h2>
     </div>
     <div class="story-view">
-      <!-- 搜索和排序栏 -->
-      <div class="filter-bar glass-container">
-        <input v-model="searchText" type="text" class="search-input" placeholder="搜索文章..." />
-        <button class="sort-button" @click="sortButton.toggle">
-          <i :class="['fas', sortButton.icon]"></i>
-          {{ sortButton.label }}
-        </button>
-      </div>
+      <!-- 搜索栏重新进行了封装 -->
+      <FilterBar
+        v-model:searchText="searchText"
+        :sort-button="sortButton"
+        placeholder="搜索文章..."
+      />
 
       <div v-if="articleStore.isLoading" class="loading-wrapper glass-container">
         <i class="fas fa-circle-notch fa-spin"></i>
@@ -47,44 +45,30 @@
         </div>
       </div>
 
-      <!-- ✨ 新增：分页组件 -->
-      <div v-if="pagination.totalPages > 1" class="pagination-controls glass-container">
-        <button
-          @click="pagination.prevPage"
-          :disabled="pagination.currentPage === 1"
-          class="pagination-btn"
-        >
-          <i class="fas fa-chevron-left"></i> 上一页
-        </button>
-        <span class="pagination-info">
-          第 {{ pagination.currentPage }} 页 / 共 {{ pagination.totalPages }} 页
-        </span>
-        <button
-          @click="pagination.nextPage"
-          :disabled="pagination.currentPage === pagination.totalPages"
-          class="pagination-btn"
-        >
-          下一页 <i class="fas fa-chevron-right"></i>
-        </button>
-      </div>
+      <!-- 分页组件以重新进行了封装 -->
+      <PaginationControls v-if="pagination && pagination.totalPages > 1" :pagination="pagination" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useArticleStore } from '@/views/stores/articleStore'
+import { useArticleContent } from '@/composables/useArticleContent'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import { vTypeWriter } from '@/directives/typeWriterDirective'
-import '@/styles/storyCard.css'
+import { useArticleStore } from '@/views/stores/articleStore'
+import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+import PaginationControls from '@/components/common/PaginationControls.vue'
+import FilterBar from '@/components/common/FilterBar.vue'
+
 import '@/styles/pageHeader.css'
-import '@/styles/searchBar.css'
 import '@/styles/typeWriter.css'
-import '@/styles/pagination.css'
+import '@/styles/storyCard.css'
 
 const router = useRouter()
 const articleStore = useArticleStore()
+const { formatDate } = useArticleContent()
 
 // 前端文章列表
 const articles = computed(() => {
@@ -110,11 +94,6 @@ onMounted(async () => {
     await articleStore.fetchArticleIndex()
   }
 })
-
-// 格式化日期
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('zh-CN')
-}
 
 // 跳转到具体文章
 const readArticle = (articleId: string) => {

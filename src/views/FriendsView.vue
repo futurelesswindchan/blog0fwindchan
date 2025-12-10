@@ -1,19 +1,14 @@
 <template>
   <div class="friends-view-container">
+    <h2 class="page-title">Friends</h2>
     <div class="friends-view">
-      <h2 class="page-title">Friends</h2>
-      <div class="filter-bar glass-container">
-        <input
-          v-model="searchText"
-          type="text"
-          placeholder="搜索大佬们...awa"
-          class="search-input"
-        />
-        <button class="sort-button" @click="sortButton.toggle">
-          <i :class="['fas', sortButton.icon]"></i>
-          {{ sortButton.label }}
-        </button>
-      </div>
+      <!-- 搜索栏重新进行了封装 -->
+      <FilterBar
+        v-model:searchText="searchText"
+        :sort-button="sortButton"
+        placeholder="搜索大佬..."
+      />
+
       <div v-if="friendStore.loading" class="loading">加载中...</div>
       <div v-else-if="friendStore.error" class="error">{{ friendStore.error }}</div>
       <div v-else>
@@ -39,37 +34,23 @@
             </a>
           </div>
         </div>
-
-        <!-- 分页控制栏 -->
-        <div class="pagination-bar" v-if="pagination.totalPages > 1">
-          <button
-            class="page-btn"
-            :disabled="pagination.currentPage === 1"
-            @click="pagination.prevPage"
-          >
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <span class="page-info">{{ pagination.currentPage }} / {{ pagination.totalPages }}</span>
-          <button
-            class="page-btn"
-            :disabled="pagination.currentPage === pagination.totalPages"
-            @click="pagination.nextPage"
-          >
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
       </div>
+
+      <!-- 分页组件以重新进行了封装 -->
+      <PaginationControls v-if="pagination && pagination.totalPages > 1" :pagination="pagination" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onErrorCaptured } from 'vue'
-import LazyImage from '@/components/common/LazyImage.vue'
-import { useFriendStore } from '@/views/stores/friendStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
-import '@/styles/searchBar.css'
-import '@/styles/pagination.css'
+import { useFriendStore } from '@/views/stores/friendStore'
+import { computed, onMounted, onErrorCaptured } from 'vue'
+
+import PaginationControls from '@/components/common/PaginationControls.vue'
+import FilterBar from '@/components/common/FilterBar.vue'
+
+import LazyImage from '@/components/common/LazyImage.vue'
 
 const friendStore = useFriendStore()
 const friends = computed(() => friendStore.friends)
@@ -82,13 +63,14 @@ const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   sortBy: (a, b) => a.name.localeCompare(b.name),
   itemsPerPage: 4, //
 })
+
 // 页面挂载时确保数据已加载
 onMounted(async () => {
   await friendStore.fetchFriends()
 })
 
 onErrorCaptured((err, instance, info) => {
-  console.error('页面 setup/onMounted 异常:', err, info)
+  console.error('页面 setup/onMounted 异常:', err, instance, info)
   return false
 })
 </script>
@@ -115,6 +97,13 @@ onErrorCaptured((err, instance, info) => {
   gap: 1rem;
   padding: 1rem;
   margin-bottom: 2rem;
+}
+
+.friends-view {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1rem;
+  position: relative;
 }
 
 .friend-grid {

@@ -2,13 +2,13 @@
   <div class="gallery-view-container">
     <h2 class="page-title">Gallery</h2>
     <div class="gallery-view">
-      <div class="filter-bar glass-container">
-        <input type="text" v-model="searchText" placeholder="搜索作品..." class="search-input" />
-        <button class="sort-button" @click="sortButton.toggle">
-          <i :class="['fas', sortButton.icon]"></i>
-          {{ sortButton.label }}
-        </button>
-      </div>
+      <!-- 搜索栏重新进行了封装 -->
+      <FilterBar
+        v-model:searchText="searchText"
+        :sort-button="sortButton"
+        placeholder="搜索文章..."
+      />
+
       <section class="gallery-content glass-container">
         <div v-if="artworkStore.loading" class="loading">加载中...</div>
         <div v-else-if="artworkStore.error" class="error">{{ artworkStore.error }}</div>
@@ -33,27 +33,6 @@
                 <p class="date">{{ artwork.date }}</p>
               </div>
             </div>
-          </div>
-
-          <!-- 分页控制栏 -->
-          <div class="pagination-bar" v-if="pagination.totalPages > 1">
-            <button
-              class="page-btn"
-              :disabled="pagination.currentPage === 1"
-              @click="pagination.prevPage"
-            >
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <span class="page-info"
-              >{{ pagination.currentPage }} / {{ pagination.totalPages }}</span
-            >
-            <button
-              class="page-btn"
-              :disabled="pagination.currentPage === pagination.totalPages"
-              @click="pagination.nextPage"
-            >
-              <i class="fas fa-chevron-right"></i>
-            </button>
           </div>
 
           <!-- 预览模态框 -->
@@ -85,26 +64,28 @@
           </Teleport>
         </div>
       </section>
+
+      <!-- 分页组件以重新进行了封装 -->
+      <PaginationControls v-if="pagination && pagination.totalPages > 1" :pagination="pagination" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onErrorCaptured } from 'vue'
-import LazyImage from '@/components/common/LazyImage.vue'
-import { useArtworkStore } from '@/views/stores/artworkStore'
-import type { Artwork } from '@/views/stores/artworkStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
-import '@/styles/searchBar.css'
-import '@/styles/pagination.css'
+import { ref, computed, onMounted, onErrorCaptured } from 'vue'
+import { useArtworkStore } from '@/views/stores/artworkStore'
 
-// 获取 store
+import type { Artwork } from '@/views/stores/artworkStore'
+
+import PaginationControls from '@/components/common/PaginationControls.vue'
+import FilterBar from '@/components/common/FilterBar.vue'
+
+import LazyImage from '@/components/common/LazyImage.vue'
+
 const artworkStore = useArtworkStore()
-
-// 确保 items 响应式
 const artworks = computed(() => artworkStore.artworks)
 
-// 搜索与排序（必须传 computed）
 // ✨ 修改：解构出 pagination
 const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   items: artworks,
