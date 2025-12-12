@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { useArticleContent } from '@/composables/useArticleContent'
+import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import { vTypeWriter } from '@/directives/typeWriterDirective'
 import { useArticleStore } from '@/views/stores/articleStore'
@@ -69,23 +70,27 @@ import '@/styles/storyCard.css'
 const router = useRouter()
 const articleStore = useArticleStore()
 const { formatDate } = useArticleContent()
+const settingsStore = useSettingsStore()
 
-// 小说文章列表
+// 前端文章列表
 const articles = computed(() => {
-  const list = articleStore.getArticleList('novels') || []
+  const list = articleStore.getArticleList('frontend') || []
   return list.map((article) => ({
     ...article,
-    category: 'novels' as const,
+    category: 'frontend' as const,
   }))
 })
 
-// ✨ 修改：解构出 pagination
+// 解构出 pagination
 const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   items: articles,
   searchFields: (article) => [article.title],
   sortType: 'date',
   sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  itemsPerPage: 6, //
+
+  // 这里使用了 computed，所以当 settingsStore 变化时，
+  // useSearchAndSort 内部的 pageSize 也会变化，从而触发重新计算分页
+  itemsPerPage: computed(() => settingsStore.pagination.itemsPerPage),
 })
 
 // 组件挂载时，获取小说文章列表

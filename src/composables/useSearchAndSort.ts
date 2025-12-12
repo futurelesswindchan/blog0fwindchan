@@ -33,13 +33,13 @@ export function useSearchAndSort<T>(options: {
   searchFields: (item: T) => string[]
   sortType: SortType
   sortBy: (a: T, b: T) => number
-  itemsPerPage?: number // ✨ 新增：每页显示数量
+  itemsPerPage?: number | Ref<number>
 }) {
-  const { itemsPerPage = 6 } = options // 默认每页6项
+  const pageSize = computed(() => unref(options.itemsPerPage) || 6)
 
   const searchText = ref('')
   const sortOrder = ref<SortOrder>('desc')
-  const currentPage = ref(1) // ✨ 新增：当前页码
+  const currentPage = ref(1) // 新增：当前页码
 
   // 计算经过搜索和排序后的【完整】列表
   const sortedAndSearchedItems = computed(() => {
@@ -70,15 +70,20 @@ export function useSearchAndSort<T>(options: {
     currentPage.value = 1
   })
 
-  // ✨ 新增：计算总页数
-  const totalPages = computed(() => {
-    return Math.ceil(sortedAndSearchedItems.value.length / itemsPerPage)
+  // 当每页数量变化时（比如用户在设置里改了），也重置回第一页防止越界
+  watch(pageSize, () => {
+    currentPage.value = 1
   })
 
-  // ✨ 修改：filteredItems 现在只返回【当前页】的数据
+  // 使用 pageSize.value 替代原来的 itemsPerPage
+  const totalPages = computed(() => {
+    return Math.ceil(sortedAndSearchedItems.value.length / pageSize.value)
+  })
+
+  // 使用 pageSize.value
   const paginatedItems = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage
-    const end = start + itemsPerPage
+    const start = (currentPage.value - 1) * pageSize.value
+    const end = start + pageSize.value
     return sortedAndSearchedItems.value.slice(start, end)
   })
 
@@ -94,7 +99,7 @@ export function useSearchAndSort<T>(options: {
     }
   })
 
-  // ✨ 新增：分页控制方法
+  // 分页控制方法
   const nextPage = () => {
     if (currentPage.value < totalPages.value) {
       currentPage.value++
@@ -115,10 +120,10 @@ export function useSearchAndSort<T>(options: {
 
   return {
     searchText,
-    // ✨ 修改：返回的是 paginatedItems，但我们依然叫它 filteredItems 以保持外部 API 一致
+    // 返回的是 paginatedItems，但我们依然叫它 filteredItems 以保持外部 API 一致
     filteredItems: paginatedItems,
     sortButton,
-    // ✨ 新增：将分页状态和方法暴露出去
+    // 将分页状态和方法暴露出去
     pagination: computed(() => ({
       currentPage: currentPage.value,
       totalPages: totalPages.value,

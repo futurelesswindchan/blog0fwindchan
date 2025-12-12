@@ -44,6 +44,7 @@
 
 <script setup lang="ts">
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
+import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useFriendStore } from '@/views/stores/friendStore'
 import { computed, onMounted, onErrorCaptured } from 'vue'
 
@@ -54,14 +55,18 @@ import LazyImage from '@/components/common/LazyImage.vue'
 
 const friendStore = useFriendStore()
 const friends = computed(() => friendStore.friends)
+const settingsStore = useSettingsStore()
 
-// ✨ 修改：解构出 pagination
+// 解构出 pagination
 const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   items: friends,
   searchFields: (friend) => [friend.name, friend.desc],
   sortType: 'alpha',
   sortBy: (a, b) => a.name.localeCompare(b.name),
-  itemsPerPage: 4, //
+
+  // 这里使用了 computed，所以当 settingsStore 变化时，
+  // useSearchAndSort 内部的 pageSize 也会变化，从而触发重新计算分页
+  itemsPerPage: computed(() => settingsStore.pagination.itemsPerPage),
 })
 
 // 页面挂载时确保数据已加载

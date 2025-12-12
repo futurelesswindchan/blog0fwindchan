@@ -7,6 +7,12 @@
     <form class="typewriter-settings-form" @submit.prevent>
       <h1>打字机动画参数</h1>
       <label>
+        启用打字机动画：
+        <input type="checkbox" v-model="settings.enabled" />
+      </label>
+      <small class="form-tip"> 关闭后将直接显示完整内容，不再有打字动画效果。 </small>
+
+      <label>
         初始延迟 (ms)：
         <input type="number" v-model.number="settings.initialDelay" min="0" max="3000" />
       </label>
@@ -32,12 +38,19 @@
         每次打字动画输出的字符数量。<br />
         数值越大，动画越快但不够细腻。<b>1</b>为逐字输出，<b>5</b>为每次输出5个字。
       </small>
+    </form>
 
+    <form class="typewriter-settings-form" @submit.prevent style="margin-top: 2rem">
+      <h1>列表显示参数</h1>
       <label>
-        启用打字机动画：
-        <input type="checkbox" v-model="settings.enabled" />
+        每页文章数量：
+        <input type="number" v-model.number="paginationSettings.itemsPerPage" min="1" max="50" />
       </label>
-      <small class="form-tip"> 关闭后将直接显示完整内容，不再有打字动画效果。 </small>
+      <small class="form-tip">
+        控制文章列表、画廊与友链等页面每页显示的卡片数量。<br />
+        画廊的实际显示数量为此处设置的1.5倍。<br />
+        建议设置在 <b>6-8</b> 之间以获得最佳阅读体验。
+      </small>
     </form>
 
     <hr />
@@ -59,17 +72,23 @@ import { useToast } from '../composables/useToast'
 
 const settingsStore = useSettingsStore()
 const settings = reactive({ ...settingsStore.typeWriter })
+const paginationSettings = reactive({ ...settingsStore.pagination })
 
 const { addToast } = useToast()
 
 const save = () => {
   settingsStore.setTypeWriterSettings(settings)
+  settingsStore.setPaginationSettings(paginationSettings)
   addToast('设置已保存！', 'success', 2200)
 }
 
 const reset = () => {
   settingsStore.resetTypeWriterSettings()
   Object.assign(settings, settingsStore.typeWriter)
+
+  paginationSettings.itemsPerPage = 6
+  settingsStore.setPaginationSettings(paginationSettings)
+
   addToast('已恢复为默认设置', 'success', 2200)
 }
 </script>

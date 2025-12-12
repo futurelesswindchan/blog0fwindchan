@@ -4,7 +4,11 @@
 </template>
 
 <script setup lang="ts">
-// 空文件，仅作为路由出口
+import { useSettingsStore } from '@/views/stores/useSettingsStore'
+
+const settingsStore = useSettingsStore()
+// 初始化时读取本地存储的设置
+settingsStore.loadSettings()
 </script>
 
 <style>

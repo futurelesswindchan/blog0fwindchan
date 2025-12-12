@@ -72,6 +72,7 @@
 </template>
 
 <script setup lang="ts">
+import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import { ref, computed, onMounted, onErrorCaptured } from 'vue'
 import { useArtworkStore } from '@/views/stores/artworkStore'
@@ -85,6 +86,7 @@ import LazyImage from '@/components/common/LazyImage.vue'
 
 const artworkStore = useArtworkStore()
 const artworks = computed(() => artworkStore.artworks)
+const settingsStore = useSettingsStore()
 
 // ✨ 修改：解构出 pagination
 const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
@@ -92,7 +94,10 @@ const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   searchFields: (artwork) => [artwork.title],
   sortType: 'date',
   sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  itemsPerPage: 8, //
+
+  // 这里使用了 computed，所以当 settingsStore 变化时，
+  // useSearchAndSort 内部的 pageSize 也会变化，从而触发重新计算分页
+  itemsPerPage: computed(() => Math.ceil(settingsStore.pagination.itemsPerPage * 1.5)),
 })
 
 // 页面加载时确保数据已加载
