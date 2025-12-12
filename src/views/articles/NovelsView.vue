@@ -74,10 +74,10 @@ const settingsStore = useSettingsStore()
 
 // 前端文章列表
 const articles = computed(() => {
-  const list = articleStore.getArticleList('frontend') || []
+  const list = articleStore.getArticleList('novels') || []
   return list.map((article) => ({
     ...article,
-    category: 'frontend' as const,
+    category: 'novels' as const,
   }))
 })
 
