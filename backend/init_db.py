@@ -1,61 +1,86 @@
 """
-注意：此脚本会删除 `Article`, `Category`, `Friend`, `Artwork` 中的所有记录。
+注意：此脚本会删除 `Article`, `Category`, `Friend`, `Artwork` 以及 `User` 中的所有记录。
 在生产环境请谨慎使用；此脚本主要用于从静态 public 文件迁移到数据库的场景。
 """
 import os
 import json
-from typing import Any, Dict, Optional
+import shutil  # 用于文件复制
+from typing import Any, Dict
 from app import app, db, Category, Article, Friend, Artwork
 from sqlalchemy import text
 
 
 # ==========================================
-# 配置项
+# region 配置项
 # ==========================================
 
 # 静态文件根目录 (相对于 backend 目录的路径)
-# 如果目录结构是 project/backend 和 project/public
-# 那么 PUBLIC_DIR 就应该是 ../public
 PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "..", "public")
 
+# 后端静态资源目录
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+
+# endregion
+
 
 # ==========================================
-# 🧹 清理旧数据
+# region 清理旧数据
 # ==========================================
 def clear_data() -> None:
-    """在执行迁移前，清空已有表数据以避免重复导入。
-
-    注意：此函数会删除 `Article`, `Category`, `Friend`, `Artwork` 中的所有记录。
-    在生产环境请谨慎使用；此脚本主要用于从静态 public 文件迁移到数据库的场景。
-    """
-
+    """在执行迁移前，清空已有表数据以避免重复导入。"""
     print("🧹 正在清空现有表...")
-
-    # 关闭 SQLite 外键约束以便安全删除所有记录
     db.session.execute(text("PRAGMA foreign_keys=OFF;"))
-
     db.session.query(Article).delete()
     db.session.query(Category).delete()
     db.session.query(Friend).delete()
     db.session.query(Artwork).delete()
-
     db.session.commit()
-
     print("✅ 表已清空。")
+# endregion
 
 
 # ==========================================
-# 迁移函数定义
+# region 静态资源迁移
 # ==========================================
+def copy_static_files() -> None:
+    """将 public 目录下的图片资源复制到 backend/static 目录下。"""
+    print("\n🚚 开始迁移静态资源图片...")
 
+    # 需要迁移的子目录
+    sub_dirs = ["friends", "artwork"]
+
+    for sub in sub_dirs:
+        src_path = os.path.join(PUBLIC_DIR, sub)
+        dst_path = os.path.join(STATIC_DIR, sub)
+
+        if os.path.exists(src_path):
+            # dirs_exist_ok=True 允许目标目录已存在，会覆盖同名文件
+            # 注意：这需要 Python 3.8+
+            try:
+                shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
+                print(f"   -> 已复制目录: {sub}")
+            except Exception as e:
+                print(f"   ❌ 复制目录 {sub} 失败: {e}")
+        else:
+            print(f"   ⚠️ 源目录不存在，跳过: {sub}")
+    
+    # 确保 uploads 目录存在，为后续上传做准备
+    uploads_dir = os.path.join(STATIC_DIR, "uploads")
+    if not os.path.exists(uploads_dir):
+        os.makedirs(uploads_dir)
+        print("   -> 已创建 uploads 目录")
+
+    print("✅ 静态资源迁移完成。")
+# endregion
+
+
+# ==========================================
+# region 迁移函数定义 (保持原有逻辑，稍作路径修正)
+# ==========================================
 
 def migrate_friends() -> None:
-    """从 `public/friends/index.json` 读取友链数据并写入数据库。"""
-
     print("\n📦 开始迁移友链...")
-
     json_path = os.path.join(PUBLIC_DIR, "friends", "index.json")
-
     if not os.path.exists(json_path):
         print(f"❌ 文件未找到：{json_path}")
         return
@@ -65,33 +90,36 @@ def migrate_friends() -> None:
             data: Dict[str, Any] = json.load(f)
 
         for item in data.get("friends", []):
+            # 修正：如果原来的路径是 /friends/xxx.jpg，现在后端托管在 static 下
+            # Flask 默认 static 路由就是 /static/xxx
+            # 但为了兼容，我们先把路径调整为 /static/friends/... 
+            # 或者，前端如果配置了代理，保持原样也可以。
+            # 这里为了稳妥，我们假设前端会直接访问 /static/...
+            
+            avatar = item.get("avatar", "")
+            if avatar and avatar.startswith("/friends/"):
+                avatar = "/static" + avatar
+
             friend = Friend(
-                # id 是自增主键，由数据库自动分配
                 name=item.get("name"),
                 desc=item.get("desc"),
                 url=item.get("url"),
-                avatar=item.get("avatar"),
-                tags=item.get("tags", []),  # JSON 列会保存列表
+                avatar=avatar, # 使用修正后的路径
+                tags=item.get("tags", []),
             )
-
             db.session.add(friend)
             print(f"   -> 已添加友链：{item.get('name')}")
 
         db.session.commit()
         print("✅ 友链迁移完成。")
-
-    except Exception as e:  # 捕获迁移过程中任意异常并回滚
+    except Exception as e:
         print(f"❌ 迁移友链时出错：{e}")
         db.session.rollback()
 
 
 def migrate_artworks() -> None:
-    """从 `public/artwork/index.json` 读取插画/作品数据并写入数据库。"""
-
     print("\n📦 开始迁移插画...")
-
     json_path = os.path.join(PUBLIC_DIR, "artwork", "index.json")
-
     if not os.path.exists(json_path):
         print(f"❌ 文件未找到：{json_path}")
         return
@@ -101,33 +129,33 @@ def migrate_artworks() -> None:
             data: Dict[str, Any] = json.load(f)
 
         for item in data.get("artworks", []):
+            # 修正路径
+            thumb = item.get("thumbnail", "")
+            if thumb and thumb.startswith("/artwork/"):
+                thumb = "/static" + thumb
+            
+            full = item.get("fullsize", "")
+            if full and full.startswith("/artwork/"):
+                full = "/static" + full
+
             artwork = Artwork(
                 title=item.get("title"),
-                thumbnail=item.get("thumbnail"),
-                fullsize=item.get("fullsize"),
+                thumbnail=thumb,
+                fullsize=full,
                 description=item.get("description"),
                 date=item.get("date"),
             )
-
             db.session.add(artwork)
             print(f"   -> 已添加插画：{item.get('title')}")
 
         db.session.commit()
         print("✅ 插画迁移完成。")
-
     except Exception as e:
         print(f"❌ 迁移插画时出错：{e}")
         db.session.rollback()
 
 
 def migrate_articles() -> None:
-    """迁移文章与分类。
-
-    说明：
-    - public/article/index.json 的格式为顶层 key 为分类 slug，value 为文章列表。
-    - 需将分类 slug 映射为展示名称（可通过 CATEGORY_MAP 自定义）。
-    """
-
     # 映射：分类 slug -> 分类显示名称
     CATEGORY_MAP: Dict[str, str] = {
         "frontend": "技术手记",
@@ -135,11 +163,8 @@ def migrate_articles() -> None:
         "novels": "幻想物语",
         "tools": "工具箱",
     }
-
     print("\n📦 开始迁移文章与分类...")
-
     json_path = os.path.join(PUBLIC_DIR, "article", "index.json")
-
     if not os.path.exists(json_path):
         print(f"❌ 文件未找到：{json_path}")
         return
@@ -148,37 +173,21 @@ def migrate_articles() -> None:
         with open(json_path, "r", encoding="utf-8") as f:
             data: Dict[str, Any] = json.load(f)
 
-        # 遍历 JSON 的顶层 keys（即分类 slug）
         for category_slug, articles_list in data.items():
-            if not isinstance(articles_list, list):
-                continue
+            if not isinstance(articles_list, list): continue
 
-            # 1) 创建或获取分类（Category）
             category_name = CATEGORY_MAP.get(category_slug, category_slug.capitalize())
-
-            category = (
-                db.session.execute(db.select(Category).filter_by(slug=category_slug)).scalar_one_or_none()
-            )
+            category = db.session.execute(db.select(Category).filter_by(slug=category_slug)).scalar_one_or_none()
 
             if not category:
                 category = Category(slug=category_slug, name=category_name or "")
                 db.session.add(category)
-                # 提交以便获取 category.id（用于外键关联）
                 db.session.commit()
                 print(f"   + 创建分类：[{category_name}] ({category_slug})")
-            else:
-                print(f"   = 已存在分类：[{category_name}] ({category_slug})")
 
-            # 2) 遍历该分类下的文章（Article）并导入
             for item in articles_list:
-                # 接收可能为 None 的字段，为避免类型错误，在构造 Article 前提供合理的默认值
-                article_slug: Optional[str] = item.get("id")
-                article_uid: Optional[str] = item.get("uid")
-                article_title: Optional[str] = item.get("title")
-                article_date: Optional[str] = item.get("date")
-                content_path: Optional[str] = item.get("content")  # 例："/article/frontend/filename.md"
-
-                # 读取 Markdown 文件内容（若 content_path 缺失或文件不存在，则使用空字符串）
+                article_slug = item.get("id")
+                content_path = item.get("content")
                 md_content = ""
 
                 if content_path:
@@ -186,62 +195,45 @@ def migrate_articles() -> None:
                     if os.path.exists(md_fs_path):
                         with open(md_fs_path, "r", encoding="utf-8") as md_file:
                             md_content = md_file.read()
-                    else:
-                        print(f"     ⚠️ 未找到 Markdown 文件：{md_fs_path}")
 
-
-                # 若关键字段缺失，使用空字符串作为回退值并输出警告（避免静态类型检查错误）
-                if not article_slug:
-                    print(f"     ⚠️ 文章缺少 slug，分类 {category_slug}：title={article_title}")
-                if not article_title:
-                    print(f"     ⚠️ 文章缺少标题，slug={article_slug}")
-                if not article_date:
-                    print(f"     ⚠️ 文章缺少日期，slug={article_slug}")
-
-                # 创建文章对象并保存（确保传入 str 类型）
                 article = Article(
                     slug=article_slug or "",
-                    uid=article_uid,
-                    title=article_title or "",
-                    date=article_date or "",
+                    uid=item.get("uid"),
+                    title=item.get("title") or "",
+                    date=item.get("date") or "",
                     content=md_content,
                     category_id=category.id,
                 )
-
                 db.session.add(article)
-                print(f"     -> 已添加文章：{article_title}（长度：{len(md_content)}）")
+                print(f"     -> 已添加文章：{item.get('title')}")
 
         db.session.commit()
         print("✅ 文章与分类迁移完成。")
-
     except Exception as e:
         print(f"❌ 迁移文章时出错：{e}")
-        print(f"   路径为：{json_path if 'json_path' in locals() else 'unknown'}")
         db.session.rollback()
 
 
 # ==========================================
-# 主执行入口
+# region 主执行入口
 # ==========================================
 
-
 if __name__ == "__main__":
-    # 检查 public 目录是否存在
     print(f"📂 Public 目录路径：{os.path.abspath(PUBLIC_DIR)}")
     if not os.path.exists(PUBLIC_DIR):
         print("❌ 错误：未找到 public 目录！请检查 PUBLIC_DIR 路径。")
         exit(1)
 
     with app.app_context():
-        # 确保数据库表已创建
         print("🔨 正在创建数据库表（如不存在）...")
         db.create_all()
 
-        print("🚀 开始数据库迁移...")
+        print("🚀 开始全量迁移...")
         clear_data()       # 1. 清空旧数据
-        migrate_friends()  # 2. 迁移友链
-        migrate_artworks() # 3. 迁移插画
-        migrate_articles() # 4. 迁移文章
+        copy_static_files()# 2. 迁移图片文件
+        migrate_friends()  # 3. 迁移友链数据
+        migrate_artworks() # 4. 迁移插画数据
+        migrate_articles() # 5. 迁移文章数据
 
         print("\n✨ 迁移全部完成！")
-
+# endregion

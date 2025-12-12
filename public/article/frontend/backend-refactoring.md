@@ -1,84 +1,159 @@
-# 风风博客开发心得（九）：后端重构与数据迁移
+# 风风博客开发心得（七）：后端重构与全栈安全
 
-> 本文记录了项目从纯前端静态架构（JSON驱动）向前后端分离架构（Flask + SQLite）迁移的完整过程。
-> **相关代码**：`backend/app.py`、`backend/init_db.py`、`src/stores/articleStore.ts`、`vite.config.ts`。
+> 本文是系列的终章。我们将视线从前端移开，深入后端世界，记录博客如何从纯静态架构进化为基于 Flask + SQLite 的全栈应用，并实现基于 JWT 的安全认证体系。  
+> **相关代码**：`backend/app.py`、`backend/init_db.py`、`src/api/index.ts`。
 
-## 1. 架构演进与技术选型
+## 1. 架构演进：为什么要上后端？
 
-为了解决纯静态博客在内容管理上的局限性，项目引入了 Python 后端，实现了真正的前后端分离。
-技术栈选择了轻量级且生态成熟的组合：
+在项目初期，我们使用 JSON 文件驱动内容。虽然简单，但痛点也很明显：
 
-- **Web 框架**: Flask — 极简、灵活，适合个人项目快速迭代。
-- **数据库**: SQLite — 无需配置的嵌入式数据库，单文件存储，备份极其方便。
-- **ORM**: Flask-SQLAlchemy (v3.x) — 采用 SQLAlchemy 2.0 的现代风格 (`Mapped`, `mapped_column`) 进行强类型声明。
+1.  **修改麻烦**：改个错别字都要重新部署。
+2.  **功能受限**：无法实现在线编辑等功能。
+3.  **安全隐患**：没有鉴权机制，后台管理无从谈起。
 
-## 2. 数据库模型设计 (Schema Design)
+因此，我们引入了 Python 后端，实现了真正的前后端分离。
 
-在 `backend/app.py` 中，我们设计了五张核心表（新增了 `User` 表），用于替代原有的 JSON 数据结构，并加入了关系约束。
+- **Web 框架**: Flask — 极简、灵活，适合个人项目。
+- **数据库**: SQLite — 单文件存储，无需配置，备份只需复制文件。
+- **ORM**: Flask-SQLAlchemy (v3.x) — 使用 SQLAlchemy 2.0 的现代风格。
 
-### 核心模型约定
+## 2. 数据库模型设计
 
-- **User (用户表)**: 用于存储管理员的用户名和**哈希后**的密码，是JWT认证的基础。
-- **Article (文章表)**: **关键决策**是直接在表中增加 `content` 字段存储 Markdown 源码，不再依赖外部 `.md` 文件。
-- **Friend/Artwork**: 利用 SQLite 对 JSON 的支持，将 `tags` 等数组字段直接存为 JSON 类型。
+在 `backend/app.py` 中，我们定义了核心数据模型。
 
-## 3. API 设计策略：适配器模式
+### 2.1 核心模型 (SQLAlchemy 2.0 风格)
 
-为了最小化前端重构成本，后端的**只读（GET） API** 的设计遵循了“向下兼容”的原则。
-例如 `GET /api/articles/index` 接口，并没有简单返回数据库行，而是由后端在内存中重组数据，输出与原 `index.json` 完全一致的嵌套结构：
-
-```json
-{
-  "frontend": [ { "id": "...", "title": "..." }, ... ],
-  "topics": [ ... ]
-}
-```
-
-这种策略使得前端展示页面几乎无需修改即可接入新后端。
-
-## 4. 数据迁移自动化 (Data Seeding)
-
-我们编写了 `backend/init_db.py` 脚本实现自动化数据迁移（或称为“数据播种”），它负责：
-
-1.  **清洗**: 执行前清空现有表，防止数据重复。
-2.  **映射**: 建立 `JSON Key` -> `Category Name` 的映射关系。
-3.  **读取与入库**: 遍历 `public/` 下的 JSON 和 Markdown 文件，将其内容批量写入数据库。
-
-这保证了任何开发者在 `clone` 项目后，都能通过一条命令快速生成一个内容完整的本地演示环境。
-
-## 5. 前端 Store 的重构与代理
-
-### Store 层改造
-
-前端彻底移除了所有读取静态文件的逻辑。以 `src/stores/articleStore.ts` 为例，`fetchArticleIndex` 和 `fetchArticle` 被改造为请求后端 API。同时，新增 `src/stores/adminStore.ts` 用于管理认证状态。
-
-### 解决 CORS/CSP 问题
-
-开发环境下，利用 Vite 的反向代理解决跨域与安全策略限制。在 `vite.config.ts` 中配置代理，将 `/api` 请求转发给本地 Flask 服务。这既规避了浏览器的安全限制，又模拟了生产环境 Nginx 的行为。
-
-## 6. 典型代码片段
-
-### 6.1 SQLAlchemy 2.0 模型定义
+最关键的决策是：**直接将 Markdown 源码存入数据库**。
 
 ```python
-# backend/app.py
 class Article(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     slug: Mapped[str] = mapped_column(String(100), unique=True)
     title: Mapped[str] = mapped_column(String(200))
-    # 直接存储 Markdown 文本
-    content: Mapped[Optional[str]] = mapped_column(Text)
     category_id: Mapped[int] = mapped_column(ForeignKey('category.id'))
+    date: Mapped[str] = mapped_column(String(20))
+    # ✨ 核心：Markdown 源码直接入库
+    content: Mapped[Optional[str]] = mapped_column(Text)
 ```
 
-## 7. 小结
+此外，我们新增了 `User` 表用于存储管理员信息（密码经过哈希处理），以及 `Friend` 和 `Artwork` 表。对于 `tags` 这种数组字段，利用 SQLite 对 JSON 的支持直接存储。
 
-本次重构成功实现了数据层与表现层的物理分离。
+### 2.2 数据迁移 (init_db.py)
 
-- **前端**: 更加纯粹，只负责数据渲染与交互。
-- **后端**: 成为了单一事实来源 (Single Source of Truth)，为后续开发 CMS 和 JWT 认证打下了坚实基础。
+为了平滑过渡，我们编写了 `backend/init_db.py` 脚本。
+
+它会自动读取旧版 `public/` 目录下的 JSON 和 `.md` 文件，清洗后批量写入 SQLite 数据库。这保证了任何开发者 clone 项目后，运行脚本即可获得一个填充好数据的环境。
+
+## 3. 安全基石：JWT 双 Token 认证
+
+为了保护后台接口（如文章增删改），我们引入了 `Flask-JWT-Extended`。
+
+### 3.1 后端实现
+
+我们采用了 **Access Token (短效)** + **Refresh Token (长效)** 的双 Token 机制：
+
+1.  **登录**: 验证密码哈希，签发双 Token。
+2.  **鉴权**: 敏感接口加上 `@jwt_required()` 装饰器。
+3.  **刷新**: 当 Access Token 过期时，使用 Refresh Token 换取新的 Access Token。
+
+```python
+# backend/app.py 登录接口示例
+@app.route('/api/admin/login', methods=['POST'])
+def login():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    user = db.session.execute(db.select(User).filter_by(username=username)).scalar_one_or_none()
+
+    # 验证哈希密码
+    if user and check_password_hash(user.password_hash, password):
+        access_token = create_access_token(identity=username)
+        refresh_token = create_refresh_token(identity=username)
+        return jsonify(access_token=access_token, refresh_token=refresh_token)
+
+    return jsonify({"msg": "Bad username or password"}), 401
+```
+
+### 3.2 前端拦截器 (src/api/index.ts)
+
+前端通过 Axios 拦截器实现了**无感刷新**。
+
+当请求返回 `401 Unauthorized` 时，拦截器会：
+
+1.  暂停当前请求。
+2.  取出 `refresh_token` 请求 `/api/admin/refresh`。
+3.  获取新 Token 并更新 `localStorage`。
+4.  修改原请求的 Header 并重发。
+5.  如果刷新也失败，则强制登出。
+
+```ts
+// src/api/index.ts 响应拦截器简化版
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config
+    // 如果是 401 且不是重试过的请求
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+      try {
+        const refreshToken = localStorage.getItem('refresh_token')
+        // 调用刷新接口
+        const { data } = await axios.post(
+          '/api/admin/refresh',
+          {},
+          {
+            headers: { Authorization: `Bearer ${refreshToken}` },
+          },
+        )
+        // 更新 Token 并重试
+        localStorage.setItem('access_token', data.access_token)
+        originalRequest.headers.Authorization = `Bearer ${data.access_token}`
+        return api(originalRequest)
+      } catch (refreshError) {
+        // 刷新失败，跳转登录
+        router.push({ name: 'AdminLogin' })
+      }
+    }
+    return Promise.reject(error)
+  },
+)
+```
+
+## 4. 开发与部署配置
+
+### 4.1 开发环境代理 (Vite Proxy)
+
+为了解决开发时的跨域问题，我们在 `vite.config.ts` 中配置了反向代理：
+
+```ts
+server: {
+  proxy: {
+    '/api': {
+      target: 'http://127.0.0.1:5000', // 转发给 Flask
+      changeOrigin: true,
+    },
+    '/uploads': {
+      target: 'http://127.0.0.1:5000', // 转发图片请求
+      changeOrigin: true,
+    }
+  }
+}
+```
+
+### 4.2 生产环境
+
+在生产环境（如 Nginx），我们将前端构建出的静态文件 (`dist/`) 作为根目录服务，同时将 `/api` 和 `/uploads` 路径反向代理到后台的 Gunicorn/uWSGI 服务，实现动静分离。
+
+## 5. 全剧终
+
+至此，风风博客的开发故事就讲完了。
+
+从第一篇的架构设计，到中间的 UI 实现、路由管理、Markdown 渲染，再到最后的后台系统与全栈重构。我们见证了一个简单的静态页面如何一步步进化为一个功能完备、设计优雅的全栈博客系统。
+
+这个项目不仅是一个记录生活的地方，更是我技术成长的试验田。希望这一系列文章能给同样热爱折腾博客的你带来一点点灵感。
+
+感谢阅读！
 
 ---
 
-> 没有未来的小风酱 著
-> 2025-12-03 (已与全栈架构同步)
+> 没有未来的小风酱 著  
+> 2025-12-12重写 （全系列完结，感谢陪伴）

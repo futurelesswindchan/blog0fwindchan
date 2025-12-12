@@ -1,159 +1,86 @@
-# 风风博客博客开发心得（五）：数据管理与状态同步
+# 风风博客开发心得（五）：数据管理与状态同步
 
-> 本文说明基于仓库实际实现的状态管理与数据加载策略，参考文件：`src/views/stores/articleStore.ts`、`src/views/stores/artworkStore.ts`、`src/views/stores/friendStore.ts`、`src/views/stores/useSettingsStore.ts` 以及 `src/composables/useSearchAndSort.ts`、`src/components/common/LazyImage.vue` 等。
+> 本文深入解析本站的数据流管理。内容基于 `src/views/stores/*.ts` 及相关 Composable 整理，已与 2025/12/12 版本代码对齐。
 
-## 1. 为什么选 Pinia
+## 1. 状态管理：Pinia 的实战应用
 
-项目使用 Vue 3 + TypeScript，Pinia 与组合式 API 的风格天然契合：轻量、类型友好、易于测试与按需加载。项目采用 setup-style 的 `defineStore`（composition API）来组织业务 state 与 side effects。
+我们使用 Pinia 来管理全局状态，但在实现上根据业务场景分成了两类策略：**只读展示**与**交互管理**。
 
-## 2. 项目中的主要 Store 与数据形态
+### 1.1 “双轨制”的数据请求
 
-源码中并没有单个“storyStore/characterStore/techStore”这样的命名空间；实际按资源划分为几个主要 store：
+你可能会发现代码里有两种请求方式：
 
-- `articleStore`（`src/views/stores/articleStore.ts`）
+1.  **原生 Fetch (`articleStore.ts`)**:
 
-  - 负责管理技术文章、专题与小说索引（仓库当前实现通过后端 API 提供索引与文章内容），包含 article list、currentArticle、isLoading、error 等字段。
-  - 提供按分类加载（如 `frontend`、`topics`、`novels`）与按 id 获取全文的函数，实际实现通过 `fetchArticleIndex()` 与 `fetchArticle(category, id)` 与后端交互。
+    - **场景**: 博客文章内容的读取。
+    - **特点**: 使用原生 `fetch`，轻量、无依赖。因为文章读取是纯公开接口，不需要复杂的拦截器或 Token 处理。
+    - **缓存**: 简单的内存缓存策略 —— `if (this.articles.frontend.length > 0) return`，避免切页面时重复请求。
 
-- `artworkStore`（`src/views/stores/artworkStore.ts`）
+2.  **Axios 封装 (`adminStore`, `friendStore`, `artworkStore`)**:
+    - **场景**: 友链、画廊的管理以及后台登录。
+    - **特点**: 引入了封装好的 `api` 实例（基于 Axios）。这让我们能方便地处理 CRUD 操作（增删改查），并在请求头中自动携带 `Authorization: Bearer token`，处理 401 刷新 Token 等逻辑。
 
-  - 管理画廊数据（图片元信息、分页/懒加载状态、加载/错误标识）。
+### 1.2 核心 Store 解析
 
-- `friendStore`（`src/views/stores/friendStore.ts`）
+- **AdminStore**: 负责鉴权。它将 `access_token` 和 `refresh_token` 存在 `localStorage` 里，提供了 `login`、`logout` 和 `refreshToken` 方法。这是后台管理的守门员。
+- **ArticleStore**: 负责内容。它维护了一个大的 `articles` 对象映射表（`frontend`, `topics` 等），以及 `currentArticle` 用于存储当前阅读的文章详情。
+- **Artwork/FriendStore**: 负责资源。它们不仅有 `fetch`，还有 `add`、`update`、`delete` Action，配合后台管理界面使用。
 
-  - 管理友链列表与相关元数据，通常为轻量 JSON 列表。
+## 2. 性能优化：LazyImage 组件
 
-- `useSettingsStore`（`src/views/stores/useSettingsStore.ts`）
-  - 保存主题、壁纸偏好等 UI 设置（例如 `isDarkTheme`），并负责持久化到 `localStorage`。
+在画廊页面，图片加载体验至关重要。`src/components/common/LazyImage.vue` 不仅仅是一个懒加载组件，它还有两个小心机( º﹃º )
 
-这些 store 均使用 `ref` / `computed` 暴露响应式状态，并以 `async` 函数封装远程加载逻辑。
-
-示例：`articleStore`（与仓库实现一致的概要）
-
-```ts
-// src/views/stores/articleStore.ts（概要，基于后端 API）
-export const useArticleStore = defineStore('article', {
-  state: () => ({
-    articles: { frontend: [], topics: [], novels: [] },
-    currentArticle: null,
-    isLoading: false,
-    error: null,
-  }),
-  actions: {
-    // 从后端 API 获取分类索引（/api/articles/index）
-    async fetchArticleIndex() {
-      if (this.articles.frontend?.length) return
-      this.isLoading = true
-      try {
-        const res = await fetch('/api/articles/index')
-        const data = await res.json()
-        this.articles = { ...this.articles, ...data }
-      } catch (e) {
-        this.error = String(e)
-      } finally {
-        this.isLoading = false
+1.  **IntersectionObserver**: 利用原生 API 监听元素是否进入视口。只有当图片快要出现在屏幕上时，才创建 `Image` 对象并赋值 `src`。
+2.  **自动重试机制**:
+    如果图片加载失败（比如网络波动），组件不会立刻显示裂图，而是会尝试重试：
+    ```ts
+    const onError = () => {
+      if (retryCount < MAX_RETRIES) {
+        retryCount++
+        //以此触发浏览器重新请求
+        currentSrc.value = props.src + '?retry=' + retryCount
       }
-    },
-
-    // 通过后端 API 获取单篇文章详情（/api/article/<category>/<id>）
-    async fetchArticle(category: string, id: string) {
-      if (this.currentArticle && this.currentArticle.id === id) return
-      this.isLoading = true
-      this.currentArticle = null
-      try {
-        const res = await fetch(`/api/article/${category}/${id}`)
-        this.currentArticle = await res.json()
-      } catch (e) {
-        this.error = String(e)
-      } finally {
-        this.isLoading = false
-      }
-    },
-  },
-})
-```
-
-## 3. 异步加载与错误处理
-
-核心做法保持一致：所有网络操作都通过 `async/await` + `try/catch` 包裹，使用 `isLoading` 和 `error` 字段暴露给视图层。关键实践：
-
-- 在发起请求前检查本地缓存（例如 `articles.value[category]`）以避免重复请求。
-- 对关键异步动作设置超时或降级策略（例如加载失败时保留旧数据并向用户显示短消息）。
-
-示例（加载防抖 / 防重复）：
-
-```ts
-if (articles.value[category] && articles.value[category].length) return
-await fetchIndex(category)
-```
-
-## 4. 路由守卫中的预加载（与源码一致）
-
-仓库的 `src/router/index.ts` 在路由守卫里对部分页面做了条件预加载，例如在进入 Friends / Gallery 页面时触发对应 store 的加载：
-
-```ts
-router.beforeEach(async (to, from, next) => {
-  document.documentElement.classList.add('page-transitioning')
-  try {
-    if (to.name === 'Friends') {
-      const f = useFriendStore()
-      if (!f.friends.length) await f.fetchFriends()
     }
-    if (to.name === 'Gallery') {
-      const a = useArtworkStore()
-      // 注意：store 中字段名为 `artworks`，方法名为 `fetchArtworks()`
-      if (!a.artworks.length) await a.fetchArtworks()
-    }
-  } catch (e) {
-    // 捕获后仍允许导航，页面内显示错误
-  }
-  next()
-})
-```
+    ```
+    这个简单的 `?retry=N` 参数往往能挽救一次加载失败。
 
-这种做法保证关键页面打开时尽可能完成必要的数据加载，从而避免空白占位或二次加载闪烁。
+## 3. 列表逻辑复用：useSearchAndSort
 
-## 5. 页面级监听与按需加载
+博客里有好几个页面（友链、画廊、后台列表）都需要：**搜索 + 排序 + 分页**。
 
-在详情页（例如文章详情、角色详情）常见的模式是：在 `watch` 或 `onMounted` 中根据 `route.params` 发起按需加载：
+如果每个页面都写一遍 `computed`，代码会非常冗余。
 
-```ts
-watch(
-  () => route.params.id,
-  async (id) => {
-    if (!id) return
-    // 实际实现通过后端 API 获取文章；在 ArticleDetailView 中使用 fetchArticle(category, id)
-    await articleStore.fetchArticle('frontend', String(id))
-  },
-  { immediate: true },
-)
-```
+我们封装了 `src/composables/useSearchAndSort.ts`，它是一个功能强大的组合式函数：
 
-## 6. 性能优化要点
+- **输入**: 原始列表数据、搜索字段定义、排序规则。
+- **输出**:
+  - `filteredItems`: 经过搜索、排序、**并分页后**的当前页数据。
+  - `searchText`: 搜索框绑定的响应式变量。
+  - `sortButton`: 包含当前排序图标和切换方法的对象。
+  - `pagination`: 包含 `currentPage`, `totalPages`, `nextPage` 等分页控制方法的对象。
 
--- 避免重复请求（缓存 + loading/loaded 检查）。
--- 图片采用 `LazyImage` 组件，支持占位与失败重试，减少首次加载压力。
-
-示例：在画廊页面使用 `LazyImage` 与分页/按需加载：
+这样，在视图组件里，我们只需要几行代码就能实现一个功能完备的列表页：
 
 ```html
-<template>
-  <div class="gallery">
-    <LazyImage v-for="img in items" :key="img.id" :src="img.url" />
-  </div>
-</template>
+<!-- 视图组件示例 -->
+<FilterBar v-model:searchText="searchText" :sort-button="sortButton" />
+
+<div class="list">
+  <ItemCard v-for="item in filteredItems" :key="item.id" :data="item" />
+</div>
+
+<PaginationControls :pagination="pagination" />
 ```
 
-## 7. 类型与可维护性
+## 4. 小结
 
-- 项目在 store、composable 与组件层尽量使用 TypeScript 接口约束，示例中 `Article`、`Artwork`、`Friend` 等类型在对应文件中声明。
-- 统一的数据接口便于在多个视图间复用组件（如列表、详情、分页控件）并降低回归风险。
+- **数据层**: 根据场景选择 `fetch` 或 `axios`，动静分离。
+- **组件层**: `LazyImage` 通过重试机制提升了图片加载的鲁棒性。
+- **逻辑层**: `useSearchAndSort` 完美地解耦了列表逻辑与 UI 展示。
 
-## 8. 小结
-
-实际仓库按资源划分 store（`articleStore`、`artworkStore`、`friendStore`、`useSettingsStore`），结合路由守卫与按需加载策略，实现了集中管理、按需拉取、错误隔离与性能优化。通过类型约束与组合式 API，代码在可维护性和可扩展性上保持良好平衡。
+下一篇，我们将探讨**后台管理系统的实现**，看看如何把这些 CRUD 接口串联成一个完整的管理面板。
 
 ---
 
-> 没有未来的小风酱 著
-> 2025-12-02 (已与全栈架构同步)
+> 没有未来的小风酱 著  
+> 2025-12-12重写 （已与源码核对，useSearchAndSort 的搜索排序分页集成可是亮点哦ov0）

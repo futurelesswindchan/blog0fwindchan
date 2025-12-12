@@ -6,6 +6,8 @@
 
 ![示例图片1](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview1.png)
 ![示例图片2](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview2.png)
+![示例图片3](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview3.png)
+![示例图片4](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview4.png)
 
 ---
 
@@ -169,9 +171,9 @@ npm run dev
 - [√] **Phase 2**: 后端架构搭建 (Flask + SQLite)
 - [√] **Phase 3**: 前后端联调与数据迁移脚本
 - [√] **Phase 4**: 开发 CMS 及 JWT 安全认证
+- [√] **Phase 5**: 完整的线上作品管理编辑仪表盘
 - [🤔] **未来构想**:
-  - [ ] 画廊与友链的在线管理功能
-  - [ ] 文章评论系统
+  - [ ] 普通用户账户与评论系统
   - [ ] ... 更多好玩的！
 
 ## 📄 使用许可 (License)

@@ -1,42 +1,52 @@
-# 风风博客博客开发心得（三）：路由与页面导航实现
+# 风风博客开发心得（三）：路由与页面导航实现
 
-> 本文基于仓库内实际实现（`src/router/index.ts`、`src/components/layout/*` 等）整理路由结构、页面导航与路由守卫等细节，便于开发者直接在代码中定位实现。
+> 本文基于 `src/router/index.ts` 及导航组件源码整理。已与 2025/12/12 版本代码对齐，补充了移动端双列布局等新特性。
 
-## 1 路由系统设计（实际实现）
+## 1. 路由系统设计：骨架
 
-项目使用 Vue Router 4，路由主配置位于 `src/router/index.ts`，整体采用 `MainLayout.vue` 作为根布局，路由要点如下：
+路由是单页应用（SPA）的骨架。我们的配置位于 `src/router/index.ts`，整体结构非常清晰：
 
-- 根页面实际为 `/home`，且 `/` 会重定向到 `/home`（保持 `MainLayout`）。
-- 文章相关集中在 `/articles` 下，包含 `frontend`、`topics`、`novels` 等子路由；每篇文章使用 `:id` 参数并复用 `ArticleDetailView.vue` 来渲染内容。
-- 其他主要路由：`/gallery`、`/friends`、`/settings` 等。未匹配路由会被重定向到 `/home`（而非单独的 404 组件）。
+- **根布局**: 所有页面都包裹在 `MainLayout` 下。
+- **重定向**: 访问 `/` 会自动跳到 `/home`。
+- **内容区**: `/articles` 下包含 `frontend`、`topics`、`novels` 等子版块。
+- **后台管理**: `/admin` 及其子路由负责登录和内容管理（这是旧版文档没提到的，现在已经实装了）。
+- **Meta 信息**: 每个路由都带了 `meta.title`，MainLayout 会读取它并通过打字机效果~~不知道是什么bug导致桌面端不显示~~展示在标题栏上。
 
-示例（节选自 `src/router/index.ts`）：
+## 2. 导航组件：桌面与移动端的“两副面孔”
 
-```ts
-{
-  path: '/',
-  component: MainLayout,
-  children: [
-    { path: 'home', name: 'Home', component: () => import('@/views/HomeView.vue'), meta: { title: '正在首页~' } },
-    { path: '', redirect: { name: 'Home' } },
-    { path: 'articles', children: [ /* frontend, topics, novels, ... */ ] },
-    { path: 'gallery', name: 'Gallery', component: () => import('@/views/GalleryView.vue') },
-    { path: 'friends', name: 'Friends', component: () => import('@/views/FriendsView.vue') },
-    { path: 'settings', name: 'Settings', component: () => import('@/views/SettingsView.vue') },
-  ]
-},
-{ path: '/:pathMatch(.*)*', redirect: '/home' },
-```
+为了适配不同设备，我们写了两个完全独立的导航组件，但它们共享同一套数据结构 `navItems`。
 
-### 1.1 Meta 信息
+### 2.1 桌面端：NavPanel.vue
 
-路由中普遍使用 `meta.title` 来表示“当前位置”文本（MainLayout 会读取并通过打字机 `TypeWriter` 显示）。这也方便将来用于动态设置 `<title>` 或 SEO 相关的逻辑。
+这是一个**可收缩的侧边栏**。
 
-## 2 路由行为与导航细节
+- **交互**: 点击顶部的双箭头按钮，侧边栏会在“仅图标”和“图标+文字”之间切换。这是通过 CSS `width` 过渡实现的。
+- **前缀匹配**: 你可能注意到了，当你阅读具体文章（如 `/articles/frontend/1`）时，左侧的“文章导航”按钮依然是高亮的。这是因为我们在 `router-link` 上加了一个判断：
 
-### 2.1 滚动行为（scrollBehavior）
+  ```html
+  :class="{ active: item.matchPrefix && $route.path.startsWith(item.path) }"
+  ```
 
-路由实例里配置了自定义的 `scrollBehavior`：所有页面切换都会立即滚动到顶部，项目中使用：
+  只要路径以 `/articles` 开头，它就会保持激活状态。
+
+  ~~才不会告诉你仪表盘相关路由其实没写这个功能~~
+
+### 2.2 移动端：MobileNavPanel.vue
+
+这是一个**全屏抽屉**，但它的布局很有意思。
+
+- **双列布局**: 不同于常见的单列列表，我们在移动端使用了 CSS Grid (`grid-template-columns: 1fr 1fr`)，把导航项排成了两列。这样不仅节省了垂直空间，看起来也更像一个现代化的仪表盘。
+- **优雅的退出动画**: 很多抽屉组件在关闭时会瞬间消失，体验很差。我们的实现是：
+  1.  点击关闭，设置 `isClosing = true`。
+  2.  组件应用 `.sliding-out` 类，触发 CSS `slideOut` 动画。
+  3.  监听 `@animationend` 事件，动画播完后再通知父组件销毁自己。
+      这一套连招让关闭过程丝般顺滑。
+
+## 3. 路由行为与守卫
+
+### 3.1 瞬间回到顶部
+
+你肯定不希望点进新文章时，页面还停留在底部。我们在路由配置里加了这行：
 
 ```ts
 scrollBehavior() {
@@ -44,99 +54,27 @@ scrollBehavior() {
 }
 ```
 
-这保证了路由切换时不会保留上一个页面的滚动位置，适合以阅读为主的站点体验。
+`instant` 关键字保证了跳转是瞬间完成的，没有拖泥带水的滚动动画，更适合阅读类网站。
 
-### 2.2 路由守卫与页面过渡控制
+### 3.2 路由守卫：数据预加载
 
-实际代码在 `router.beforeEach` 中：
+在 `beforeEach` 中，我们做了一个大胆的决定：**阻塞式预加载**。
 
-- 会在导航开始时向 `document.documentElement` 添加 `page-transitioning` 类，用于触发页面过渡（CSS 中会监听并应用模糊/遮罩等效果）。
-- 根据目标路由名称做按需预加载：目前实现会在跳转到 `Friends` 时调用 `useFriendStore().fetchFriends()`，在跳转到 `Gallery` 时调用 `useArtworkStore().fetchArtworks()`。如果数据已存在则跳过请求。
-- 在 `beforeEach` 中捕获异常并保证执行 `next()`，避免因为预加载失败导致导航阻塞。
+当你要去“友链”或“画廊”页时，路由守卫会先去 Store 里拉取数据。只有数据回来了，页面才会跳转。
 
-示例（节选）：
+虽然这可能会让点击后的反应慢个几百毫秒，但它保证了**页面一显示就是有内容的**，避免了进入页面后出现“加载中...”转圈圈的尴尬。配合 CSS 的 `page-transitioning` 过渡类，体验其实非常流畅。
 
-```ts
-router.beforeEach(async (to, from, next) => {
-  document.documentElement.classList.add('page-transitioning')
-  try {
-    if (to.name === 'Friends') {
-      await useFriendStore().fetchFriends()
-    } else if (to.name === 'Gallery') {
-      await useArtworkStore().fetchArtworks()
-    }
-    next()
-  } catch (err) {
-    console.error(err)
-    next()
-  }
-})
+## 4. 小结
 
-router.afterEach(() => {
-  setTimeout(() => document.documentElement.classList.remove('page-transitioning'), 400)
-})
-```
+路由和导航不仅仅是把页面连起来，更是用户体验的关键一环。
 
-TRANSITION_DURATION 在路由文件中设置为 400ms，与 CSS 过渡保持一致以保证视觉连贯。
+- 桌面端注重**空间利用**（可收缩）。
+- 移动端注重**操作效率**（双列布局、大点击区域）。
+- 路由层面注重**阅读体验**（瞬间回顶、预加载）。
 
-## 3 页面导航组件（桌面与移动）
-
-导航实现分成桌面端 `NavPanel.vue`（固定侧边栏）和移动端 `MobileNavPanel.vue`（抽屉式）。两者在实现上保持一致的路由项定义（`navItems`），并在样式与交互上作差异化处理。
-
-共同点：
-
-- 都使用 `<router-link>` 渲染导航项，并根据 `item.exact` 与 `item.matchPrefix` 来控制激活样式与前缀匹配（例如 `/articles/frontend/...` 会匹配 `/articles` 前缀）。
-- 都在导航列表末尾放置“主题切换”按钮，父组件通过 `@toggle-theme` 响应切换逻辑。
-
-桌面端 `NavPanel.vue` 的特点：
-
-- 支持收起/展开（`isExpanded`），收起时仅显示图标，展开时显示标签。收起/展开通过向父组件抛出 `toggle` 事件控制。
-- 使用 `router-link` 的 `exact` / `active` 类并额外通过 `item.matchPrefix && $route.path.startsWith(item.path)` 来实现“前缀高亮”。
-
-移动端 `MobileNavPanel.vue` 的特点：
-
-- 采用滑入滑出动画（`slideIn` / `slideOut`），关闭时通过设置 `isClosing` 触发退出动画，动画结束后通过 `@animationend` 发出 `close` 事件给父组件。
-- 在点击导航项时会调用 `handleClose()` 来优雅关闭抽屉（避免瞬间关闭引起样式抖动）。
-
-示例（navItems 的结构）：
-
-```js
-const navItems = [
-  { path: '/home', iconType: ['fas', 'home'], label: '这是首页', exact: true, matchPrefix: true },
-  { path: '/articles', iconType: ['fas', 'book-open'], label: '文章导航', matchPrefix: true },
-  { path: '/gallery', iconType: ['fas', 'images'], label: '绘画长廊', matchPrefix: true },
-  { path: '/friends', iconType: ['fas', 'paw'], label: '友情链接', matchPrefix: true },
-]
-```
-
-## 4 路由与数据联动（实用细节）
-
-- 通过路由守卫延迟预加载可以避免页面进入时的数据闪烁，但也会在导航前增加网络延迟；当前实现只在必要路由预加载并做了存在性检查以避免重复请求。
-- 页面级组件通常监听 `route.params` 来加载对应资源（例如 `ArticleDetailView` 根据 `:id` 加载文章内容），这保证了刷新和直接访问链接时仍能正常渲染。
-
-## 5 TODO
-
-- 如果希望页面切换更流畅，可在 `index.html` 或根组件做首次主题/壁纸的同步（减少首屏闪烁）。
-- 对于更复杂的预加载策略，可以引入路由级的 `meta.preload` 标记，并在 `beforeEach` 根据该标记统一处理，而不是在代码中显式判断路由名。
-- 若需支持 SEO 更友好的 title/head 管理，建议在 `afterEach` 中根据 `to.meta.title` 更新 `document.title` 或集成 `vue-meta`。
-
-## 补充说明
-
-- 关于 `scrollBehavior` 中的 `behavior: 'instant'`：
-
-  - 说明：`'instant'` 不是浏览器 `ScrollToOptions` 的标准字符串（标准为 `'auto' | 'smooth'`），这是项目约定而非浏览器 API 标准；如果希望更严格兼容浏览器，可以使用 `'auto'` 或在需要平滑滚动时使用 `'smooth'`。
-
-- 路由守卫中 `await` 的可见性与性能影响：
-
-  - 说明：`beforeEach` 中 `await` store 请求会阻塞导航直到请求完成。当前实现通过 `loaded` 检查与内部的 `fetchPromise` 并发锁已做了良好保护，但若后端响应不稳定或请求较慢，用户会感到导航延迟：
-    - 若不希望阻塞导航，可在 `afterEach` 或组件内触发加载并显示 loading 占位；
-    - 或者仅对极少数关键路由（必须先有数据才能渲染）保留 `await`，其余使用非阻塞加载策略。
-
-## 6 小结
-
-本项目的路由实现以 `MainLayout` 为基线，采用嵌套路由把内容按功能区分，结合路由守卫做按需预加载与页面过渡控制；导航组件在桌面与移动端做了交互适配（展开/收起、抽屉动画、主题切换入口），整体以用户阅读体验为出发点。
+下一篇，我们将深入**文章内容渲染与 Markdown 支持**，看看那些漂亮的代码高亮是怎么做出来的。
 
 ---
 
-> 没有未来的小风酱 著
-> 2025-12-02 (已与全栈架构同步)
+> 没有未来的小风酱 著  
+> 2025-12-12重写 （已已已已已经与源码核对）

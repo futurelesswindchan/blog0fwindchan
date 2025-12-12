@@ -3,14 +3,14 @@
     {
       "id": "about-blog",
       "uid": "frontend-1",
-      "title": "1.关于此博客的情况总览",
+      "title": "1.项目总览与架构解析",
       "date": "2025-06-20",
       "content": "/article/frontend/about-blog.md"
     },
     {
       "id": "architecture",
       "uid": "frontend-2",
-      "title": "2.前端架构设计与页面布局",
+      "title": "2.前端架构与页面布局",
       "date": "2025-06-21",
       "content": "/article/frontend/architecture.md"
     },
@@ -24,9 +24,9 @@
     {
       "id": "rendering",
       "uid": "frontend-4",
-      "title": "4.文章内容渲染与 Markdown 支持",
+      "title": "4.文章渲染与 Markdown 支持",
       "date": "2025-06-23",
-      "content": "/article/frontend/rendering.md"
+      "content": "/article/frontend/md-rendering.md"
     },
     {
       "id": "data-management",
@@ -38,41 +38,20 @@
     {
       "id": "responsive-design",
       "uid": "frontend-6",
-      "title": "6.响应式与移动端适配",
+      "title": "6.后台管理系统实战",
       "date": "2025-06-25",
-      "content": "/article/frontend/responsive-design.md"
+      "content": "/article/frontend/backend-refactoring.md"
     },
     {
       "id": "theme",
       "uid": "frontend-7",
-      "title": "7.主题与美术风格实现",
+      "title": "7.后端重构与全栈安全",
       "date": "2025-06-26",
-      "content": "/article/frontend/theme.md"
-    },
-    {
-      "id": "component-development",
-      "uid": "frontend-8",
-      "title": "8.组件开发与复用经验",
-      "date": "2025-06-27",
-      "content": "/article/frontend/component-development.md"
-    },
-    {
-      "id": "backend-refactoring",
-      "uid": "frontend-9",
-      "title": "9.后端重构与数据迁移实战",
-      "date": "2025-12-02",
-      "content": "/article/frontend/backend-refactoring.md"
-    },
-    {
-      "id": "admin-panel-jwt-authentication",
-      "uid": "frontend-10",
-      "title": "10.后台管理与 JWT 安全认证",
-      "date": "2025-12-03",
-      "content": "/article/frontend/admin-panel-jwt-authentication.md"
+      "content": "/article/frontend/admin-implementation.md"
     },
     {
       "id": "fucked-serachbar",
-      "uid": "frontend-11",
+      "uid": "frontend-8",
       "title": "（番外）搜索栏引发的血案",
       "date": "2025-06-27",
       "content": "article/frontend/fucked-serachbar.md"

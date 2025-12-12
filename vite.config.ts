@@ -25,6 +25,10 @@ export default defineConfig({
         // 那么就不需要 rewrite。如果后端是 @app.route('/articles')，这里就需要 rewrite 去掉 /api
         // 根据仓库中的的 app.py，路由已经是 /api/xxx 了，所以这里不需要 rewrite
       },
+      '/static': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+      },
     },
   },
 })

@@ -1,83 +1,105 @@
 # 风风博客开发心得（一）：项目总览与架构解析
 
-> 本文为系列开篇，旨在概述项目当前的全栈架构、核心技术选型及源码的对应关系。内容已与最新的前后端代码完全对齐。
+> 本文为系列开篇，旨在带你快速浏览这个全栈博客项目的“骨架”。  
+> 内容已与最新的前后端代码（2025/12/12 版本）完全对齐。
 
-## 1. 项目目标与现状
+## 1. 碎碎念：为什么又要造轮子？
 
-风风博客是一个功能完备、设计精良的全栈个人站点。项目初始目标是构建一个支持多种内容形态、阅读体验优秀的前端应用，现已演进为一个包含**在线内容管理系统 (CMS)** 的动态网站。
+嗨！欢迎来到风风博客的开发手记。
 
-- **前端**: 一个基于 Vue 3 的高度定制化的单页面应用 (SPA)，负责所有用户交互和内容展示。
-- **后端**: 一个基于 Flask 的轻量级 API 服务器，负责数据持久化、业务逻辑和安全认证。
+老实说，社区上成熟的博客系统多如牛毛，`Wordpress`、`Hexo`、`Halo`……随便拎一个出来都能打。
 
-## 2. 技术栈与实现要点
+但作为一个“爱折腾”的爱好者，总觉得别人的轮子虽然圆，但不够顺手。
+
+于是，这个项目诞生了。起初它只是一个想把 CSS 写出花来的纯前端页面，后来为了能在网页上直接写文章，又硬着头皮写了后端。
+
+现在的它，已经是一个**全栈的动态网站**，不仅有花哨的前台展示，还有一个五脏俱全的**在线内容管理系统 (CMS)**。
+
+## 2. 技术栈：简单粗暴但好用
+
+我们的目标是：用最舒服的姿势写代码。
 
 ### 2.1 前端 (Frontend) - `src/`
 
-- **核心框架**: Vue 3 (Composition API) + TypeScript + Vite。项目入口为 `src/main.ts`。
-- **状态管理**: Pinia。全局状态（如主题）存放于 `src/stores/`，业务状态（如文章、认证）存放于 `src/views/stores/` (例如 `articleStore.ts`, `adminStore.ts`)。
-- **HTTP 通信**: Axios。所有与后端 API 的交互都通过一个集成了**拦截器**的 Axios 实例 (`src/api/index.ts`)，自动处理 JWT Token 的发送与刷新。
-- **路由**: Vue Router 4。路由配置见 `src/router/index.ts`，包含**路由守卫**以实现后台权限控制。
+- **核心框架**: Vue 3 (Composition API) + TypeScript + Vite。这一套现在是标配了，开发体验极佳。
+- **状态管理**: Pinia。虽然官方推荐把 Store 放在 `src/stores`，但我把它们按照业务模块塞进了 `src/views/stores/`（比如 `articleStore.ts`, `adminStore.ts`），找起来更直观。
+- **HTTP 通信**: Axios。所有的魔法都在 `src/api/index.ts` 里，那里藏着一个自动处理 JWT 续签的拦截器，后面细说。
+- **Markdown**: 使用 `vue-markdown-render` 组件。在 `src/composables/useArticleContent.ts` 里可以看到，我们并没有手写繁琐的 render 逻辑，而是直接把组件抛出去用，省时省力。
 
 ### 2.2 后端 (Backend) - `backend/`
 
-- **核心框架**: Flask。主程序位于 `backend/app.py`，包含了所有 API 路由定义。
-- **数据库与ORM**: SQLite + SQLAlchemy (2.0 风格)。所有数据模型（User, Article 等）均在 `app.py` 中定义。
-- **安全认证**: Flask-JWT-Extended。提供标准的 JWT 签发、验证与刷新机制，通过 `@jwt_required()` 装饰器保护后台 API。
+- **核心框架**: Flask。Python 写起来就是快！（性能...不听不听！( ˘･з･)）
+- **大管家 `app.py`**: 这是一个略显庞大的单文件应用（Monolith）。所有的 API 路由、数据库模型（User, Article, Friend...）都在这一个文件里。虽然这不符合“最佳实践”，但对于个人博客来说，**找代码只需要滚动鼠标滚轮**，简直不要太爽。
+- **数据库**: SQLite + SQLAlchemy。文件型数据库，备份只需要复制一个 `blog.db` 文件，方便的咧。
+- **安全**: Flask-JWT-Extended。用来发令牌（Token），保护我们的后台接口不被邪恶怪兽入侵。
 
-## 3. 核心功能与代码对应
+## 3. 核心机制：它是怎么跑起来的？
 
-- **Markdown 渲染**: 前端使用 `markdown-it` 渲染从 API 获取的 Markdown 字符串。渲染逻辑封装在 `src/composables/useArticleContent.ts`，代码高亮由 `highlight.js` 实现 (`useCodeHighlight.ts`)。
-- **内容管理系统 (CMS)**:
-  - **视图**: 位于 `src/views/admin/`，包含登录页 (`LoginView`)、管理仪表盘 (`DashboardView`) 和核心的编辑器 (`EditorView`)。
-  - **所见即所得**: 编辑器通过“编辑/预览”模式切换，预览时复用前台的 `<ContentTypeWriter>` 组件，保证了后台创作与前台阅读的视觉一致性。
-- **数据流 (Data Flow)**:
-  1.  **用户操作** 触发组件事件。
-  2.  **Pinia Store** 调用 `src/api/index.ts` 中的 `api` 实例。
-  3.  **Axios** 发送 HTTP 请求到后端 Flask API。
-  4.  **Flask** 处理请求，通过 SQLAlchemy 与 SQLite 数据库交互。
+### 3.1 数据的流动
 
-## 4. 数据初始化 (Data Seeding)
+整个应用的数据流非常清晰：
 
-为了方便新用户快速搭建一个内容丰富的演示站点，项目采用“数据播种”机制：
+1.  **用户操作**: 比如你在后台点击了“保存文章”。
+2.  **Pinia Store**: `articleStore` 接到指令，调用封装好的 API。
+3.  **Axios 拦截器**: (`src/api/index.ts`) 就像一个尽职的门卫，它会检查你口袋里有没有 `access_token`，如果没有或者过期了，它甚至会偷偷帮你去后端换个新的（Refresh Token），然后再把请求发出去。这一切对用户都是无感的。
+4.  **Flask 后端**: `app.py` 里的路由函数接收到 JSON 数据，通过 SQLAlchemy 塞进 `blog.db`。
 
-- **种子数据**: `public/` 目录下存放了所有示例文章的 Markdown 源文件和图片资源。
-- **迁移脚本**: `backend/init_db.py` 脚本负责读取这些种子数据，并将其一次性批量写入 SQLite 数据库。
-- **数据库文件**: 最终生成的数据库 `blog.db` 位于 `backend/instance/` 目录，并被 `.gitignore` 忽略。
+### 3.2 静态资源的大迁徙
 
-## 5. 开发与启动
+这是一个比较有趣的坑。
 
-项目需同时运行前后端服务。
+在纯前端时代，图片都放在 `public/` 下。有了后端之后，上传的图片需要放在后端服务器上。
 
-### 5.1 启动后端
+为了兼容旧数据，我写了一个超暴力的脚本 `backend/init_db.py`。
+
+当你运行它时，它不仅会把 JSON 里的文章导入数据库，还会化身“搬运工”，把前端 `public/friends` 和 `public/artwork` 里的图片，物理复制到后端的 `backend/static/` 目录下。
+
+这样，无论你是上传的新图，还是以前的老图，后端都能统一通过 `/static/...` 路径吐出来。
+
+## 4. 怎么把这玩意跑起来？
+
+如果你想在本地把玩一下，需要同时启动前后端“双引擎”。
+
+### 4.1 启动后端引擎
+
+进入 `backend/` 目录，准备好 Python 环境：
 
 ```bash
-# 在 backend/ 目录下
-pip install -r requirements.txt  # 安装依赖
-flask create-admin               # 创建管理员账户
-python init_db.py                # (可选) 填充示例数据
-python app.py                    # 启动服务
+# 1. 安装依赖
+pip install -r requirements.txt
+
+# 2. 创建管理员账号 (这是我在 app.py 里特意留的一个 CLI 命令)
+# 它会提示你输入用户名和密码，并自动初始化数据库表
+flask create-admin
+
+# 3. (可选) 填充示例数据
+# 警告：这会清空现有数据！它会把 public/ 下的预制文章和图片导入数据库
+python init_db.py
+
+# 4. 点火！
+python app.py
 ```
 
-### 5.2 启动前端
+### 4.2 启动前端引擎
+
+回到项目根目录：
 
 ```bash
-# 在项目根目录下
 npm install
 npm run dev
 ```
 
-_注：详细的启动指南请参考根目录的 `README.md`。_
+现在，打开浏览器访问 `http://localhost:5173`，你应该能看到那个花里胡哨的首页了。
 
-## 6. 小结与后续方向
+## 5. 下集预告
 
-经过七个月的持续开发，项目已经从一个纯前端应用，成功演进为一个包含安全认证和在线内容管理功能的动态网站。
+这一篇只是个开胃菜。接下来，我们会深入到具体的实现细节中去。
 
-后续文章将深入探讨：
+下一篇，我们将聊聊**前端架构设计与页面布局**。我会讲讲我是如何用 CSS 把页面做成“玻璃质感”的，以及那个让我掉头发的响应式布局。
 
-- **CMS 设计**: 如何实现“编辑/预览”无缝切换的用户体验。
-- **JWT 认证**: 前后端如何配合实现 Token 的自动刷新与安全校验。
+Stay tuned!
 
 ---
 
-> 没有未来的小风酱 著
-> 2025-12-03 (已与全栈架构同步)
+> 没有未来的小风酱 著  
+> 2025-12-12重写 （已与源码核对，确认 app.py 还是那么长，init_db.py 还是那么暴力）
