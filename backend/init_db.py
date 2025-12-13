@@ -1,10 +1,10 @@
 """
 注意：此脚本会删除 `Article`, `Category`, `Friend`, `Artwork` 以及 `User` 中的所有记录。
-在生产环境请谨慎使用；此脚本主要用于从静态 public 文件迁移到数据库的场景。
+主要用于从 legacy_data (原静态文件) 迁移到数据库的场景。
 """
 import os
 import json
-import shutil  # 用于文件复制
+import shutil
 from typing import Any, Dict
 from app import app, db, Category, Article, Friend, Artwork
 from sqlalchemy import text
@@ -14,10 +14,10 @@ from sqlalchemy import text
 # region 配置项
 # ==========================================
 
-# 静态文件根目录 (相对于 backend 目录的路径)
-PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "..", "public")
+# 1. 源数据目录：指向 legacy_data 
+SOURCE_DIR = os.path.join(os.path.dirname(__file__), "..", "legacy_data")
 
-# 后端静态资源目录
+# 2. 后端静态资源目录 (目标目录)
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
 # endregion
@@ -29,6 +29,7 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 def clear_data() -> None:
     """在执行迁移前，清空已有表数据以避免重复导入。"""
     print("🧹 正在清空现有表...")
+    # SQLite 某些版本需要关闭外键约束才能清空关联表
     db.session.execute(text("PRAGMA foreign_keys=OFF;"))
     db.session.query(Article).delete()
     db.session.query(Category).delete()
@@ -43,28 +44,27 @@ def clear_data() -> None:
 # region 静态资源迁移
 # ==========================================
 def copy_static_files() -> None:
-    """将 public 目录下的图片资源复制到 backend/static 目录下。"""
+    """将 legacy_data 下的图片资源复制到 backend/static 目录下。"""
     print("\n🚚 开始迁移静态资源图片...")
 
     # 需要迁移的子目录
     sub_dirs = ["friends", "artwork"]
 
     for sub in sub_dirs:
-        src_path = os.path.join(PUBLIC_DIR, sub)
+        src_path = os.path.join(SOURCE_DIR, sub)
         dst_path = os.path.join(STATIC_DIR, sub)
 
         if os.path.exists(src_path):
-            # dirs_exist_ok=True 允许目标目录已存在，会覆盖同名文件
-            # 注意：这需要 Python 3.8+
             try:
+                # dirs_exist_ok=True 允许覆盖
                 shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
-                print(f"   -> 已复制目录: {sub}")
+                print(f"   -> 已复制目录: {sub} 到 backend/static/{sub}")
             except Exception as e:
                 print(f"   ❌ 复制目录 {sub} 失败: {e}")
         else:
             print(f"   ⚠️ 源目录不存在，跳过: {sub}")
     
-    # 确保 uploads 目录存在，为后续上传做准备
+    # 确保 uploads 目录存在
     uploads_dir = os.path.join(STATIC_DIR, "uploads")
     if not os.path.exists(uploads_dir):
         os.makedirs(uploads_dir)
@@ -75,12 +75,12 @@ def copy_static_files() -> None:
 
 
 # ==========================================
-# region 迁移函数定义 (保持原有逻辑，稍作路径修正)
+# region 迁移函数定义
 # ==========================================
 
 def migrate_friends() -> None:
     print("\n📦 开始迁移友链...")
-    json_path = os.path.join(PUBLIC_DIR, "friends", "index.json")
+    json_path = os.path.join(SOURCE_DIR, "friends", "index.json")
     if not os.path.exists(json_path):
         print(f"❌ 文件未找到：{json_path}")
         return
@@ -90,21 +90,19 @@ def migrate_friends() -> None:
             data: Dict[str, Any] = json.load(f)
 
         for item in data.get("friends", []):
-            # 修正：如果原来的路径是 /friends/xxx.jpg，现在后端托管在 static 下
-            # Flask 默认 static 路由就是 /static/xxx
-            # 但为了兼容，我们先把路径调整为 /static/friends/... 
-            # 或者，前端如果配置了代理，保持原样也可以。
-            # 这里为了稳妥，我们假设前端会直接访问 /static/...
-            
             avatar = item.get("avatar", "")
-            if avatar and avatar.startswith("/friends/"):
-                avatar = "/static" + avatar
+            # 路径修正：如果原路径是 /friends/xxx，改为 /static/friends/xxx
+            # 这样前端请求 /static/... 时，Nginx 可以直接映射到 backend/static
+            if avatar and not avatar.startswith("/static"):
+                 # 移除开头的 / (如果有)
+                clean_path = avatar.lstrip("/")
+                avatar = f"/static/{clean_path}"
 
             friend = Friend(
                 name=item.get("name"),
                 desc=item.get("desc"),
                 url=item.get("url"),
-                avatar=avatar, # 使用修正后的路径
+                avatar=avatar,
                 tags=item.get("tags", []),
             )
             db.session.add(friend)
@@ -119,7 +117,7 @@ def migrate_friends() -> None:
 
 def migrate_artworks() -> None:
     print("\n📦 开始迁移插画...")
-    json_path = os.path.join(PUBLIC_DIR, "artwork", "index.json")
+    json_path = os.path.join(SOURCE_DIR, "artwork", "index.json")
     if not os.path.exists(json_path):
         print(f"❌ 文件未找到：{json_path}")
         return
@@ -129,14 +127,15 @@ def migrate_artworks() -> None:
             data: Dict[str, Any] = json.load(f)
 
         for item in data.get("artworks", []):
-            # 修正路径
             thumb = item.get("thumbnail", "")
-            if thumb and thumb.startswith("/artwork/"):
-                thumb = "/static" + thumb
-            
             full = item.get("fullsize", "")
-            if full and full.startswith("/artwork/"):
-                full = "/static" + full
+
+            # 路径修正
+            if thumb and not thumb.startswith("/static"):
+                thumb = f"/static/{thumb.lstrip('/')}"
+            
+            if full and not full.startswith("/static"):
+                full = f"/static/{full.lstrip('/')}"
 
             artwork = Artwork(
                 title=item.get("title"),
@@ -156,7 +155,6 @@ def migrate_artworks() -> None:
 
 
 def migrate_articles() -> None:
-    # 映射：分类 slug -> 分类显示名称
     CATEGORY_MAP: Dict[str, str] = {
         "frontend": "技术手记",
         "topics": "奇思妙想",
@@ -164,7 +162,7 @@ def migrate_articles() -> None:
         "tools": "工具箱",
     }
     print("\n📦 开始迁移文章与分类...")
-    json_path = os.path.join(PUBLIC_DIR, "article", "index.json")
+    json_path = os.path.join(SOURCE_DIR, "article", "index.json")
     if not os.path.exists(json_path):
         print(f"❌ 文件未找到：{json_path}")
         return
@@ -191,10 +189,13 @@ def migrate_articles() -> None:
                 md_content = ""
 
                 if content_path:
-                    md_fs_path = os.path.join(PUBLIC_DIR, content_path.lstrip("/"))
+                    # 读取 markdown 文件
+                    md_fs_path = os.path.join(SOURCE_DIR, content_path.lstrip("/"))
                     if os.path.exists(md_fs_path):
                         with open(md_fs_path, "r", encoding="utf-8") as md_file:
                             md_content = md_file.read()
+                    else:
+                        print(f"     ⚠️ Markdown 文件缺失: {md_fs_path}")
 
                 article = Article(
                     slug=article_slug or "",
@@ -219,9 +220,9 @@ def migrate_articles() -> None:
 # ==========================================
 
 if __name__ == "__main__":
-    print(f"📂 Public 目录路径：{os.path.abspath(PUBLIC_DIR)}")
-    if not os.path.exists(PUBLIC_DIR):
-        print("❌ 错误：未找到 public 目录！请检查 PUBLIC_DIR 路径。")
+    print(f"📂 数据源目录 (Legacy Data)：{os.path.abspath(SOURCE_DIR)}")
+    if not os.path.exists(SOURCE_DIR):
+        print("❌ 错误：未找到 legacy_data 目录！")
         exit(1)
 
     with app.app_context():
@@ -229,11 +230,11 @@ if __name__ == "__main__":
         db.create_all()
 
         print("🚀 开始全量迁移...")
-        clear_data()       # 1. 清空旧数据
-        copy_static_files()# 2. 迁移图片文件
-        migrate_friends()  # 3. 迁移友链数据
-        migrate_artworks() # 4. 迁移插画数据
-        migrate_articles() # 5. 迁移文章数据
+        clear_data()       
+        copy_static_files()
+        migrate_friends()  
+        migrate_artworks() 
+        migrate_articles() 
 
-        print("\n✨ 迁移全部完成！")
+        print("\n✨ 迁移全部完成！现在 backend/static 目录应包含所有图片资源。")
 # endregion

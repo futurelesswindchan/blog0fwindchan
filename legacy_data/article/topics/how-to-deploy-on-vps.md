@@ -246,25 +246,37 @@ sudo nano /etc/nginx/sites-available/blog
 ```nginx
 server {
     listen 80;
-    # 把这里换成你的 IP 地址
-    server_name [你的服务器公网IP];
+    # 把这里换成你的 IP 地址或域名
+    server_name [你的服务器公网IP或域名];
 
-    # 网站根目录，指向前端打包好的 dist 文件夹
+    # 1. 网站根目录 (前端静态文件)，指向前端打包好的 dist 文件夹
     # 把 [你的用户名] 换成你自己的！同时，如果你的项目文件夹名不是 blog0fwindchan，也请一并修改！
     root /home/[你的用户名]/blog0fwindchan/dist;
     index index.html;
 
-    # 默认请求处理，适配 Vue Router 的 History 模式
+    # 2. 静态资源路由，将 /static/ 开头的请求直接映射到后端的 static 目录
+    # 这样图片请求就不会落入 SPA 的 try_files 陷阱了
+    # 把 [你的用户名] 换成你自己的！同时，如果你的项目文件夹名不是 blog0fwindchan，也请一并修改！
+    location /static/ {
+        # 注意：使用 alias 时，目录最后最好带上 /
+        alias /home/[你的用户名]/blog0fwindchan/backend/static/;
+        expires 30d; # 设置浏览器缓存 30 天
+        add_header Cache-Control "public, no-transform";
+    }
+
+    # 3. API 请求转发，转发给 Gunicorn 运行的 Flask 后端
+    # 把 [你的用户名] 换成你自己的！同时，如果你的项目文件夹名不是 blog0fwindchan，也请一并修改！
+    location /api {
+        include proxy_params;
+        proxy_pass http://unix:/home/[你的用户名]/blog0fwindchan/backend/blog.sock;
+    }
+
+    # 4. 前端 SPA 路由兜底，只有当上面两个 location 都不匹配时，才进入这里
     location / {
         try_files $uri $uri/ /index.html;
     }
-
-    # API 请求转发，交给 Gunicorn 处理
-    location /api {
-        # 把 [你的用户名] 换成你自己的！
-        proxy_pass http://unix:/home/[你的用户名]/blog0fwindchan/backend/blog.sock;
-    }
 }
+
 ```
 
 保存并退出。
