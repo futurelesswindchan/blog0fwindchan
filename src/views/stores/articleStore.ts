@@ -24,7 +24,6 @@ interface ArticleState {
 }
 
 // --- API 基地址 (本地开发调试用) ---
-// TODO: 上线前需要修改为线上域名，或者通过环境变量配置
 // 直接使用相对路径，Vite 代理会自动处理
 const API_BASE_URL = '/api'
 

@@ -81,7 +81,6 @@ import type { Artwork } from '@/views/stores/artworkStore'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
-
 import LazyImage from '@/components/common/LazyImage.vue'
 
 const artworkStore = useArtworkStore()

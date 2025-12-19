@@ -37,7 +37,7 @@ const routes: RouteRecordRaw[] = [
             name: 'Articles',
             component: () => import('@/views/ArticleView.vue'),
             meta: {
-              title: '这里是全部的技术文章哦 ( •̀ ω •́ )✧',
+              title: '这里是全部的文章哦 ( •̀ ω •́ )✧',
             },
           },
           {

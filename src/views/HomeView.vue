@@ -154,15 +154,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
 import { useArtworkStore } from '@/views/stores/artworkStore'
-import LazyImage from '@/components/common/LazyImage.vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
 import TypeWriter from '@/components/common/TypeWriter.vue'
+import LazyImage from '@/components/common/LazyImage.vue'
 
 // --- 资源路径 ---
-const avatarUrl = '/assets/images/logo.webp' // 假设这是头像
+const avatarUrl = '/assets/images/logo.webp'
 const qrCodeUrl = '/assets/images/qrcode.svg'
 
 // --- 状态管理 ---
@@ -191,9 +192,7 @@ const latestArticles = computed<ArticleSummary[]>(() => {
 // 获取最新画作 (取第1幅)
 const latestArtwork = computed(() => {
   if (artworkStore.artworks.length > 0) {
-    // 假设 artworkStore.artworks 已经是按时间倒序或者是无序的
-    // 这里简单取第一个，如果需要排序请自行添加 sort 逻辑
-    return artworkStore.artworks[0]
+    return artworkStore.artworks[artworkStore.artworks.length - 1]
   }
   return null
 })
@@ -464,12 +463,42 @@ const features = [
   justify-content: space-between;
   transition:
     transform 0.3s ease,
-    box-shadow 0.3s ease;
+    box-shadow 0.3s ease,
+    background-color 0.3s;
 }
 
 .dynamic-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 底部能量条 (默认宽度0，hover时展开) */
+.dynamic-card::after {
+  content: '';
+  position: absolute;
+  top: 95%;
+  bottom: 0;
+  left: -5px;
+  width: 0%;
+  height: 10px;
+  background: rgba(0, 119, 255, 0.75);
+  box-shadow: 0 -2px 10px var(--accent-color);
+  transition: width 0.3s ease-in-out;
+  z-index: 10;
+}
+
+.dynamic-card:hover::after {
+  width: 120%; /* 能量条充满 */
+}
+
+/* 深色模式适配 */
+.dark-theme .dynamic-card:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-theme .dynamic-card::after {
+  background: rgba(26, 133, 255, 0.95);
 }
 
 .card-badge {
@@ -550,12 +579,56 @@ const features = [
   text-align: center;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  overflow: hidden; /* 必须隐藏溢出的光 */
+  /* 保持原有过渡 */
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s;
+  /* 给一个透明边框，hover时变色 */
+  border: 1px solid transparent;
 }
 
+/* 扫光层 */
+.portal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%; /* 初始位置在左侧外部 */
+  width: 100%;
+  height: 100%;
+  /* 制作一道倾斜的亮光 */
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  transition: none; /* 默认无过渡，防止鼠标移出时倒着播 */
+  pointer-events: none; /* 确保不挡住点击 */
+  z-index: 1;
+}
+
+/* 悬停状态 */
 .portal-card:hover {
-  transform: translateY(-5px);
+  /* 边框亮起 */
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(var(--accent-color-rgb), 0.15); /* 假设你有RGB变量，没有的话用普通阴影 */
+}
+
+.portal-card:hover::before {
+  /* 触发动画：从左扫到右 */
+  left: 150%;
+  transition: left 0.6s ease-in-out;
+}
+
+/* 图标上浮增强 */
+.portal-card:hover .portal-icon {
+  transform: scale(1.1) translateY(-5px);
+  text-shadow: 0 5px 15px var(--accent-color); /* 图标发光 */
 }
 
 .portal-icon {
@@ -563,10 +636,6 @@ const features = [
   color: var(--accent-color);
   margin-bottom: 1rem;
   transition: transform 0.3s ease;
-}
-
-.portal-card:hover .portal-icon {
-  transform: scale(1.1);
 }
 
 .portal-info h3 {
