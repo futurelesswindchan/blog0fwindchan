@@ -1,47 +1,45 @@
 # 风风博客开发心得（四）：文章渲染与 Markdown 支持
 
 > 本文揭秘本站文章是如何从 Markdown 源码变成网页上跳动的字符的。  
-> 内容基于 `src/components/common/ContentTypeWriter.vue` 及相关 Composable 整理，已与 2025/12/12 版本代码对齐。
+> 内容基于 `src/components/common/` 下的打字机组件族及相关 Composable 整理，已与 **2025/12/19 版本** 代码对齐。
 
-## 1. 渲染核心：ContentTypeWriter
+## 1. 渲染核心：打字机家族
 
-在文章详情页，你看到的那个正在“打字”的组件就是 `src/components/common/ContentTypeWriter.vue`。
+为了看起来更炫酷，我们在项目中实现了三种不同的打字机机制，分别应对不同的场景。
 
-### 1.1 “增量渲染”的打字机
+### 1.1 正文渲染：ContentTypeWriter
 
-很多打字机效果是操作 DOM 节点的（比如把 HTML 树藏起来，一个个显示），但我们的实现方式更加简单粗暴且有趣：**对 Markdown 源码进行切片**。
+在文章详情页，负责渲染 Markdown 正文的是 `src/components/common/ContentTypeWriter.vue`。
 
-逻辑如下：
+它的核心逻辑是**增量渲染**：
 
-1.  **输入**: 接收完整的 Markdown 字符串 `content`。
-2.  **切片**: 设置一个指针 `currentIndex`，通过 `setTimeout` 不断增加它。
-3.  **计算**: 实时计算 `displayContent = content.slice(0, currentIndex)`。
-4.  **渲染**: 把这个**不完整**的 Markdown 字符串喂给 `<VueMarkdown>` 组件。
+1.  **切片**: 接收完整的 Markdown 字符串，维护一个 `currentIndex` 指针。
+2.  **循环**: 通过 `setTimeout` 递归调用，每次增加 `chunkSize`。
+3.  **喂食**: 实时计算 `displayContent = content.slice(0, currentIndex)`，把这个**不完整**的字符串喂给 `<VueMarkdown>` 组件。
 
-```ts
-// 核心逻辑简化
-const type = () => {
-  if (currentIndex.value < props.content.length) {
-    // 每次多截取 chunkSize 个字符
-    currentIndex.value += props.chunkSize
-    setTimeout(type, props.speed)
-  }
-}
-```
+这种做法虽然野路子（Markdown 语法可能会在打字过程中短暂暴露），但它完美避开了操作 DOM 的复杂性，而且那种“`**加粗` 还没打完显示星号”的感觉，反而增加了一种实时写作的真实感。光标使用的是 `>>` 符号，配合 CSS `blink` 动画。
 
-这种做法的好处是完全不需要处理复杂的 HTML DOM 结构，坏处是打字过程中偶尔会看到 Markdown 语法暴露。
+### 1.2 UI 标题：TypeWriter
 
-比如 `**加粗` 还没打出后半个 `**` 时，页面上会显示星号，但这反而增加了一种“正在实时写作”的真实感。
+在顶部导航栏显示“当前位置”的组件是 `src/components/common/TypeWriter.vue`。~~在主页也有用哦~~
 
-### 1.2 光标动画
+它比前者更轻量，专门用于纯文本。
 
-组件里还放了一个 `>>` 形状的光标：
+- **特性**: 支持 `IntersectionObserver`，只有当你滚动到它可见时才会开始打字。
+- **光标**: 使用更传统的 `|` 符号。
+- **逻辑**: 同样是切片逻辑，但它不涉及 Markdown 编译，性能开销极小。
 
-```html
-<span v-if="isTyping" class="typing-cursor">>></span>
-```
+### 1.3 列表动画：v-type-writer 指令
 
-配合 CSS 的 `blink` 动画，让它看起来像是在终端里输入一样。
+这是最精彩的部分。在文章列表页（如 `FrontEndView.vue`），你会看到文章卡片是一个接一个“打”出来的。
+
+如果用 JS 去控制每一个卡片的文字，性能会爆炸。所以我们写了一个指令 `src/directives/typeWriterDirective.ts`，采用 **JS 计算 + CSS 变量** 的混合驱动模式：
+
+1.  **计算延迟**: 指令挂载时，遍历所有 `.chapter-item`，计算出每个卡片的延迟时间 `itemDelay`。
+2.  **注入变量**: 将延迟写入 CSS 变量：`card.style.setProperty('--item-delay', ...)`。
+3.  **CSS 驱动**: 实际的动画（卡片浮现、标题打字）全部由 CSS `animation` 完成，JS 只负责触发一个类名 `typing-element`。
+
+这样做既保证了动画的复杂调度，又把繁重的渲染任务交给了浏览器的合成线程，极其流畅。
 
 ## 2. 代码高亮：useCodeHighlight
 
@@ -67,24 +65,18 @@ const highlightCode = (code: string, lang: string) => {
 
 在 `src/styles/codeBlock.css` 中，我们把 `.code-lang` 设计成了一个半透明的标题栏，配合 `JetBrainsMono` 字体，让代码块看起来像是一个迷你的 IDE 窗口。
 
+特别地，我们为 Vue 语法定制了专属配色（`.hljs-tag` 为红色，`.hljs-attr` 为橙色），致敬 Vue 官方文档的视觉体验。
+
 ## 3. 字数统计：useArticleInfo
 
 在文章开头显示的“约 xxx 字”，是由 `src/composables/useArticleInfo.ts` 计算的。
 
 算法非常朴实无华：
 
-1.  用正则表达式把 Markdown 里的图片、链接、代码块、标题符号统统删掉，只留纯文本。
+1.  用一堆正则表达式把 Markdown 里的图片、链接、代码块、标题符号统统删掉，只留纯文本。
 2.  统计中文字符数量。
 3.  统计英文单词数量，除以 2（因为英文单词通常比汉字长，除以 2 换算成“字”的概念比较接近阅读体感）。
 4.  两者相加，得出估算值。
-
-```ts
-// 核心正则
-const text = contentText
-  .replace(/\!\[.*?\]\(.*?\)/g, '') // 删图片
-  .replace(/\`.*?\`/g, '') // 删行内代码
-// ...更多正则
-```
 
 ## 4. 样式适配
 
@@ -92,17 +84,16 @@ const text = contentText
 
 - **玻璃质感**: 代码块背景是半透明的 (`rgba(0, 0, 0, 0.7)`)，在暗色模式下会更深一点。
 - **滚动条**: 自定义了 `::-webkit-scrollbar`，让代码块内部的滚动条变细、变透明，不再突兀。
-- **Vue 高亮**: 特意为 Vue 语法配置了专属颜色（比如 `.hljs-tag` 是红色，`.hljs-attr` 是橙色），致敬 Vue 官方文档的配色。
 
 ## 5. 小结
 
-通过 `ContentTypeWriter` 的增量渲染和 `useCodeHighlight` 的自定义封装，我们实现了一个既有动态感又美观的文章阅读体验。
+从 Markdown 正文的增量渲染，到 UI 标题的轻量打字，再到列表卡片的 CSS 变量驱动动画，我们构建了一套完整的“打字机宇宙”。
 
-虽然 切片Markdown 的方案听起来有点野路子，但它在实际运行中表现得相当稳定，而且完美避开了操作 DOM 可能带来的安全风险（XSS）。
+这些细节虽然增加了不少开发时间，但它们共同营造出了风风博客独特的那种感觉。~~到底是什么感觉啊喂OAO~~
 
 下一篇，我们将聊聊**后端 API 设计与数据管理**，看看这些文章数据是怎么存取和管理的。
 
 ---
 
 > 没有未来的小风酱 著  
-> 2025-12-12重写 （已与源码核对，打字机效果其实也是看到了那些AI流式输出才想做的）
+> 2025-12-19 更新 （已与源码核对，打字机效果其实也是看到了那些AI流式输出才想做的）

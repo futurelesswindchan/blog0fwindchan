@@ -8,14 +8,14 @@
 在项目初期，我们使用 JSON 文件驱动内容。虽然简单，但痛点也很明显：
 
 1.  **修改麻烦**：改个错别字都要重新部署。
-2.  **功能受限**：无法实现在线编辑等功能。
+2.  **功能受限**：无法实现在线编辑、图片上传等功能。
 3.  **安全隐患**：没有鉴权机制，后台管理无从谈起。
 
 因此，我们引入了 Python 后端，实现了真正的前后端分离。
 
 - **Web 框架**: Flask — 极简、灵活，适合个人项目。
 - **数据库**: SQLite — 单文件存储，无需配置，备份只需复制文件。
-- **ORM**: Flask-SQLAlchemy (v3.x) — 使用 SQLAlchemy 2.0 的现代风格。
+- **ORM**: Flask-SQLAlchemy (v3.x) — 全面拥抱 SQLAlchemy 2.0 的 `Mapped` 类型注解风格。
 
 ## 2. 数据库模型设计
 
@@ -23,26 +23,32 @@
 
 ### 2.1 核心模型 (SQLAlchemy 2.0 风格)
 
-最关键的决策是：**直接将 Markdown 源码存入数据库**。
+最关键的决策是：**直接将 Markdown 源码存入数据库**。同时，我们引入了 `Category` 表来管理分类。
 
 ```python
 class Article(db.Model):
+    # 使用 Mapped 类型注解，IDE 提示更友好
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     slug: Mapped[str] = mapped_column(String(100), unique=True)
     title: Mapped[str] = mapped_column(String(200))
-    category_id: Mapped[int] = mapped_column(ForeignKey('category.id'))
+    # 外键关联
+    category_id: Mapped[int] = mapped_column(ForeignKey("category.id"))
     date: Mapped[str] = mapped_column(String(20))
     # ✨ 核心：Markdown 源码直接入库
     content: Mapped[Optional[str]] = mapped_column(Text)
 ```
 
-此外，我们新增了 `User` 表用于存储管理员信息（密码经过哈希处理），以及 `Friend` 和 `Artwork` 表。对于 `tags` 这种数组字段，利用 SQLite 对 JSON 的支持直接存储。
+此外，我们新增了 `User` 表用于存储管理员信息（密码经过哈希处理不可逆），以及 `Friend` 和 `Artwork` 表。对于 `tags` 这种数组字段，利用 SQLite 对 JSON 的支持直接存储：`mapped_column(JSON)`。
 
 ### 2.2 数据迁移 (init_db.py)
 
-为了平滑过渡，我们编写了 `backend/init_db.py` 脚本。
+为了平滑过渡，我们编写了 `backend/init_db.py` 脚本。它不仅仅是导数据，更是一个**全量迁移工具**：
 
-它会自动读取旧版 `public/` 目录下的 JSON 和 `.md` 文件，清洗后批量写入 SQLite 数据库。这保证了任何开发者 clone 项目后，运行脚本即可获得一个填充好数据的环境。
+1.  **清理**: 清空现有数据库表。
+2.  **资源迁移**: 将 `legacy_data` 下的图片物理拷贝到 `backend/static` 目录。
+3.  **数据清洗**: 读取 JSON 和 `.md` 文件，修正图片路径（例如将 `/friends/avatar.jpg` 修正为 `/static/friends/avatar.jpg`），然后批量写入数据库。
+
+这保证了任何开发者 clone 项目后，只需运行一次脚本，就能获得一个图文并茂的完整环境。
 
 ## 3. 安全基石：JWT 双 Token 认证
 
@@ -50,28 +56,11 @@ class Article(db.Model):
 
 ### 3.1 后端实现
 
-我们采用了 **Access Token (短效)** + **Refresh Token (长效)** 的双 Token 机制：
+我们采用了 **Access Token (1小时)** + **Refresh Token (30天)** 的双 Token 机制：
 
 1.  **登录**: 验证密码哈希，签发双 Token。
 2.  **鉴权**: 敏感接口加上 `@jwt_required()` 装饰器。
-3.  **刷新**: 当 Access Token 过期时，使用 Refresh Token 换取新的 Access Token。
-
-```python
-# backend/app.py 登录接口示例
-@app.route('/api/admin/login', methods=['POST'])
-def login():
-    username = request.json.get('username')
-    password = request.json.get('password')
-    user = db.session.execute(db.select(User).filter_by(username=username)).scalar_one_or_none()
-
-    # 验证哈希密码
-    if user and check_password_hash(user.password_hash, password):
-        access_token = create_access_token(identity=username)
-        refresh_token = create_refresh_token(identity=username)
-        return jsonify(access_token=access_token, refresh_token=refresh_token)
-
-    return jsonify({"msg": "Bad username or password"}), 401
-```
+3.  **刷新**: 专门的 `/api/admin/refresh` 接口，受 `@jwt_required(refresh=True)` 保护，用于以旧换新。
 
 ### 3.2 前端拦截器 (src/api/index.ts)
 
@@ -80,10 +69,10 @@ def login():
 当请求返回 `401 Unauthorized` 时，拦截器会：
 
 1.  暂停当前请求。
-2.  取出 `refresh_token` 请求 `/api/admin/refresh`。
-3.  获取新 Token 并更新 `localStorage`。
-4.  修改原请求的 Header 并重发。
-5.  如果刷新也失败，则强制登出。
+2.  调用 `adminStore.refreshToken()`（内部请求后端刷新接口）。
+3.  获取新 Token 并更新 Store 和 Headers。
+4.  **重发原请求**。
+5.  如果刷新也失败，则调用 `adminStore.logout()` 强制登出。
 
 ```ts
 // src/api/index.ts 响应拦截器简化版
@@ -91,26 +80,21 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
-    // 如果是 401 且不是重试过的请求
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 如果是 401 且不是刷新接口本身报错，且未重试过
+    if (
+      error.response?.status === 401 &&
+      !originalRequest.url?.includes('/refresh') &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true
       try {
-        const refreshToken = localStorage.getItem('refresh_token')
-        // 调用刷新接口
-        const { data } = await axios.post(
-          '/api/admin/refresh',
-          {},
-          {
-            headers: { Authorization: `Bearer ${refreshToken}` },
-          },
-        )
-        // 更新 Token 并重试
-        localStorage.setItem('access_token', data.access_token)
-        originalRequest.headers.Authorization = `Bearer ${data.access_token}`
+        // 调用 Store Action 刷新 Token
+        const newAccessToken = await adminStore.refreshToken()
+        // 更新 Header 并重试
+        originalRequest.headers['Authorization'] = 'Bearer ' + newAccessToken
         return api(originalRequest)
       } catch (refreshError) {
-        // 刷新失败，跳转登录
-        router.push({ name: 'AdminLogin' })
+        adminStore.logout() // 刷新失败，强制登出
       }
     }
     return Promise.reject(error)
@@ -122,26 +106,29 @@ api.interceptors.response.use(
 
 ### 4.1 开发环境代理 (Vite Proxy)
 
-为了解决开发时的跨域问题，我们在 `vite.config.ts` 中配置了反向代理：
+为了解决开发时的跨域问题，以及正确加载后端托管的静态资源，我们在 `vite.config.ts` 中配置了反向代理：
 
 ```ts
 server: {
   proxy: {
+    // API 请求转发
     '/api': {
-      target: 'http://127.0.0.1:5000', // 转发给 Flask
+      target: 'http://127.0.0.1:5000',
       changeOrigin: true,
     },
-    '/uploads': {
-      target: 'http://127.0.0.1:5000', // 转发图片请求
+    // ✨ 关键：静态资源（图片）转发
+    // 因为上传的图片和迁移的旧图都在 Flask 的 static 目录下
+    '/static': {
+      target: 'http://127.0.0.1:5000',
       changeOrigin: true,
-    }
-  }
+    },
+  },
 }
 ```
 
 ### 4.2 生产环境
 
-在生产环境（如 Nginx），我们将前端构建出的静态文件 (`dist/`) 作为根目录服务，同时将 `/api` 和 `/uploads` 路径反向代理到后台的 Gunicorn/uWSGI 服务，实现动静分离。
+在生产环境（如 Nginx），我们将前端构建出的静态文件 (`dist/`) 作为根目录服务，同时将 `/api` 和 `/static` 路径反向代理到后台的 Gunicorn/uWSGI 服务，实现动静分离。
 
 ## 5. 全剧终
 
@@ -156,4 +143,4 @@ server: {
 ---
 
 > 没有未来的小风酱 著  
-> 2025-12-12重写 （全系列完结，感谢陪伴）
+> 2025-12-19 更新 （全系列完结，感谢陪伴！）

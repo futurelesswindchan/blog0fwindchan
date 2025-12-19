@@ -65,11 +65,11 @@ const handleLogin = async () => {
   const success = await adminStore.login(username.value, password.value)
 
   if (success) {
-    // 登录成功，跳回原来想去的页面，或者默认去编辑器
-    const redirect = (route.query.redirect as string) || '/editor'
+    // 登录成功，跳回原来想去的页面，或者默认去仪表盘
+    const redirect = (route.query.redirect as string) || '/dashboard'
     router.push(redirect)
   } else {
-    errorMsg.value = '口令或用户名错误！你不是小风酱！🚫'
+    errorMsg.value = '口令或用户名错误！你不是这里的主人QAQ！🚫'
   }
   loading.value = false
 }

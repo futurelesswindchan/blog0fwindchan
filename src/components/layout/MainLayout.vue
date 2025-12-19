@@ -1,3 +1,4 @@
+<!-- src\components\layout\MainLayout.vue -->
 <template>
   <div
     class="main-layout theme-transition"
