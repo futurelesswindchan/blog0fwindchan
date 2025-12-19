@@ -1,149 +1,152 @@
-<!-- HomeView.vue -->
+<!-- src/views/HomeView.vue -->
 <template>
-  <div class="home-view-container">
-    <!-- 添加根元素 -->
-    <section class="home-view">
-      <h2 class="welcome-title">欢迎 ~\(≧▽≦)/~ 欢迎</h2>
-
-      <!-- 新增个人明信片 -->
-      <div class="vcard-container">
-        <div class="vcard">
-          <div class="vcard-content">
-            <a href="#" class="vcard-title">windchan!</a>
-            <h2 class="vcard-contact">
-              唔~这都被你发现啦awa...<br />本网站还在更新中哦0v0！&emsp;项目始于2025/04/14！
-            </h2>
-            <span class="vcard-desc">
-              恭喜你发现了传说中的OAO...？！！<br />风酱的网站qwq...?!<br /><br />
-              虽然很喜欢咕咕...（小声）<br />不过迟早有一天会更新的！ヾ(•ω•`)
-              <br />同时欢迎通过下方联系方式与我交流互动~(≧▽≦)/
-            </span>
-          </div>
-
-          <div class="vcard-cylinders">
-            <div v-for="i in 4" :key="i" class="cylinder" :style="cylinderStyle(i)"></div>
-            <div class="special-cylinder"></div>
-          </div>
-
-          <!-- 使用LazyImage组件替换原有img标签 -->
-          <LazyImage
-            :src="qrCode"
-            alt="qwq?"
-            className="vcard-qrcode"
-            :containerStyle="{
-              width: '275px',
-              height: '275px',
-              position: 'absolute',
-              margin: '60px 45px 45px 50px',
-              opacity: 0,
-              transition: 'opacity 1s linear',
-            }"
-          />
-        </div>
-      </div>
-
-      <!-- 在 vcard-container 后面添加新的移动端明信片 -->
-      <div class="mobile-vcard">
-        <div class="mobile-vcard__content">
-          <div class="mobile-vcard__text">
-            <a href="#" class="vcard-title mobile-vcard-title">windchan!</a>
-            <h4 class="mobile-vcard-contact">
-              <div class="mobile-vcard__qrcode">
+  <div class="home-dashboard">
+    <!-- A区: Hero Dashboard -->
+    <section class="hero-section glass-container">
+      <div class="hero-content">
+        <!-- 左侧：头像与状态 -->
+        <div class="profile-group">
+          <div class="avatar-wrapper" @click="toggleAvatarFlip">
+            <div class="avatar-inner" :class="{ 'is-flipped': isAvatarFlipped }">
+              <!-- 正面：头像 -->
+              <div class="avatar-front">
                 <LazyImage
-                  :src="qrCode"
-                  alt="qwq?"
-                  className="mobile-qrcode"
-                  :containerStyle="{
-                    width: '200px',
-                    height: '200px',
-                    borderRadius: '12px',
-                    border: '3px solid var(--accent-color)',
-                  }"
+                  :src="avatarUrl"
+                  alt="Avatar"
+                  className="avatar-img"
+                  :containerStyle="{ width: '100%', height: '100%' }"
                 />
               </div>
-              <span
-                ><br />传说中的风风博客qwq?! <br />正在更新中（很慢QAQ） <br />但是...一定会的~！
-              </span>
-            </h4>
+              <!-- 背面：二维码 -->
+              <div class="avatar-back">
+                <LazyImage
+                  :src="qrCodeUrl"
+                  alt="QRCode"
+                  className="qrcode-img"
+                  :containerStyle="{ width: '100%', height: '100%' }"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-info">
+            <h1 class="nickname">Wind Chan</h1>
+            <div class="status-badge">
+              <span class="status-dot"></span>
+              <span class="status-text">Coding & Dreaming...</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- 新增平板端明信片 -->
-      <div class="tablet-vcard">
-        <div class="tablet-vcard__content">
-          <div class="tablet-vcard__qrcode">
-            <LazyImage
-              :src="qrCode"
-              alt="qwq?"
-              className="tablet-qrcode"
-              :containerStyle="{
-                width: '180px',
-                height: '180px',
-                borderRadius: '12px',
-                border: '3px solid var(--accent-color)',
-              }"
-            />
+        <!-- 右侧：Slogan 打字机 -->
+        <div class="slogan-group">
+          <TypeWriter :text="sloganText" :speed="80" :delay="500" class="slogan-text" />
+          <p class="slogan-sub">
+            欢迎来到风风的赛博小屋 ~\(≧▽≦)/~<br />
+            这里记录着代码、故事和...忘了还有什么了！QAQ
+          </p>
+
+          <!-- 社交链接集成在 Hero 区域 -->
+          <div class="social-links">
+            <a
+              v-for="link in socialLinks"
+              :key="link.name"
+              :href="link.link"
+              target="_blank"
+              class="social-btn"
+              :title="link.name"
+              :style="{ '--hover-color': link.color }"
+            >
+              <i :class="link.icon"></i>
+            </a>
           </div>
-          <div class="tablet-vcard__text">
-            <a href="#" class="vcard-title tablet-vcard-title">windchan!</a>
-            <h4 class="tablet-vcard-contact">
-              <br />恭喜你发现了传说中的OAO...？！！ <br />风风博客qwq...?!
-              <br />虽然大家都喜欢咕咕咕...（小声） <br />不过迟早有一天会更新的！ヾ(•ω•`)
-            </h4>
-            <p class="tablet-vcard-desc">欢迎通过下方联系方式与我交流互动~(≧▽≦)/</p>
-          </div>
+          <p class="slogan-sub">⬆️联系方式⬆️ 欢迎交流哦ov0</p>
         </div>
       </div>
+    </section>
 
-      <h3 class="welcome-title welcome-title-tiny">---这里有着...(*/ω＼*)---</h3>
+    <!-- B区: Dynamic Stream (动态内容) -->
+    <section class="dynamic-section">
+      <h2 class="section-title"><i class="fas fa-bolt"></i> 最新动态</h2>
 
-      <div class="feature-grid">
+      <div class="dynamic-grid">
+        <!-- 1. 最新文章卡片 (2篇) -->
+        <div
+          v-for="article in latestArticles"
+          :key="article.id"
+          class="dynamic-card article-card glass-container"
+          @click="navigateToArticle(article)"
+        >
+          <div class="card-badge">New Article</div>
+          <div class="card-content">
+            <h3 class="card-title">{{ article.title }}</h3>
+            <div class="card-meta">
+              <i class="far fa-calendar-alt"></i>
+              {{ article.date }}
+            </div>
+            <p class="card-desc">点击阅读全文...</p>
+          </div>
+          <div class="card-icon">
+            <i class="fas fa-file-alt"></i>
+          </div>
+        </div>
+
+        <!-- 2. 最新画作卡片 (1幅) -->
+        <div
+          v-if="latestArtwork"
+          class="dynamic-card artwork-card glass-container"
+          @click="navigateToGallery"
+        >
+          <div class="card-badge">New Art</div>
+          <!-- 背景图 -->
+          <LazyImage
+            :src="latestArtwork.thumbnail"
+            :alt="latestArtwork.title"
+            className="artwork-bg"
+            :containerStyle="{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 0,
+              opacity: 0.6,
+            }"
+          />
+          <div class="card-content artwork-content">
+            <h3 class="card-title">{{ latestArtwork.title }}</h3>
+            <div class="card-meta">
+              <i class="fas fa-palette"></i>
+              {{ latestArtwork.date }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 骨架屏/加载占位 (当数据未加载时) -->
+        <div v-if="isLoading" class="dynamic-card glass-container loading-card">
+          <i class="fas fa-circle-notch fa-spin"></i>
+          <span>Loading...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- C区: Navigation Portals (传送门) -->
+    <section class="portal-section">
+      <h2 class="section-title"><i class="fas fa-compass"></i> 探索世界</h2>
+
+      <div class="portal-grid">
         <div
           v-for="item in features"
           :key="item.title"
-          class="feature-card glass-container"
+          class="portal-card glass-container"
           @click="navigateToFeature(item.route)"
         >
-          <LazyImage
-            :src="item.bgImage"
-            :alt="item.title"
-            className="feature-bg"
-            :containerStyle="{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              zIndex: 0,
-            }"
-          />
-          <div class="feature-content">
-            <div class="feature-icon">
-              <i :class="['fas', item.icon]"></i>
-            </div>
-            <div class="feature-text">
-              <h3>{{ item.title }}</h3>
-              <p>{{ item.desc }}</p>
-            </div>
+          <div class="portal-icon">
+            <i :class="['fas', item.icon]"></i>
           </div>
-        </div>
-      </div>
-
-      <div class="contact-section">
-        <h3 class="contact-section__title">联系方式喵ヽ(￣ω￣〃)ゝ</h3>
-        <div class="contact-section__grid">
-          <a
-            v-for="contact in contacts"
-            :key="contact.name"
-            :href="contact.link"
-            target="_blank"
-            class="contact-section__card"
-            :style="{ background: contact.color }"
-          >
-            <i class="contact-section__icon" :class="[contact.icon]"></i>
-            <span class="contact-section__text">{{ contact.name }}</span>
-          </a>
+          <div class="portal-info">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.desc }}</p>
+          </div>
+          <!-- 悬停时的背景装饰 -->
+          <div class="portal-glow"></div>
         </div>
       </div>
     </section>
@@ -151,937 +154,516 @@
 </template>
 
 <script setup lang="ts">
-import LazyImage from '@/components/common/LazyImage.vue'
-
-// 修改图片导入
-const qrCode = '/assets/images/qrcode.svg'
-const cardBg1 = '/assets/images/card-bg1.jpg'
-const cardBg2 = '/assets/images/card-bg2.jpg'
-const cardBg3 = '/assets/images/card-bg3.jpg'
-const cardBg4 = '/assets/images/card-bg4.jpg'
-
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
+import { useArtworkStore } from '@/views/stores/artworkStore'
+import LazyImage from '@/components/common/LazyImage.vue'
+import TypeWriter from '@/components/common/TypeWriter.vue'
 
-// 圆柱样式生成器
-const cylinderStyle = (i: number) => ({
-  '--i': i,
-  '--w': [1.5, 1.6, 1.4, 1.7][i - 1],
+// --- 资源路径 ---
+const avatarUrl = '/assets/images/logo.webp' // 假设这是头像
+const qrCodeUrl = '/assets/images/qrcode.svg'
+
+// --- 状态管理 ---
+const router = useRouter()
+const articleStore = useArticleStore()
+const artworkStore = useArtworkStore()
+
+const isAvatarFlipped = ref(false)
+const sloganText = '唔...这都被你发现啦？(*/ω＼*)'
+
+// --- 数据获取 ---
+const isLoading = computed(() => articleStore.isLoading || artworkStore.loading)
+
+// 获取最新文章 (合并所有分类，按日期排序，取前2篇)
+const latestArticles = computed<ArticleSummary[]>(() => {
+  const allArticles: ArticleSummary[] = [
+    ...articleStore.getArticleList('frontend'),
+    ...articleStore.getArticleList('topics'),
+    ...articleStore.getArticleList('novels'),
+  ]
+
+  // 简单的日期字符串比较 (假设格式为 YYYY-MM-DD)
+  return allArticles.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 2)
 })
 
-const router = useRouter()
+// 获取最新画作 (取第1幅)
+const latestArtwork = computed(() => {
+  if (artworkStore.artworks.length > 0) {
+    // 假设 artworkStore.artworks 已经是按时间倒序或者是无序的
+    // 这里简单取第一个，如果需要排序请自行添加 sort 逻辑
+    return artworkStore.artworks[0]
+  }
+  return null
+})
 
-// 添加导航函数
+onMounted(async () => {
+  // 并行加载数据
+  await Promise.all([articleStore.fetchArticleIndex(), artworkStore.fetchArtworks()])
+})
+
+// --- 交互逻辑 ---
+const toggleAvatarFlip = () => {
+  isAvatarFlipped.value = !isAvatarFlipped.value
+}
+
+const navigateToArticle = (article: ArticleSummary) => {
+  // 需要反查分类，或者在 ArticleSummary 中包含 category 字段
+  // 这里做一个简单的遍历查找 category
+  let category = 'frontend' // 默认
+  if (articleStore.getArticleList('topics').find((a) => a.id === article.id)) category = 'topics'
+  if (articleStore.getArticleList('novels').find((a) => a.id === article.id)) category = 'novels'
+
+  router.push(`/articles/${category}/${article.id}`)
+}
+
+const navigateToGallery = () => {
+  router.push('/gallery')
+}
+
 const navigateToFeature = (route: string) => {
   router.push(route)
 }
 
-const features = [
-  {
-    icon: 'fa-laptop-code',
-    title: '技术手札',
-    desc: '网站开发笔记与心得',
-    bgImage: cardBg4,
-    route: '/articles/frontend',
-  },
-  {
-    icon: 'fa-user',
-    title: '奇怪杂谈',
-    desc: '关于生活与兴趣的随笔',
-    bgImage: cardBg1,
-    route: '/articles/topics',
-  },
-  {
-    icon: 'fa-feather',
-    title: '幻想物语',
-    desc: '轻小说风格故事连载',
-    bgImage: cardBg3,
-    route: '/articles/novels',
-  },
-  {
-    icon: 'fa-palette',
-    title: '绘卷长廊',
-    desc: '插画与设计作品展示',
-    bgImage: cardBg2,
-    route: '/gallery',
-  },
-]
-
-const contacts = [
+// --- 静态配置数据 ---
+const socialLinks = [
   {
     name: 'GitHub',
     icon: 'fab fa-github',
     link: 'https://github.com/futurelesswindchan',
-    color: 'rgba(36, 41, 46, 0.2)', // GitHub的深灰色
+    color: '#24292e',
   },
   {
     name: 'Bilibili',
     icon: 'fab fa-bilibili',
-    link: 'https://space.bilibili.com/273245032?spm_id_from=333.1007.0.0',
-    color: 'rgba(251, 114, 153, 0.2)', // B站粉色
+    link: 'https://space.bilibili.com/273245032',
+    color: '#fb7299',
   },
   {
     name: 'Email',
     icon: 'fas fa-envelope',
     link: 'mailto:windchan0v0@foxmail.com',
-    color: 'rgba(66, 133, 244, 0.2)', // 邮件蓝色
+    color: '#4285f4',
+  },
+]
+
+const features = [
+  {
+    icon: 'fa-laptop-code',
+    title: '技术手札',
+    desc: '代码与Bug的爱恨情仇',
+    route: '/articles/frontend',
+  },
+  {
+    icon: 'fa-coffee',
+    title: '奇怪杂谈',
+    desc: '生活琐事与碎碎念',
+    route: '/articles/topics',
+  },
+  {
+    icon: 'fa-feather-alt',
+    title: '幻想物语',
+    desc: '中二病发作现场',
+    route: '/articles/novels',
+  },
+  {
+    icon: 'fa-palette',
+    title: '绘卷长廊',
+    desc: '黑历史堆放处',
+    route: '/gallery',
   },
 ]
 </script>
 
 <style scoped>
-.home-view-container {
-  width: 100%;
-  min-height: inherit;
+/* --- 基础布局 --- */
+.home-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  min-height: 80vh;
 }
 
-/* 标题样式调整 */
-.welcome-title {
-  text-align: center;
+.section-title {
+  font-size: 1.5rem;
   color: var(--accent-color);
-  margin-bottom: 2rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  line-height: 350%;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.9;
 }
 
-.dark-theme .welcome-title {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* 移动端标题样式 */
-@media (max-width: 767px) {
-  .welcome-title,
-  .welcome-title-tiny {
-    margin: 0.5rem 10px; /* 统一移动端间距 */
-    padding: 0.8rem;
-    line-height: 1.6;
-  }
-}
-
-/* 桌面端明信片控制 */
-.vcard-container {
-  display: none; /* 默认隐藏 */
-}
-
-@media (min-width: 1101px) {
-  .vcard-container {
-    display: flex; /* 仅在桌面端显示 */
-    justify-content: center;
-    margin: 2rem 0;
-  }
-}
-
-/* 明信片基础样式调整 */
-.vcard {
+/* --- A区: Hero Section --- */
+.hero-section {
+  padding: 3rem;
   position: relative;
-  width: 900px;
-  height: 400px;
-  border: 10px solid rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.8); /* 白底 */
-  color: #222; /* 黑字 */
-  border-radius: 20px;
   overflow: hidden;
-  backdrop-filter: blur(5px);
-  transition: transform 0.3s;
 }
 
-.vcard:hover {
-  transform: translateY(-5px);
-}
-
-/* 文字内容区 */
-
-.vcard-title {
-  transition: 0.4s;
-  text-decoration: none;
-  color: var(--accent-color);
-  font-size: 5rem;
-  font-family: 'FleurDeLeah', sans-serif;
-  line-height: 1;
-  letter-spacing: 5px;
-}
-
-.vcard-content {
-  position: absolute;
-  width: 500px;
-  margin-left: 2em;
-  margin: 75px 50px;
-  transition: 1s;
-  z-index: 1;
-}
-
-.vcard-contact {
-  transition: 0.4s;
-  opacity: 0;
-  color: #1ed2c8;
-  font-size: 1rem;
-  margin: 1rem 0 0 2em;
-}
-
-.vcard-desc {
-  transition: 0.4s;
-  color: #444;
-  margin-left: 2em;
-  font: 500 15px sans-serif;
-  position: absolute;
-  top: 100px;
-  line-height: 1.6;
-}
-
-/* 深色主题下的桌面端明信片 */
-.dark-theme .vcard {
-  border: 10px solid rgba(0, 0, 0, 0.4);
-  background: rgba(0, 0, 0, 0.85); /* 黑底 */
-  color: #fff; /* 白字 */
-}
-
-.dark-theme .vcard-title {
-  color: var(--accent-color);
-}
-
-.dark-theme .vcard-contact {
-  color: #1ed2c8;
-}
-
-.dark-theme .vcard-desc {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-/* 圆柱动画效果 */
-.vcard-cylinders {
-  position: absolute;
-  top: -130px;
-  right: -240px;
-}
-
-.cylinder {
-  position: absolute;
-  right: calc(var(--i) * 100px);
-  width: calc(var(--w) * 40px);
-  height: 500px;
-  border-radius: 100px;
-  transform: rotateZ(220deg) translate(0, 0);
-  background: rgba(240, 220, 150, 0.8);
-  transition: 0.5s calc(var(--i) * 0.1s);
-}
-
-.cylinder:nth-child(2) {
-  background: rgba(240, 190, 230, 0.8);
-}
-
-/* 二维码样式 */
-.vcard-qrcode {
-  width: 275px;
-  height: 275px;
-  position: absolute;
-  margin: 60px 45px 45px 50px;
-  opacity: 0;
-  transition: opacity 2s linear; /* 改为线性动画保证同步 */
-}
-
-/* 悬停动画 */
-.vcard:hover .vcard-content {
-  left: 370px;
-  transition: left 1s 0.1s cubic-bezier(0.4, 0, 0.2, 1); /* 明确指定过渡属性 */
-}
-
-.vcard:hover .vcard-desc {
-  top: 155px;
-  transition: 1s 0.5s;
-}
-
-.vcard:hover .vcard-contact {
-  will-change: left;
-  opacity: 1;
-  transition: 1s 0.5s;
-}
-
-/* 圆柱动画效果 */
-.vcard:hover .cylinder {
-  transform: rotateZ(220deg) translate(-200px, 400px);
-}
-
-.vcard:hover .vcard-qrcode {
-  will-change: opacity;
-  opacity: 1;
-}
-
-/* 修改二维码悬停动画样式 */
-.vcard:hover :deep(.lazy-image-container) {
-  opacity: 1 !important;
-}
-
-/* 调整动画时间关系 */
-.vcard:not(:hover) .vcard-content {
-  left: 0;
-  transition: left 1s 0s cubic-bezier(0.4, 0, 0.2, 1); /* 移出时立即执行 */
-}
-
-.vcard:not(:hover) .vcard-qrcode {
-  opacity: 0;
-  transition: opacity 0.5s 0s linear; /* 同步开始消失 */
-}
-
-/* 移动端明信片样式优化 */
-.mobile-vcard {
-  display: none; /* 默认隐藏 */
-}
-
-@media (max-width: 1100px) {
-  .mobile-vcard {
-    display: block; /* 在平板和手机端显示 */
-  }
-}
-
-/* 平板端明信片默认隐藏 */
-.tablet-vcard {
-  display: none;
-}
-
-/* 优化平板端布局 */
-@media (min-width: 769px) and (max-width: 1100px) {
-  .mobile-vcard {
-    max-width: 800px;
-    margin: 1.5rem auto;
-    padding: 1.5rem;
-  }
-  .mobile-vcard__content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.2rem;
-    position: relative;
-  }
-  .mobile-vcard__qrcode {
-    position: static;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  .mobile-vcard__text {
-    width: 100%;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-  }
-  .mobile-vcard-title {
-    font-size: 2.2rem;
-    color: var(--accent-color);
-    font-family: 'FleurDeLeah', sans-serif;
-    text-decoration: none;
-    margin-bottom: 0.5rem;
-  }
-  .mobile-vcard-contact {
-    text-align: center;
-    position: static;
-    left: unset;
-    font-size: 1rem;
-    color: #1ed2c8;
-    margin: 0.5rem 0;
-    line-height: 1.6;
-  }
-}
-
-/* 平板端专属样式 */
-@media (min-width: 769px) and (max-width: 1100px) {
-  .tablet-vcard {
-    display: flex;
-    justify-content: center;
-    margin: 2rem 0;
-  }
-  .tablet-vcard__content {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.92);
-    border-radius: 18px;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
-    padding: 2rem 2.5rem;
-    gap: 2.5rem;
-    max-width: 700px;
-    width: 100%;
-    position: relative;
-  }
-  .tablet-vcard__qrcode {
-    flex: 0 0 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .tablet-vcard__text {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-    min-width: 0;
-  }
-  .tablet-vcard-title {
-    transition: 0.4s;
-    font-size: 5rem;
-    color: var(--accent-color);
-    font-family: 'FleurDeLeah', sans-serif;
-    text-decoration: none;
-  }
-  .tablet-vcard-contact {
-    transition: 0.4s;
-    font-size: 1.1rem;
-    margin: 0;
-    line-height: 1.6;
-    margin-left: 2em;
-  }
-  .tablet-vcard-desc {
-    transition: 0.4s;
-    font-size: 1rem;
-    margin-left: 2em;
-  }
-  /* 深色主题适配 */
-  .dark-theme .tablet-vcard__content {
-    background: rgba(0, 0, 0, 0.7);
-  }
-  .dark-theme .tablet-vcard-title {
-    color: var(--accent-color);
-  }
-  .dark-theme .tablet-vcard-contact,
-  .dark-theme .tablet-vcard-desc {
-    color: rgba(255, 255, 255, 0.85);
-  }
-}
-
-/* 只在平板端显示 tablet-vcard，隐藏桌面和移动端明信片 */
-@media (min-width: 769px) and (max-width: 1100px) {
-  .vcard-container,
-  .mobile-vcard {
-    display: none !important;
-  }
-}
-
-.feature-grid {
-  display: grid;
-  gap: 20px;
-  padding: 0 15px;
-  margin: 2rem 0;
-}
-
-/* 手机端：单列左右布局 */
-@media (max-width: 768px) {
-  .feature-grid {
-    grid-template-columns: 1fr;
-    padding: 0 10px;
-    gap: 15px;
-  }
-
-  .feature-card {
-    aspect-ratio: 5/2;
-    padding: 0;
-  }
-
-  .feature-content {
-    padding: 0.6rem 1rem;
-  }
-
-  .feature-icon {
-    font-size: 2.2rem;
-    width: 3rem;
-    height: 3rem;
-  }
-
-  .feature-text {
-    gap: 0.2rem;
-    padding-right: 0.5rem;
-  }
-}
-
-/* 平板设备：两列布局 */
-@media (min-width: 769px) and (max-width: 1110px) {
-  .feature-grid {
-    grid-template-columns: repeat(2, 1fr);
-    padding: 0 15px;
-    gap: 20px;
-  }
-
-  .feature-card {
-    aspect-ratio: 5/2;
-    padding: 0;
-  }
-
-  .feature-content {
-    flex-direction: row;
-    align-items: center;
-    padding: 0.8rem 1.2rem;
-    gap: 1rem;
-  }
-
-  .feature-icon {
-    font-size: 2.4rem;
-    width: 3.2rem;
-    height: 3.2rem;
-    margin-bottom: 0;
-  }
-
-  .feature-text {
-    text-align: left;
-    gap: 0.3rem;
-  }
-
-  .feature-text h3 {
-    font-size: 1.15rem;
-  }
-
-  .feature-text p {
-    font-size: 0.9rem;
-    line-height: 1.4;
-  }
-}
-
-/* 桌面端：四列布局 */
-@media (min-width: 1111px) {
-  .feature-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 30px;
-    padding: 0 20px;
-  }
-
-  .feature-content {
-    flex-direction: column;
-    text-align: center;
-    padding: 1rem;
-  }
-
-  .feature-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .feature-text h3 {
-    font-size: 1.2rem;
-  }
-}
-
-/* 修改特性卡片样式 */
-.feature-card {
+.hero-content {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
   position: relative;
-  padding: 1.5rem;
-  border-radius: 12px;
-  overflow: hidden;
+  z-index: 2;
+}
+
+/* 头像翻转特效 */
+.avatar-wrapper {
+  margin: 0 auto;
+  width: 180px;
+  height: 180px;
+  perspective: 1000px;
   cursor: pointer;
-  transition: all 0.3s var(--aero-animation);
-  aspect-ratio: 16/9;
-  display: flex;
-  align-items: center;
-  will-change: transform;
-  -webkit-tap-highlight-color: transparent;
 }
 
-.feature-content {
+.avatar-inner {
   position: relative;
-  z-index: 1;
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 0.8rem;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
 }
 
-.feature-icon {
+.avatar-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.avatar-front,
+.avatar-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--accent-color);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-back {
+  transform: rotateY(180deg);
+  background: white; /* 二维码通常需要白底 */
+}
+
+/* 个人信息 */
+.profile-info {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.nickname {
+  font-family: 'FleurDeLeah', cursive;
+  font-size: 3.5rem;
+  color: var(--accent-color);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #4caf50;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 右侧 Slogan 与 社交 */
+.slogan-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.slogan-text {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--accent-color);
+  margin-bottom: 1rem;
+  min-height: 2.4rem; /* 防止打字时高度跳动 */
+}
+
+.slogan-sub {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+
+.social-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.social-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
-  color: var(--accent-color);
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
+  font-size: 1.5rem;
+  color: inherit;
+  transition: all 0.3s ease;
+  text-decoration: none;
 }
 
-.feature-text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+.social-btn:hover {
+  background: var(--hover-color);
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.feature-text h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  color: var(--accent-color);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* --- B区: Dynamic Grid --- */
+.dynamic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
 }
 
-.feature-text p {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  white-space: normal;
-}
-
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .feature-grid {
-    grid-template-columns: 1fr;
-    padding: 0 10px;
-    gap: 15px;
-  }
-
-  .feature-card {
-    aspect-ratio: 5/2;
-    padding: 0;
-  }
-
-  .feature-content {
-    padding: 0.6rem 1rem;
-  }
-
-  .feature-icon {
-    font-size: 2.2rem;
-    width: 3rem;
-    height: 3rem;
-  }
-
-  .feature-text {
-    gap: 0.2rem;
-    padding-right: 0.5rem;
-  }
-
-  .feature-text h3 {
-    font-size: 1.1rem;
-  }
-
-  .feature-text p {
-    font-size: 0.85rem;
-    line-height: 1.3;
-  }
-}
-
-/* 平板竖屏：2列 */
-@media (min-width: 769px) and (max-width: 1199px) {
-  .feature-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 25px;
-  }
-}
-
-/* 大桌面：4列 */
-@media (min-width: 1200px) {
-  .feature-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 30px;
-  }
-
-  .feature-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .feature-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
-}
-
-/* 深色主题样式 */
-:deep(.dark-theme) .feature-card {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-/* 确保背景图默认完全透明 */
-.feature-card :deep(.feature-bg) {
-  opacity: 0 !important; /* 桌面端默认隐藏 */
-  transition: opacity 0.3s ease;
-}
-
-/* 桌面端悬停时显示背景图 */
-@media (min-width: 1111px) {
-  .feature-card:hover :deep(.feature-bg) {
-    opacity: 0.7 !important;
-  }
-}
-
-/* 移动端和平板端默认显示背景图 */
-@media (max-width: 1110px) {
-  .feature-card :deep(.feature-bg) {
-    opacity: 0.5 !important;
-  }
-}
-
-/* 深色主题下的特性卡片基础样式 */
-.dark-theme .feature-card {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-/* 内容始终保持在最上层 */
-.feature-content {
+.dynamic-card {
+  height: 100px;
+  padding: 1.5rem;
   position: relative;
-  z-index: 1;
-  width: 100%;
-  text-align: center;
-  padding: 1rem;
-  border-radius: 8px;
-}
-
-.card-content {
-  flex: 1;
+  cursor: pointer;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 100%; /* 确保填满父容器 */
-  padding: 12px;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.dynamic-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.card-badge {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  z-index: 2;
+}
+
+.card-content {
+  margin: auto 0;
   position: relative;
-  z-index: 1;
 }
 
-/* 标题样式 */
-h3 {
-  font-size: 1.2em;
-  margin: 12px 0;
+.card-title {
+  font-size: 1.3rem;
+  margin: 0 0 0.5rem 0;
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  z-index: 2;
+  position: relative;
 }
 
-/* 描述文本样式 */
-p {
-  font-size: 0.9em;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.icon {
-  font-size: 2.5em;
-  margin-bottom: 1rem;
-  color: var(--accent-color);
-  transition: transform 0.3s;
-}
-
-/* Contact section styles */
-.contact-section {
-  margin: 40px 0;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
-}
-
-.contact-section__title {
-  font-size: 1.2rem;
-  margin: 0;
-  color: inherit;
-}
-
-.contact-section__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.contact-section__card {
+.card-meta {
+  font-size: 0.9rem;
+  opacity: 0.7;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 20px;
-  border-radius: 12px;
-  transition: all 0.3s var(--aero-animation);
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  gap: 6px;
+  z-index: 2;
+  position: relative;
 }
 
-.contact-section__icon {
-  font-size: 2.5em;
-  margin-bottom: 12px;
+.card-desc {
+  font-size: 0.9rem;
+  margin-top: auto;
+  opacity: 0.8;
+}
+
+.card-icon {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  font-size: 6rem;
+  opacity: 0.05;
+  transform: rotate(-15deg);
   transition: all 0.3s ease;
 }
 
-.contact-section__text {
-  font-size: 1rem;
+.article-card:hover .card-icon {
+  opacity: 0.1;
+  transform: rotate(0deg) scale(1.1);
+}
+
+/* 画作卡片特殊样式 */
+.artwork-content {
+  position: relative;
+  z-index: 2;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  margin-top: auto; /* 推到底部 */
+}
+
+/* --- C区: Portal Grid --- */
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.portal-card {
+  padding: 2rem;
   text-align: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.contact-section__card:hover {
-  transform: translateY(-3px);
-  filter: brightness(1.1) saturate(1.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+.portal-card:hover {
+  transform: translateY(-5px);
 }
 
-.contact-section:hover .fa-github {
-  filter: brightness(5);
-}
-
-.dark-theme .contact-section:hover .fa-github {
-  filter: brightness(0.5);
-}
-
-/* 图标特定颜色 */
-.contact-section__card:hover .fa-github {
-  color: #24292e;
-}
-
-.contact-section__card:hover .fa-bilibili {
-  color: #fb7299;
-}
-
-.contact-section__card:hover .fa-envelope {
-  color: #4285f4;
-}
-
-/* 深色主题适配 */
-.dark-theme .contact-section {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.dark-theme .contact-section__title {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.dark-theme .contact-section__card {
-  background: rgba(0, 0, 0, 0.2);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.dark-theme .contact-section__card:hover {
-  background: rgba(0, 0, 0, 0.4);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-/* 移动端适配 */
-@media (max-width: 800px) {
-  .contact-section {
-    margin: 20px 10px;
-    padding: 1.5rem;
-  }
-
-  .contact-section__title {
-    font-size: 1.1rem;
-  }
-
-  .contact-section__grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-  }
-
-  .contact-section__card {
-    padding: 15px 10px;
-  }
-
-  .contact-section__icon {
-    font-size: 2rem;
-    margin-bottom: 8px;
-  }
-
-  .contact-section__text {
-    font-size: 0.9rem;
-  }
-}
-
-/* 优化移动端点击效果 */
-@media (hover: none) {
-  .feature-card:active {
-    transform: scale(0.98);
-  }
-
-  .contact-section__card:active {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-}
-
-/* 移动端明信片样式 */
-.mobile-vcard {
-  margin: 1rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.mobile-vcard-title {
-  font-size: 4em;
-  letter-spacing: 3px;
-  transition: 0.4s;
-}
-
-.mobile-vcard__qrcode {
-  position: static;
-  display: flex;
-  float: left;
-  justify-content: center;
-  align-items: center;
-  margin: 1rem 0 0 8%;
-}
-
-.mobile-vcard-contact span {
-  text-align: left;
-  position: static;
-  font-size: 1rem;
-  margin: 0.5rem 0;
-  line-height: 1.6;
-}
-
-/* 深色主题适配 */
-.dark-theme .mobile-vcard {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-.dark-theme .mobile-vcard__text h3 {
+.portal-icon {
+  font-size: 2.5rem;
   color: var(--accent-color);
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease;
 }
 
-.dark-theme .mobile-vcard__text h4 {
-  color: rgba(255, 255, 255, 0.8);
+.portal-card:hover .portal-icon {
+  transform: scale(1.1);
 }
 
-.dark-theme .mobile-vcard__text p {
-  color: rgba(255, 255, 255, 0.9);
+.portal-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
 }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .mobile-vcard {
-    margin: 0.8rem;
-    padding: 1rem;
-  }
-  .mobile-vcard__content {
+.portal-info p {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  margin: 0;
+}
+
+/* --- 响应式适配 --- */
+
+/* 平板 (Tablet) */
+@media (max-width: 1024px) {
+  .hero-content {
     flex-direction: column;
-    gap: 1rem;
-  }
-  .mobile-vcard__qrcode :deep(.lazy-image-container) {
-    width: 100px !important;
-    height: 100px !important;
-  }
-  .mobile-vcard__text {
     text-align: center;
+    gap: 2rem;
   }
-  .mobile-vcard__text h3 {
-    font-size: 1.1rem;
+
+  .slogan-group {
+    align-items: center;
   }
-  .mobile-vcard__text h4 {
-    font-size: 0.95rem;
+
+  .dynamic-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2列 */
   }
-  .mobile-vcard__text p {
-    font-size: 0.85rem;
+
+  .dynamic-card:last-child {
+    grid-column: span 2; /* 画作卡片占满一行 */
+  }
+
+  .portal-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* 平板适配 */
-@media (min-width: 769px) and (max-width: 1100px) {
-  .mobile-vcard {
-    max-width: 800px;
-    margin: 1.5rem auto;
+/* 手机 (Mobile) */
+@media (max-width: 768px) {
+  .home-dashboard {
+    padding: 1rem;
+    gap: 2rem;
   }
-  .mobile-vcard__qrcode :deep(.lazy-image-container) {
-    width: 150px !important;
-    height: 150px !important;
+
+  .hero-section {
+    padding: 2rem 1.5rem;
   }
+
+  .avatar-wrapper {
+    width: 140px;
+    height: 140px;
+  }
+
+  .nickname {
+    font-size: 2.8rem;
+  }
+
+  .slogan-text {
+    font-size: 1.4rem;
+    min-height: auto;
+  }
+
+  .dynamic-grid {
+    grid-template-columns: 1fr; /* 单列 */
+  }
+
+  .dynamic-card:last-child {
+    grid-column: span 1;
+  }
+
+  .portal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-card {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .portal-icon {
+    margin-bottom: 0;
+    font-size: 2rem;
+  }
+}
+
+/* 深色模式微调 */
+:deep(.dark-theme) .social-btn {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:deep(.dark-theme) .card-icon {
+  opacity: 0.1; /* 深色模式下图标稍微明显一点 */
 }
 </style>

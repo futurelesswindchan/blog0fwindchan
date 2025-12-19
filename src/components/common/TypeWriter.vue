@@ -4,7 +4,7 @@
     <template v-else>
       <span ref="contentRef" class="typing-content">{{ displayText }}</span>
       <!-- 修改光标显示逻辑和样式 -->
-      <span v-show="showCursor" class="cursor" :class="{ blink: !isTyping }">>></span>
+      <span v-show="showCursor" class="cursor" :class="{ blink: !isTyping }">|</span>
     </template>
   </div>
 </template>
@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<Props>(), {
   showCursor: true,
   autoStart: true,
   preserveHtml: false,
-  chunkSize: 10,
+  chunkSize: 1,
   chunkDelay: 50,
 })
 
