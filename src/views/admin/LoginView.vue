@@ -1,7 +1,7 @@
 <!-- src\views\admin\LoginView.vue -->
 <template>
   <div class="login-view-container">
-    <h2 class="page-title">Athuntication</h2>
+    <h2 class="page-title-art">Athuntication</h2>
 
     <hr />
 
@@ -49,7 +49,7 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAdminStore } from '@/views/stores/adminStore'
 
-import '@/styles/pageTitle.css'
+import '@/styles/pageTitleArt.css'
 
 const username = ref('') // ✨ 新增
 const password = ref('')
