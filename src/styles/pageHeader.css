@@ -1,4 +1,4 @@
-/* 统一的页面标题栏样式 */
+/* src\styles\pageHeader.css */
 .page-header {
   display: flex;
   align-items: stretch;
@@ -12,7 +12,7 @@
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-.back-area {
+.page-header .back-area {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,20 +23,20 @@
   padding: 0 0.5rem;
 }
 
-.back-area:hover {
+.page-header .back-area:hover {
   background-color: rgb(0, 119, 255);
 }
 
-.back-area i {
+.page-header .back-area i {
   font-size: 1.2em;
   transition: transform 0.3s var(--aero-animation);
 }
 
-.back-area:hover i {
+.page-header .back-area:hover i {
   transform: translateX(-3px);
 }
 
-.page-title {
+.page-header .page-title {
   text-align: left;
   color: var(--accent-color);
   line-height: 350%;
@@ -48,11 +48,11 @@
 }
 
 /* 适配暗色主题 */
-.dark-theme .back-area {
+.dark-theme .page-header .back-area {
   border-right-color: rgba(255, 255, 255, 0.05);
 }
 
-.dark-theme .back-area:hover {
+.dark-theme .page-header .back-area:hover {
   background-color: rgb(0, 102, 219);
 }
 
@@ -64,7 +64,7 @@
     margin-bottom: 0;
   }
 
-  .back-area {
+  .page-header .back-area {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -73,15 +73,15 @@
     background: rgba(255, 255, 255, 0.1);
   }
 
-  .back-area:active {
+  .page-header .back-area:active {
     background: rgba(0, 119, 255, 0.2);
   }
 
-  .back-area i {
+  .page-header .back-area i {
     font-size: 1.4em;
   }
 
-  .page-title {
+  .page-header .page-title {
     color: var(--accent-color);
     font-size: 1.1em;
     letter-spacing: 0px;
@@ -90,11 +90,11 @@
 
 /* 暗色主题移动端适配 */
 @media (max-width: 768px) {
-  .dark-theme .back-area {
+  .dark-theme .page-header .back-area {
     background: rgba(0, 0, 0, 0.1);
   }
 
-  .dark-theme .back-area:active {
+  .dark-theme .page-header .back-area:active {
     background: rgba(0, 119, 255, 0.2);
   }
 }

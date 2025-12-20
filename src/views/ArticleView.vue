@@ -1,7 +1,7 @@
 <!-- ArticleView.vue (renamed from TechView.vue) -->
 <template>
   <div class="article-view-container">
-    <h2 class="page-title">Articles</h2>
+    <h2 class="page-title-ark">Articles</h2>
     <section class="article-view">
       <div class="article-categories">
         <!-- 技术手札 -->
@@ -79,7 +79,7 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useArticleStore } from '@/views/stores/articleStore'
 
-import '@/styles/pageTitle.css'
+import '@/styles/pageTitleArt.css'
 
 const router = useRouter()
 const articleStore = useArticleStore()

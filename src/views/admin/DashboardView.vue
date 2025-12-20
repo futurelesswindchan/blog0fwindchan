@@ -1,7 +1,7 @@
 <!-- src\views\admin\DashboardView.vue -->
 <template>
   <div class="dashboard-container">
-    <h2 class="page-title">Dashboard</h2>
+    <h2 class="page-title-ark">Dashboard</h2>
 
     <!-- Tab 切换栏 -->
     <div class="tabs-header">
@@ -157,7 +157,7 @@ import FriendModal from '@/components/admin/FriendModal.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import api from '@/api'
 
-import '@/styles/pageTitle.css'
+import '@/styles/pageTitleArt.css'
 
 type ArticleWithCategory = ArticleSummary & { category: string }
 

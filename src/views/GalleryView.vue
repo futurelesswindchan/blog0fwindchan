@@ -1,7 +1,7 @@
 <!-- src\views\GalleryView.vue -->
 <template>
   <div class="gallery-view-container">
-    <h2 class="page-title">Gallery</h2>
+    <h2 class="page-title-ark">Gallery</h2>
     <div class="gallery-view">
       <!-- 搜索栏 -->
       <FilterBar
@@ -109,7 +109,7 @@ import FilterBar from '@/components/common/FilterBar.vue'
 import LazyImage from '@/components/common/LazyImage.vue'
 
 import '@/styles/correctContentMargin.css'
-import '@/styles/pageTitle.css'
+import '@/styles/pageTitleArt.css'
 
 const artworkStore = useArtworkStore()
 const artworks = computed(() => artworkStore.artworks)

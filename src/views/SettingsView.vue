@@ -1,6 +1,6 @@
 <template>
   <div class="settings-view-container">
-    <h2 class="page-title">Settings</h2>
+    <h2 class="page-title-ark">Settings</h2>
 
     <hr />
 
@@ -72,7 +72,7 @@ import { useToast } from '../composables/useToast'
 
 import ToastManager from '../components/common/ToastManager.vue'
 
-import '@/styles/pageTitle.css'
+import '@/styles/pageTitleArt.css'
 
 const settingsStore = useSettingsStore()
 const settings = reactive({ ...settingsStore.typeWriter })
