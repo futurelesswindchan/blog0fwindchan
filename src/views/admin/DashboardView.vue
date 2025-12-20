@@ -1,17 +1,7 @@
+<!-- src\views\admin\DashboardView.vue -->
 <template>
   <div class="dashboard-container">
-    <div class="page-header">
-      <div class="back-area" @click="$router.back()">
-        <i class="fas fa-arrow-left"></i>
-      </div>
-      <h2 class="page-title">内容管理面板</h2>
-
-      <!-- 动态操作按钮：根据当前 Tab 变化 -->
-      <div class="action-area" @click="handleCreate">
-        <i class="fas" :class="createButtonIcon"></i>
-        <span>&ensp;{{ createButtonText }}</span>
-      </div>
-    </div>
+    <h2 class="page-title">Dashboard</h2>
 
     <!-- Tab 切换栏 -->
     <div class="tabs-header">
@@ -26,6 +16,12 @@
       </button>
     </div>
 
+    <!-- 动态操作按钮：根据当前 Tab 变化 -->
+    <div class="action-area" @click="handleCreate">
+      <i class="fas" :class="createButtonIcon"></i>
+      <span>&ensp;{{ createButtonText }}</span>
+    </div>
+
     <div class="dashboard-content">
       <!-- 1. 文章列表 -->
       <div v-if="currentTab === 'articles'" class="tab-content">
@@ -35,20 +31,20 @@
           <table v-else class="data-table">
             <thead>
               <tr>
-                <th>标题</th>
-                <th>分类</th>
-                <th>日期</th>
-                <th>操作</th>
+                <th class="col-title">标题</th>
+                <th class="col-category">分类</th>
+                <th class="col-date">日期</th>
+                <th class="col-action">操作</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="article in paginatedArticles" :key="article.id">
-                <td>{{ article.title }}</td>
-                <td>
+                <td class="col-title" :title="article.title">{{ article.title }}</td>
+                <td class="col-category">
                   <span class="badge">{{ article.category }}</span>
                 </td>
-                <td>{{ formatDate(article.date) }}</td>
-                <td class="action-cell">
+                <td class="col-date">{{ formatDate(article.date) }}</td>
+                <td class="action-cell col-action">
                   <button @click="editArticle(article)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
                   </button>
@@ -74,23 +70,23 @@
           <table v-else class="data-table">
             <thead>
               <tr>
-                <th>名称</th>
-                <th>链接</th>
-                <th>描述</th>
-                <th>操作</th>
+                <th class="col-name">名称</th>
+                <th class="col-url">链接</th>
+                <th class="col-desc">描述</th>
+                <th class="col-action">操作</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="friend in paginatedFriends" :key="friend.id">
-                <td>
+                <td class="col-name">
                   <div class="flex-center">
                     <img :src="friend.avatar || '/favicon.png'" class="mini-avatar" />
-                    {{ friend.name }}
+                    <span class="text-truncate">{{ friend.name }}</span>
                   </div>
                 </td>
-                <td class="url-col">{{ friend.url }}</td>
-                <td>{{ friend.desc }}</td>
-                <td class="action-cell">
+                <td class="col-url url-col" :title="friend.url">{{ friend.url }}</td>
+                <td class="col-desc" :title="friend.desc">{{ friend.desc }}</td>
+                <td class="action-cell col-action">
                   <button @click="openFriendModal(friend)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
                   </button>
@@ -112,7 +108,7 @@
           <div v-if="artworkStore.loading" class="loading">加载中...</div>
           <div v-else class="gallery-grid">
             <div v-for="work in paginatedGallery" :key="work.id" class="gallery-item">
-              <img :src="work.thumbnail" />
+              <img :src="work.thumbnail" loading="lazy" />
               <div class="gallery-info">
                 <h4>{{ work.title }}</h4>
                 <div class="gallery-actions">
@@ -161,9 +157,8 @@ import FriendModal from '@/components/admin/FriendModal.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import api from '@/api'
 
-import '@/styles/pageHeader.css'
+import '@/styles/pageTitle.css'
 
-// 定义一个扩展类型，因为 computed 里给 article 加上了 category 字段
 type ArticleWithCategory = ArticleSummary & { category: string }
 
 const router = useRouter()
@@ -184,10 +179,14 @@ const currentTab = ref<(typeof tabs)[number]['key']>('articles')
 
 // --- 数据加载 ---
 onMounted(() => {
+  refreshAllData()
+})
+
+const refreshAllData = () => {
   articleStore.fetchArticleIndex()
   friendStore.fetchFriends()
   artworkStore.fetchArtworks()
-})
+}
 
 // --- 顶部按钮逻辑 ---
 const createButtonText = computed(() => {
@@ -217,7 +216,7 @@ const handleCreate = () => {
 // =========================================
 // 搜索与分页逻辑 (客户端实现)
 // =========================================
-const pageSize = 10 // 每页显示数量
+const pageSize = 10
 
 // --- 1. 文章搜索与分页 ---
 const articleSearchText = ref('')
@@ -356,7 +355,7 @@ const editArticle = (article: ArticleWithCategory) => {
 const deleteArticle = async (article: ArticleWithCategory) => {
   if (confirm(`确定删除文章《${article.title}》吗？`)) {
     await api.delete(`/articles/${article.id}`)
-    articleStore.fetchArticleIndex() // 简单粗暴重刷
+    await articleStore.fetchArticleIndex() // 立即刷新
   }
 }
 
@@ -376,11 +375,13 @@ const handleFriendSubmit = async (data: Partial<Friend>) => {
   } else {
     await friendStore.addFriend(data)
   }
+  await friendStore.fetchFriends() // 立即刷新列表
 }
 
 const deleteFriend = async (id: string) => {
   if (confirm('确定删除该友链吗？')) {
     await friendStore.deleteFriend(id)
+    await friendStore.fetchFriends() // 立即刷新列表
   }
 }
 
@@ -400,11 +401,13 @@ const handleArtworkSubmit = async (data: Partial<Artwork>) => {
   } else {
     await artworkStore.addArtwork(data)
   }
+  await artworkStore.fetchArtworks() // 立即刷新列表
 }
 
 const deleteArtwork = async (id: string) => {
   if (confirm('确定删除该作品吗？')) {
     await artworkStore.deleteArtwork(id)
+    await artworkStore.fetchArtworks() // 立即刷新列表
   }
 }
 </script>
@@ -428,23 +431,27 @@ const deleteArtwork = async (id: string) => {
 /* =========================================
    2. 顶部操作区
    ========================================= */
+
 .action-area {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 100px; /* 稍微宽一点以容纳文字 */
+  min-height: 50px;
   cursor: pointer;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s var(--aero-animation);
   padding: 0 1rem;
   text-decoration: none;
   color: black;
   font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .dark-theme .action-area {
   color: white;
   border-left-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .action-area:hover {
@@ -471,14 +478,10 @@ const deleteArtwork = async (id: string) => {
   display: flex;
   align-items: stretch;
   justify-content: space-between;
-  margin-top: 0; /* 紧贴上方或保持原有间距 */
-  margin-bottom: 2rem;
-
-  /* 复用 page-header 的容器样式 */
   background-color: rgba(255, 255, 255, 0.35);
-  border-radius: 4px;
-  overflow: hidden; /* 裁剪掉平行四边形溢出的棱角 */
-  border: 1px solid rgba(255, 255, 255, 0.35); /* 增加微弱边框增强质感 */
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+  min-height: 50px;
 }
 
 .dark-theme .tabs-header {
@@ -487,7 +490,7 @@ const deleteArtwork = async (id: string) => {
 }
 
 .tab-btn {
-  flex: 1; /* 三等分 */
+  flex: 1;
   position: relative;
   border: none;
   background: transparent;
@@ -495,12 +498,9 @@ const deleteArtwork = async (id: string) => {
   cursor: pointer;
   font-weight: 600;
   font-size: 1rem;
-  color: var(--text-color-secondary); /* 默认灰色 */
+  color: var(--text-color-secondary);
   transition: color 0.3s ease;
-
-  /* 确保文字在背景之上 */
   z-index: 1;
-  /* 简单的分隔线 (可选) */
   border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -508,7 +508,6 @@ const deleteArtwork = async (id: string) => {
   border-right: none;
 }
 
-/* 悬停态：稍微亮一点 */
 .tab-btn:hover {
   color: var(--accent-color);
   background-color: rgba(0, 119, 255, 0.1);
@@ -518,13 +517,11 @@ const deleteArtwork = async (id: string) => {
   background-color: rgba(0, 102, 219, 0.1);
 }
 
-/* 激活态文字颜色 */
 .tab-btn.active {
   color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* 平行四边形激活背景 */
 .tab-btn::before {
   content: '';
   position: absolute;
@@ -533,14 +530,10 @@ const deleteArtwork = async (id: string) => {
   left: 0;
   right: 0;
   background: rgb(0, 119, 255);
-  z-index: -1; /* 放在文字下面 */
-
-  /* 初始状态：完全透明且位置偏移 */
+  z-index: -1;
   opacity: 0;
-  transform: skewX(-20deg) translateX(-20%); /* 倾斜并偏移 */
+  transform: skewX(-20deg) translateX(-20%);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* 稍微加宽一点，防止倾斜后边缘露白 */
   width: 120%;
   margin-left: -10%;
 }
@@ -549,18 +542,11 @@ const deleteArtwork = async (id: string) => {
   background: rgb(0, 102, 219);
 }
 
-/* 激活时显示背景 */
 .tab-btn.active::before {
   opacity: 1;
-  transform: skewX(-20deg) translateX(0); /* 归位 */
+  transform: skewX(-20deg) translateX(0);
 }
 
-/* 修正：第一个和最后一个按钮的背景不需要倾斜外侧边缘，
-   或者利用父容器的 overflow: hidden 自动裁剪。
-   这里我们利用父容器裁剪，效果就像一个被切断的平行四边形，非常酷。
-*/
-
-/* 响应式微调 */
 @media (max-width: 768px) {
   .tab-btn {
     padding: 0.8rem 0;
@@ -594,6 +580,7 @@ const deleteArtwork = async (id: string) => {
   border-collapse: collapse;
   text-align: left;
   color: inherit;
+  table-layout: fixed; /* 强制列宽控制，便于省略号显示 */
 }
 
 .data-table th,
@@ -601,6 +588,10 @@ const deleteArtwork = async (id: string) => {
   padding: 1rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   vertical-align: middle;
+  /* 默认不换行，溢出隐藏，显示省略号 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dark-theme .data-table th,
@@ -613,7 +604,6 @@ const deleteArtwork = async (id: string) => {
   color: var(--accent-color);
   background: rgba(0, 119, 255, 0.08);
   border-bottom: 2px solid rgba(0, 119, 255, 0.2);
-  white-space: nowrap;
 }
 
 .dark-theme .data-table th {
@@ -634,9 +624,44 @@ const deleteArtwork = async (id: string) => {
 }
 
 /* =========================================
-   6. 徽章与特定列样式
+   6. 列宽控制与文本截断 (移动端适配核心)
    ========================================= */
-/* 分类徽章 */
+
+/* 桌面端默认宽度分配 */
+.col-title {
+  width: 40%;
+}
+.col-category {
+  width: 15%;
+}
+.col-date {
+  width: 20%;
+}
+.col-action {
+  width: 15%;
+  min-width: 100px;
+  text-align: right;
+}
+
+.col-name {
+  width: 25%;
+}
+.col-url {
+  width: 35%;
+}
+.col-desc {
+  width: 25%;
+}
+
+/* 文本截断辅助类 */
+.text-truncate {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 徽章 */
 .badge {
   background: rgba(0, 119, 255, 0.1);
   color: #0077ff;
@@ -670,13 +695,10 @@ const deleteArtwork = async (id: string) => {
   object-fit: cover;
   border: 2px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0; /* 防止头像被挤压 */
 }
 
 .url-col {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   color: #888;
   font-size: 0.9em;
   font-family: monospace;
@@ -692,9 +714,10 @@ const deleteArtwork = async (id: string) => {
 .action-cell {
   display: flex;
   gap: 0.5rem;
+  justify-content: flex-end; /* 按钮靠右 */
+  overflow: visible; /* 允许按钮阴影溢出 */
 }
 
-/* 将 .icon-btn 样式升级为旧版的 .action-btn 块状样式 */
 .icon-btn {
   background: rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -707,7 +730,8 @@ const deleteArtwork = async (id: string) => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0; /* 重置 padding */
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .dark-theme .icon-btn {
@@ -802,6 +826,7 @@ const deleteArtwork = async (id: string) => {
   border-radius: 0 0 12px 12px;
 }
 
+/* 移动端或悬停时显示信息 */
 .gallery-item:hover .gallery-info {
   transform: translateY(0);
 }
@@ -821,7 +846,6 @@ const deleteArtwork = async (id: string) => {
   gap: 0.5rem;
 }
 
-/* 画廊里的按钮稍微小一点，且颜色适应深色背景 */
 .gallery-actions .icon-btn {
   width: 28px;
   height: 28px;
@@ -846,7 +870,7 @@ const deleteArtwork = async (id: string) => {
 }
 
 /* =========================================
-   10. 响应式适配
+   10. 响应式适配 (移动端核心优化)
    ========================================= */
 @media (max-width: 768px) {
   .dashboard-content {
@@ -858,12 +882,40 @@ const deleteArtwork = async (id: string) => {
     padding: 0.5rem;
   }
 
+  /* 移动端表格列宽调整 */
   .data-table th,
   .data-table td {
     padding: 0.75rem 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
+  /* 隐藏次要列以节省空间 */
+  .col-date {
+    display: none;
+  }
+
+  /* 调整剩余列宽 */
+  .col-title {
+    width: 50%;
+  }
+  .col-category {
+    width: 25%;
+  }
+  .col-action {
+    width: 25%;
+  }
+
+  .col-name {
+    width: 30%;
+  }
+  .col-url {
+    width: 40%;
+  }
+  .col-desc {
+    display: none;
+  } /* 移动端隐藏描述列 */
+
+  /* 徽章缩小 */
   .badge {
     padding: 0.15rem 0.5rem;
     font-size: 0.75rem;
@@ -874,12 +926,20 @@ const deleteArtwork = async (id: string) => {
     font-size: 0.85rem;
   }
 
-  .action-area {
-    min-width: 60px;
-    padding: 0 0.5rem;
+  /* 画廊双列布局 */
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
   }
-  .action-area span {
-    display: none; /* 移动端隐藏文字，只留图标 */
+
+  /* 移动端画廊信息常驻显示，防止无法操作 */
+  .gallery-info {
+    transform: translateY(0);
+    padding: 0.5rem;
+  }
+
+  .gallery-info h4 {
+    font-size: 0.8rem;
   }
 }
 </style>

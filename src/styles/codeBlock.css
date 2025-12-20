@@ -109,6 +109,7 @@
 }
 
 .code-block {
+  display: flex;
   position: relative;
   margin: 0;
   padding: 0;
@@ -120,7 +121,7 @@
 }
 
 .code-block .code-lang {
-  width: 100%;
+  width: 300%;
   box-sizing: border-box;
   padding: 0.8rem 1.4rem;
   font-size: 1rem;
@@ -137,7 +138,7 @@
 /* 代码内容部分 */
 .code-block code {
   display: block;
-  padding: 4rem 1rem 0rem 1rem;
+  padding: 4rem 1rem 1rem 1rem;
   background: none !important;
   white-space: pre;
   border-radius: 0 0 8px 8px;

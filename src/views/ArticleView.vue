@@ -79,6 +79,8 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useArticleStore } from '@/views/stores/articleStore'
 
+import '@/styles/pageTitle.css'
+
 const router = useRouter()
 const articleStore = useArticleStore()
 
@@ -97,30 +99,6 @@ const goToArticle = (routeName: string) => {
 </script>
 
 <style scoped>
-.article-view-container {
-  width: 100%;
-  min-height: inherit;
-}
-
-.article-view {
-  padding: 1rem;
-}
-
-.page-title {
-  text-align: center;
-  color: var(--accent-color);
-  margin-bottom: 2rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  line-height: 175%;
-  font-family: 'FleurDeLeah', sans-serif;
-  font-size: 3.5rem;
-  letter-spacing: 5px;
-}
-
-.dark-theme .page-title {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
 .article-categories {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));

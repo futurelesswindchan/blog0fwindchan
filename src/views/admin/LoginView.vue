@@ -1,3 +1,4 @@
+<!-- src\views\admin\LoginView.vue -->
 <template>
   <div class="login-view-container">
     <h2 class="page-title">Athuntication</h2>
@@ -48,6 +49,8 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAdminStore } from '@/views/stores/adminStore'
 
+import '@/styles/pageTitle.css'
+
 const username = ref('') // ✨ 新增
 const password = ref('')
 const loading = ref(false)
@@ -76,21 +79,6 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-.page-title {
-  text-align: center;
-  color: var(--accent-color);
-  margin-bottom: 2rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  line-height: 175%;
-  font-family: 'FleurDeLeah', sans-serif;
-  font-size: 3.5rem;
-  letter-spacing: 5px;
-}
-
-.dark-theme .page-title {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
 .login-form {
   margin: 0 auto;
   display: flex;

@@ -33,30 +33,17 @@
 .chapter-info h3 {
   margin: 0;
   color: var(--accent-color);
-  /* 移除可能影响打字效果的样式 */
-  /* white-space: nowrap; */
-  /* overflow: hidden; */
-  /* text-overflow: ellipsis; */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   flex: 1;
-  min-width: 0; /* 允许标题文本截断 */
+  min-width: 0;
 }
 
 .chapter-item i {
   margin-left: 1rem;
   flex-shrink: 0; /* 防止图标被压缩 */
   transition: transform 0.3s var(--aero-animation);
-}
-
-.story-view-container {
-  width: 100%;
-  min-height: inherit;
-}
-
-.story-view {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 1rem;
-  position: relative;
 }
 
 /* 为文章添加特殊渐变效果 */
@@ -89,7 +76,8 @@
   .chapter-info {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 0.2rem;
+    font-size: 90%;
   }
 
   .chapter-date {
@@ -99,6 +87,7 @@
 
   .chapter-item {
     padding: 1rem;
+    margin: 0.5rem 0;
   }
 
   .chapter-item i {
@@ -114,24 +103,4 @@
   .chapter-item:hover i {
     transform: translateY(-50%) translateX(5px) !important;
   }
-}
-
-/* 确保打字机效果不影响悬停效果 */
-.type-writer .chapter-item {
-  opacity: 0;
-  transform: translateY(20px);
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s ease;
-}
-
-.type-writer.typing .chapter-item {
-  opacity: 1;
-  transform: translateY(0);
-  transition-delay: calc(var(--typing-delay, 0ms) * 0.5);
-}
-
-/* 打字机效果完成后恢复悬停效果 */
-.type-writer.typing .chapter-item:hover {
-  transform: translateX(5px) !important;
 }

@@ -1,0 +1,13 @@
+.page-title {
+  text-align: center;
+  color: var(--accent-color);
+  margin: 0 0 2rem 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  line-height: 175%;
+  font-family: 'FleurDeLeah', sans-serif;
+  font-size: 3.5rem;
+  letter-spacing: 5px;
+}
+.dark-theme .page-title {
+  background-color: rgba(0, 0, 0, 0.1);
+}

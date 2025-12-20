@@ -37,12 +37,14 @@
 }
 
 .page-title {
-  flex: 1;
   text-align: left;
   color: var(--accent-color);
   line-height: 350%;
   margin: 0;
   padding: 0 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 适配暗色主题 */
@@ -58,33 +60,31 @@
 @media (max-width: 768px) {
   .page-header {
     display: flex;
-    align-items: stretch; /* 修改为 stretch 使子元素填充高度 */
     font-size: 1.2em;
-    min-height: 80px; /* 稍微降低高度改善体验 */
+    margin-bottom: 0;
   }
 
   .back-area {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 60px; /* 使用固定宽度 */
-    padding: 0; /* 移除内边距 */
-    background: rgba(255, 255, 255, 0.1); /* 添加轻微背景以提示可点击 */
+    width: 60px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .back-area:active {
-    /* 添加点击反馈 */
     background: rgba(0, 119, 255, 0.2);
   }
 
   .back-area i {
-    font-size: 1.4em; /* 增大图标尺寸 */
+    font-size: 1.4em;
   }
 
   .page-title {
+    color: var(--accent-color);
     font-size: 1.1em;
-    line-height: 80px; /* 与 min-height 对应 */
-    padding: 0 1rem;
+    letter-spacing: 0px;
   }
 }
 

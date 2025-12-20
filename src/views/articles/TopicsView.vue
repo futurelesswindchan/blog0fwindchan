@@ -63,6 +63,7 @@ import { useRouter } from 'vue-router'
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 
+import '@/styles/correctContentMargin.css'
 import '@/styles/pageHeader.css'
 import '@/styles/typeWriter.css'
 import '@/styles/storyCard.css'

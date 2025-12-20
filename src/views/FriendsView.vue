@@ -53,6 +53,8 @@ import FilterBar from '@/components/common/FilterBar.vue'
 
 import LazyImage from '@/components/common/LazyImage.vue'
 
+import '@/styles/pageTitle.css'
+
 const friendStore = useFriendStore()
 const friends = computed(() => friendStore.friends)
 const settingsStore = useSettingsStore()
@@ -81,36 +83,6 @@ onErrorCaptured((err, instance, info) => {
 </script>
 
 <style scoped>
-/* ...原有样式不变... */
-.page-title {
-  text-align: center;
-  color: var(--accent-color);
-  margin-bottom: 2rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  line-height: 175%;
-  font-family: 'FleurDeLeah', sans-serif;
-  font-size: 3.5rem;
-  letter-spacing: 5px;
-}
-
-.dark-theme .page-title {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.filter-bar {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  margin-bottom: 2rem;
-}
-
-.friends-view {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 1rem;
-  position: relative;
-}
-
 .friend-grid {
   display: flex;
   flex-wrap: wrap;

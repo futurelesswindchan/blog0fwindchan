@@ -660,7 +660,7 @@ const afterEnter = () => {
   justify-content: space-between;
   height: 56px;
   box-sizing: border-box;
-  backdrop-filter: blur(1px);
+  backdrop-filter: blur(5px);
   transition: all 0.3s var(--aero-animation);
 }
 
@@ -723,7 +723,7 @@ const afterEnter = () => {
   align-items: center;
   justify-content: center;
   margin: 0 1rem;
-  max-width: 50%;
+  max-width: 100%;
 }
 
 .mobile-title :deep(.type-writer) {

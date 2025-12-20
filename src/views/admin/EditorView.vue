@@ -1,3 +1,4 @@
+<!-- src\views\admin\EditorView.vue -->
 <template>
   <div class="article-view-container editor-mode">
     <!-- 顶部：标题与返回 -->
@@ -108,15 +109,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue' // ✨ 引入 onMounted
-import { useRouter, useRoute } from 'vue-router' // ✨ 引入 useRoute
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useArticleContent } from '@/composables/useArticleContent'
 import { useArticleInfo } from '@/composables/useArticleInfo'
 import { useCodeHighlight } from '@/composables/useCodeHighlight'
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
-import api from '@/api' // ✨ 引入 api 实例
-import { useArticleStore } from '@/views/stores/articleStore' // ✨ 引入 articleStore
+import api from '@/api'
+import { useArticleStore } from '@/views/stores/articleStore'
 
+import '@/styles/correctContentMargin.css'
 import '@/styles/articleContent.css'
 import '@/styles/articleInfo.css'
 import '@/styles/pageHeader.css'
@@ -255,8 +257,6 @@ const goBack = () => {
 </script>
 
 <style scoped>
-/* 覆盖/扩展默认样式以适配编辑器 */
-
 .editor-mode {
   position: relative;
 }

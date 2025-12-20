@@ -14,20 +14,8 @@ settingsStore.loadSettings()
 <style>
 /* 全局滚动条样式 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-  background-color: transparent;
+  display: none;
 }
-
-::-webkit-scrollbar-thumb {
-  background-color: var(--accent-color);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
 .page-transitioning {
   pointer-events: none;
   user-select: none;

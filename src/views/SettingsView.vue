@@ -68,8 +68,11 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
-import ToastManager from '../components/common/ToastManager.vue'
 import { useToast } from '../composables/useToast'
+
+import ToastManager from '../components/common/ToastManager.vue'
+
+import '@/styles/pageTitle.css'
 
 const settingsStore = useSettingsStore()
 const settings = reactive({ ...settingsStore.typeWriter })
@@ -95,20 +98,6 @@ const reset = () => {
 </script>
 
 <style scoped>
-.page-title {
-  text-align: center;
-  color: var(--accent-color);
-  margin-bottom: 2rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  line-height: 175%;
-  font-family: 'FleurDeLeah', sans-serif;
-  font-size: 3.5rem;
-  letter-spacing: 5px;
-}
-.dark-theme .page-title {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
 .typewriter-settings-form {
   margin: 0 auto;
   display: flex;

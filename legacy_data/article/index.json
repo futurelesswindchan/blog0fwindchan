@@ -86,42 +86,5 @@
       "date": "2025-12-19",
       "content": "/article/topics/how-to-update-and-maintain.md"
     }
-  ],
-  "novels": [
-    {
-      "id": "story-1",
-      "uid": "novel-1",
-      "title": "Episode 01",
-      "date": "2025-11-05",
-      "content": "/article/novels/story-1.md"
-    },
-    {
-      "id": "story-2",
-      "uid": "novel-2",
-      "title": "Episode 02",
-      "date": "2025-11-05",
-      "content": "/article/novels/story-2.md"
-    },
-    {
-      "id": "story-3",
-      "uid": "novel-3",
-      "title": "Episode 03",
-      "date": "2025-11-05",
-      "content": "/article/novels/story-3.md"
-    },
-    {
-      "id": "story-4",
-      "uid": "novel-4",
-      "title": "Episode 04",
-      "date": "2025-11-05",
-      "content": "/article/novels/story-4.md"
-    },
-    {
-      "id": "story-5",
-      "uid": "novel-5",
-      "title": "Episode 05",
-      "date": "2025-11-05",
-      "content": "/article/novels/story-5.md"
-    }
   ]
 }

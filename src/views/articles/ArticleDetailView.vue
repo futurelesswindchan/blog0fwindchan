@@ -4,7 +4,12 @@
       <div class="back-area" @click="$router.back()">
         <i class="fas fa-arrow-left"></i>
       </div>
-      <h2 class="page-title">{{ article?.title }}</h2>
+      <h2 class="page-title">
+        {{ article?.title }}
+        <span v-if="articleStore.error" class="error-message">
+          {{ articleStore.error }}
+        </span>
+      </h2>
     </div>
 
     <div class="story-view">
@@ -32,9 +37,6 @@
         <i class="fas fa-circle-notch fa-spin"></i>
         <span>正在加载文章...</span>
       </div>
-      <div v-if="articleStore.error" class="error-message">
-        {{ articleStore.error }}
-      </div>
     </div>
     <ArticleNavigation
       :prev-article="prevArticle"
@@ -53,8 +55,11 @@ import { useArticleContent } from '@/composables/useArticleContent'
 import { useArticleInfo } from '@/composables/useArticleInfo'
 import { useArticleNavigation } from '@/composables/useArticleNavigation'
 import { useCodeHighlight } from '@/composables/useCodeHighlight'
+
 import ArticleNavigation from '@/components/ArticleNavigation.vue'
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
+
+import '@/styles/correctContentMargin.css'
 import '@/styles/articleContent.css'
 import '@/styles/articleInfo.css'
 import '@/styles/pageHeader.css'

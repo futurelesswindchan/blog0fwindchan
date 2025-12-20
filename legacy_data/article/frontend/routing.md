@@ -30,8 +30,7 @@
   :class="{ active: item.matchPrefix && $route.path.startsWith(item.path) }"
   ```
 
-  只要路径以 `/articles` 开头，它就会保持激活状态。
-  ~~才不会告诉你仪表盘相关路由其实没写完这个功能呢~~
+  只要路径以 `/articles` 开头，它就会保持激活状态。~~才不会告诉你仪表盘相关路由也有这个功能呢~~
 
 ### 2.2 移动端：MobileNavPanel.vue
 
