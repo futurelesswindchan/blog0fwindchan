@@ -15,7 +15,7 @@ from sqlalchemy import text
 # ==========================================
 
 # 1. 源数据目录：指向 legacy_data 
-SOURCE_DIR = os.path.join(os.path.dirname(__file__), "..", "legacy_data")
+SOURCE_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend/legacy_data")
 
 # 2. 后端静态资源目录 (目标目录)
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
