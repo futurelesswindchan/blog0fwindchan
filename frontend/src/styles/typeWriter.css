@@ -1,0 +1,116 @@
+/* 基础样式 */
+.type-writer {
+  opacity: 1;
+}
+
+/* 卡片初始状态 */
+.type-writer .chapter-item {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s var(--aero-animation);
+  transition-delay: var(--item-delay, 0ms);
+  pointer-events: auto; /* 允许交互，动画不再阻塞点击 */
+}
+
+/* 卡片出现动画 */
+.type-writer.typing-element .chapter-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 标题文字样式 */
+.type-writer .chapter-item h3 {
+  display: inline-block;
+  width: 0;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  position: relative;
+}
+
+/* 文字打字动画 */
+.type-writer.typing-text .chapter-item h3 {
+  width: auto;
+  animation: typing-text var(--typing-duration, 0.8s) steps(var(--text-length, 20))
+    var(--text-delay, 0ms) both;
+}
+
+/* 在需要时可以暂停打字动画（通过根元素加类 .typing-paused） */
+.type-writer.typing-paused .chapter-item h3 {
+  animation-play-state: paused !important;
+}
+
+/* 暂停光标闪烁 */
+.type-writer.typing-paused .typing-cursor {
+  animation-play-state: paused !important;
+}
+
+/* 动画完成状态 */
+.type-writer.typing-complete .chapter-item {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateX(0);
+  transition: transform 0.3s var(--aero-animation);
+}
+
+/* 完成状态下的悬停效果 */
+.type-writer.typing-complete .chapter-item:hover {
+  transform: translateX(5px);
+}
+
+/* 打字动画关键帧 */
+@keyframes typing-text {
+  from {
+    width: 0;
+    border-right: 2px solid var(--accent-color);
+  }
+  to {
+    width: 100%;
+    border-right: 2px solid transparent;
+  }
+}
+
+/* 光标样式 */
+.typing-cursor {
+  display: inline-block;
+  color: var(--accent-color);
+  margin-left: 2px;
+  font-weight: bold;
+  opacity: 0;
+  animation: none;
+}
+
+.type-writer.typing-text .typing-cursor {
+  opacity: 1;
+  animation: blink 1s infinite;
+}
+
+.type-writer.typing-complete .typing-cursor {
+  display: none;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* 屏幕适配 */
+@media (min-width: 769px) {
+  .type-writer .chapter-item h3 {
+    max-width: calc(100% - 150px);
+  }
+}
+
+@media (max-width: 768px) {
+  .type-writer .chapter-item h3 {
+    max-width: calc(100vw - 120px);
+  }
+
+  .type-writer.typing-complete .chapter-item:hover i {
+    transform: translateY(-50%) translateX(5px);
+  }
+}

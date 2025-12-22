@@ -1,0 +1,310 @@
+/* 20种自定义文字颜色与背景色，适配浅色与深色主题 */
+
+/* 文字颜色 */
+.text-red {
+  color: #990b0b !important;
+}
+.text-pink {
+  color: #e91e63 !important;
+}
+.text-purple {
+  color: #9c27b0 !important;
+}
+.text-deep-purple {
+  color: #673ab7 !important;
+}
+.text-indigo {
+  color: #3f51b5 !important;
+}
+.text-blue {
+  color: #2196f3 !important;
+}
+.text-light-blue {
+  color: #03a9f4 !important;
+}
+.text-cyan {
+  color: #00bcd4 !important;
+}
+.text-teal {
+  color: #009688 !important;
+}
+.text-green {
+  color: #4caf50 !important;
+}
+.text-light-green {
+  color: #8bc34a !important;
+}
+.text-lime {
+  color: #cddc39 !important;
+}
+.text-yellow {
+  color: #b0a11a !important;
+}
+.text-amber {
+  color: #ffc107 !important;
+}
+.text-orange {
+  color: #ff9800 !important;
+}
+.text-deep-orange {
+  color: #ff5722 !important;
+}
+.text-brown {
+  color: #795548 !important;
+}
+.text-gray {
+  color: #9e9e9e !important;
+}
+.text-blue-gray {
+  color: #607d8b !important;
+}
+.text-black {
+  color: #222 !important;
+}
+
+/* 背景色 */
+.bg-red {
+  background: rgba(231, 76, 60, 0.13) !important;
+}
+.bg-pink {
+  background: rgba(233, 30, 99, 0.13) !important;
+}
+.bg-purple {
+  background: rgba(156, 39, 176, 0.13) !important;
+}
+.bg-deep-purple {
+  background: rgba(103, 58, 183, 0.13) !important;
+}
+.bg-indigo {
+  background: rgba(63, 81, 181, 0.13) !important;
+}
+.bg-blue {
+  background: rgba(33, 150, 243, 0.13) !important;
+}
+.bg-light-blue {
+  background: rgba(3, 169, 244, 0.13) !important;
+}
+.bg-cyan {
+  background: rgba(0, 188, 212, 0.13) !important;
+}
+.bg-teal {
+  background: rgba(0, 150, 136, 0.13) !important;
+}
+.bg-green {
+  background: rgba(76, 175, 80, 0.13) !important;
+}
+.bg-light-green {
+  background: rgba(139, 195, 74, 0.13) !important;
+}
+.bg-lime {
+  background: rgba(205, 220, 57, 0.13) !important;
+}
+.bg-yellow {
+  background: rgba(255, 235, 59, 0.13) !important;
+}
+.bg-amber {
+  background: rgba(255, 193, 7, 0.13) !important;
+}
+.bg-orange {
+  background: rgba(255, 152, 0, 0.13) !important;
+}
+.bg-deep-orange {
+  background: rgba(255, 87, 34, 0.13) !important;
+}
+.bg-brown {
+  background: rgba(121, 85, 72, 0.13) !important;
+}
+.bg-gray {
+  background: rgba(158, 158, 158, 0.13) !important;
+}
+.bg-blue-gray {
+  background: rgba(96, 125, 139, 0.13) !important;
+}
+.bg-black {
+  background: rgba(34, 34, 34, 0.13) !important;
+}
+
+/* 特殊气泡样式 */
+.bg-wind {
+  background: repeating-linear-gradient(135deg, rgb(0, 76, 255) 0 15px, transparent 15px 30px);
+  background-color: #c9d6dd;
+  background-blend-mode: overlay;
+  color: black;
+}
+
+.bg-griffon {
+  background:
+    repeating-linear-gradient(
+      65deg,
+      transparent 0 23px,
+      #67000079 30px 32px,
+      transparent 39px 60px
+    ),
+    repeating-linear-gradient(135deg, rgba(255, 0, 157, 0.2) 0 10px, transparent 10px 21px);
+  background-color: #0b0118;
+  background-blend-mode: screen;
+  color: white;
+}
+
+.bg-red,
+.bg-pink,
+.bg-purple,
+.bg-deep-purple,
+.bg-indigo,
+.bg-blue,
+.bg-light-blue,
+.bg-cyan,
+.bg-teal,
+.bg-green,
+.bg-light-green,
+.bg-lime,
+.bg-yellow,
+.bg-amber,
+.bg-orange,
+.bg-deep-orange,
+.bg-brown,
+.bg-gray,
+.bg-blue-gray,
+.bg-black,
+.bg-wind,
+.bg-griffon {
+  border-radius: 6px;
+  padding: 0.2em 0.5em;
+  display: inline-block;
+  margin: 0.2em 0;
+  line-height: 1.8;
+  word-break: break-all;
+}
+
+/* 深色主题适配 */
+.dark-theme .text-red {
+  color: #e01313 !important;
+}
+.dark-theme .text-pink {
+  color: #ff80ab !important;
+}
+.dark-theme .text-purple {
+  color: #ea80fc !important;
+}
+.dark-theme .text-deep-purple {
+  color: #b388ff !important;
+}
+.dark-theme .text-indigo {
+  color: #8c9eff !important;
+}
+.dark-theme .text-blue {
+  color: #82b1ff !important;
+}
+.dark-theme .text-light-blue {
+  color: #80d8ff !important;
+}
+.dark-theme .text-cyan {
+  color: #84ffff !important;
+}
+.dark-theme .text-teal {
+  color: #a7ffeb !important;
+}
+.dark-theme .text-green {
+  color: #b9f6ca !important;
+}
+.dark-theme .text-light-green {
+  color: #ccff90 !important;
+}
+.dark-theme .text-lime {
+  color: #f4ff81 !important;
+}
+.dark-theme .text-yellow {
+  color: #ffff8d !important;
+}
+.dark-theme .text-amber {
+  color: #ffe57f !important;
+}
+.dark-theme .text-orange {
+  color: #ffd180 !important;
+}
+.dark-theme .text-deep-orange {
+  color: #ff9e80 !important;
+}
+.dark-theme .text-brown {
+  color: #d7ccc8 !important;
+}
+.dark-theme .text-gray {
+  color: #eee !important;
+}
+.dark-theme .text-blue-gray {
+  color: #b0bec5 !important;
+}
+.dark-theme .text-black {
+  color: #fff !important;
+}
+
+.dark-theme .bg-red {
+  background: rgba(231, 76, 60, 0.22) !important;
+}
+.dark-theme .bg-pink {
+  background: rgba(233, 30, 99, 0.22) !important;
+}
+.dark-theme .bg-purple {
+  background: rgba(156, 39, 176, 0.22) !important;
+}
+.dark-theme .bg-deep-purple {
+  background: rgba(103, 58, 183, 0.22) !important;
+}
+.dark-theme .bg-indigo {
+  background: rgba(63, 81, 181, 0.22) !important;
+}
+.dark-theme .bg-blue {
+  background: rgba(33, 150, 243, 0.22) !important;
+}
+.dark-theme .bg-light-blue {
+  background: rgba(3, 169, 244, 0.22) !important;
+}
+.dark-theme .bg-cyan {
+  background: rgba(0, 188, 212, 0.22) !important;
+}
+.dark-theme .bg-teal {
+  background: rgba(0, 150, 136, 0.22) !important;
+}
+.dark-theme .bg-green {
+  background: rgba(76, 175, 80, 0.22) !important;
+}
+.dark-theme .bg-light-green {
+  background: rgba(139, 195, 74, 0.22) !important;
+}
+.dark-theme .bg-lime {
+  background: rgba(205, 220, 57, 0.22) !important;
+}
+.dark-theme .bg-yellow {
+  background: rgba(255, 235, 59, 0.22) !important;
+}
+.dark-theme .bg-amber {
+  background: rgba(255, 193, 7, 0.22) !important;
+}
+.dark-theme .bg-orange {
+  background: rgba(255, 152, 0, 0.22) !important;
+}
+.dark-theme .bg-deep-orange {
+  background: rgba(255, 87, 34, 0.22) !important;
+}
+.dark-theme .bg-brown {
+  background: rgba(121, 85, 72, 0.22) !important;
+}
+.dark-theme .bg-gray {
+  background: rgba(158, 158, 158, 0.22) !important;
+}
+.dark-theme .bg-blue-gray {
+  background: rgba(96, 125, 139, 0.22) !important;
+}
+.dark-theme .bg-black {
+  background: rgba(34, 34, 34, 0.22) !important;
+}
+
+.FleurDeleah {
+  font-family: 'FleurDeleah', sans-serif !important;
+  letter-spacing: 3px !important;
+}
+
+.Aa偷吃可爱长大的 {
+  font-family: 'Aa偷吃可爱长大的', sans-serif !important;
+  letter-spacing: 3px !important;
+}
