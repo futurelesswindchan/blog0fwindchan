@@ -1,0 +1,102 @@
+/* 搜索过滤栏容器 */
+.filter-bar {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* 搜索输入框 */
+.search-input {
+  flex: 1;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  transition: all 0.3s var(--aero-animation);
+}
+
+/* 占位符颜色主题适配 */
+.search-input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+  transition: color 0.3s var(--aero-animation);
+}
+
+.dark-theme .search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.search-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 10px rgba(0, 119, 255, 0.2);
+}
+
+/* 排序按钮 */
+.sort-button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s var(--aero-animation);
+}
+
+.sort-button:hover {
+  color: white;
+  background: rgb(0, 119, 255);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 119, 255, 0.3);
+}
+
+.sort-button:active {
+  transform: translateY(0);
+}
+
+/* 暗色主题按钮样式 */
+.dark-theme .sort-button {
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+}
+
+.dark-theme .sort-button:hover {
+  background: rgb(0, 119, 255);
+  color: black;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .filter-bar {
+    padding: 0.8rem;
+    margin: 1rem 0;
+    flex-wrap: wrap; /* 允许换行 */
+    gap: 0.8rem; /* 减小间距 */
+  }
+
+  .search-input {
+    font-size: 0.9rem;
+    flex-basis: 100%; /* 搜索框独占一行 */
+  }
+
+  .sort-button {
+    flex: 1; /* 排序按钮平分剩余空间 */
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    text-align: center;
+    min-width: calc(50% - 0.4rem); /* 确保两列布局 */
+    white-space: nowrap; /* 防止文字换行 */
+  }
+
+  /* 优化点击效果 */
+  .sort-button:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+
+  /* 移除悬浮效果 */
+  .sort-button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}

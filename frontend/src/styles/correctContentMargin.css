@@ -1,0 +1,15 @@
+.article-view-container,
+.gallery-view-container,
+.friends-view-container {
+  width: 100%;
+  min-height: inherit;
+}
+
+.story-view,
+.gallery-view,
+.friends-view {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1rem;
+  position: relative;
+}

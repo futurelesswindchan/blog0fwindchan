@@ -1,0 +1,77 @@
+# ==========================
+# Global / System Files
+# ==========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================
+# IDE & Editor Settings
+# ==========================
+.idea
+.vs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==========================
+# Frontend (Vue/Vite)
+# ==========================
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/coverage/
+frontend/*.local
+frontend/*.tsbuildinfo
+
+# Testing
+frontend/test-results/
+frontend/playwright-report/
+
+# ==========================
+# Backend (Python/Flask)
+# ==========================
+
+# Virtual Environments
+backend/venv/
+venv/
+.venv/
+env/
+
+# Python Cache & Compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Flask Instance Folder (Database usually lives here)
+backend/instance/*
+!backend/instance/.gitkeep
+
+# Database files (Ignore local DBs)
+*.sqlite3
+*.db
+
+# Environment Variables (Secrets - NEVER COMMIT THIS)
+.env
+backend/.env
+
+# ==========================
+# User Content / Uploads
+# ==========================
+
+# Ignore uploaded files in static folder, but keep the directory structure
+backend/static/*
+
+# Note: We do NOT ignore 'backend/static/artwork' or 'backend/static/friends'
+# because those seem to be your default seed data/images.

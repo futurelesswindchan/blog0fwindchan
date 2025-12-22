@@ -1,0 +1,250 @@
+/* Vue语法高亮 */
+.markdown-content .language-vue .hljs-tag {
+  color: #f56c6c;
+}
+
+.markdown-content .language-vue .hljs-name {
+  color: #e06c75;
+}
+
+.markdown-content .language-vue .hljs-attr {
+  color: #d19a66;
+}
+
+.markdown-content .language-vue .hljs-string {
+  color: #98c379;
+}
+
+.markdown-content .language-vue .hljs-keyword {
+  color: #c678dd;
+}
+
+/* 暗色主题适配 */
+.dark-theme .markdown-content pre {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .markdown-content :not(pre) > code {
+  background: rgba(0, 119, 255, 0.15);
+}
+
+.dark-theme .markdown-content .language-vue .hljs-tag {
+  color: #cc0000;
+}
+
+.dark-theme .markdown-content .language-vue .hljs-name {
+  color: #e45649;
+}
+
+.dark-theme .markdown-content .language-vue .hljs-attr {
+  color: #986801;
+}
+
+.dark-theme .markdown-content .language-vue .hljs-string {
+  color: #50a14f;
+}
+
+.dark-theme .markdown-content .language-vue .hljs-keyword {
+  color: #a626a4;
+}
+
+/* 代码块滚动条美化 */
+.markdown-content pre::-webkit-scrollbar {
+  height: 6px;
+}
+
+.markdown-content pre::-webkit-scrollbar-thumb {
+  background: rgba(0, 119, 255, 0.3);
+  border-radius: 3px;
+}
+
+.markdown-content pre::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+/* 代码字体 */
+.markdown-content code {
+  font-family: 'JetBrainsMono', 'Fira Mono', 'Consolas', monospace;
+  font-size: 0.9em;
+  line-height: 1.6;
+  letter-spacing: -0.5px;
+}
+
+/* 语法高亮色彩方案 - 更柔和的色调 */
+.markdown-content .hljs-keyword,
+.markdown-content .hljs-tag {
+  color: #7eb6ff;
+}
+
+.markdown-content .hljs-string {
+  color: #98c379;
+}
+
+.markdown-content .hljs-function {
+  color: #61afef;
+}
+
+.markdown-content .hljs-number {
+  color: #e5c07b;
+}
+
+.markdown-content .hljs-comment {
+  color: #7f848e;
+  font-style: italic;
+}
+
+/* 暗色主题语法高亮 */
+.dark-theme .markdown-content .hljs-keyword,
+.dark-theme .markdown-content .hljs-tag {
+  color: #79b8ff;
+}
+
+.dark-theme .markdown-content .hljs-string {
+  color: #85e89d;
+}
+
+.dark-theme .markdown-content .hljs-comment {
+  color: #959da5;
+}
+
+.code-block {
+  display: flex;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border-radius: 4px;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.7);
+  color: #e6e6e6;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.code-block .code-lang {
+  width: 300%;
+  box-sizing: border-box;
+  padding: 0.8rem 1.4rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0; /* 取消圆角 */
+  background: rgba(0, 119, 255, 0.4);
+  color: var(--accent-color);
+  border-bottom: 1px solid rgba(0, 119, 255, 0.08);
+  position: absolute;
+  top: 0;
+  margin: 0; /* 确保没有外边距 */
+}
+
+/* 代码内容部分 */
+.code-block code {
+  display: block;
+  padding: 4rem 1rem 1rem 1rem;
+  background: none !important;
+  white-space: pre;
+  border-radius: 0 0 8px 8px;
+}
+
+/* 适配暗色主题 */
+.dark-theme .code-block {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .code-block .code-lang {
+  background: rgba(0, 119, 255, 0.22);
+  color: var(--accent-color);
+  border-bottom: 1px solid rgba(0, 119, 255, 0.13);
+}
+
+/* 行内代码块样式 */
+.markdown-content :not(pre) > code {
+  display: inline-block;
+  padding: 0.15em 0.5em;
+  margin: 0 0.1em;
+  font-size: 0.8em;
+  background: rgba(0, 119, 255, 0.08);
+  color: #1565c0;
+  border-radius: 4px;
+  font-family: 'JetBrainsMono', 'Fira Mono', 'Consolas', monospace;
+  vertical-align: 0.05em;
+  word-break: break-all;
+  transition: background 0.2s;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* 暗色主题下的行内代码块 */
+.dark-theme .markdown-content :not(pre) > code {
+  background: rgba(0, 119, 255, 0.18);
+  color: #40a9ff;
+}
+
+/* Markdown 引用块样式 */
+.markdown-content blockquote {
+  margin: 1.2em 0;
+  padding: 0.1em 1.2em;
+  border-left: 8px solid #0077ff;
+  background: rgba(0, 119, 255, 0.06);
+  color: #444;
+  border-radius: 1px;
+  font-size: 1em;
+  font-style: italic;
+  transition: background 0.2s;
+}
+
+/* 暗色主题下的引用块 */
+.dark-theme .markdown-content blockquote {
+  background: rgba(0, 119, 255, 0.13);
+  color: #b3d8ff;
+  border-left-color: #40a9ff;
+}
+
+/* Markdown 表格样式适配 */
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0;
+  font-size: 1em;
+  background: rgba(0, 119, 255, 0.03);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 119, 255, 0.04);
+}
+
+.markdown-content th,
+.markdown-content td {
+  padding: 0.6em 1em;
+  border: 1px solid rgba(0, 119, 255, 0.13);
+  text-align: left;
+  vertical-align: middle;
+  transition: background 0.2s;
+}
+
+.markdown-content th {
+  background: rgba(0, 119, 255, 0.3);
+  color: #1565c0;
+  font-weight: 600;
+}
+
+.markdown-content tr:nth-child(even) td {
+  background: rgba(0, 119, 255, 0.04);
+}
+
+/* 暗色主题下的表格样式 */
+.dark-theme .markdown-content table {
+  background: rgba(0, 119, 255, 0.09);
+  box-shadow: 0 2px 8px rgba(0, 119, 255, 0.05);
+}
+
+.dark-theme .markdown-content th,
+.dark-theme .markdown-content td {
+  border-color: rgba(0, 119, 255, 0.22);
+}
+
+.dark-theme .markdown-content th {
+  background: rgba(0, 119, 255, 0.5);
+  color: #90c3ee;
+}
+
+.dark-theme .markdown-content tr:nth-child(even) td {
+  background: rgba(0, 119, 255, 0.07);
+}
