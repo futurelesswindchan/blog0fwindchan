@@ -42,12 +42,18 @@ git pull origin main
 
 ### 第 3 步：更新前端 (Server)
 
-如果你修改了 `src/` 下的 Vue 文件、CSS 或图片，需要重新打包然后重启nginx服务：：
+如果你修改了 `frontend/` 下的 Vue 文件、CSS 或图片，需要重新打包：
 
 ```bash
+cd frontend   # <--- 关键：进入前端目录
 npm install   # (可选) 如果没加新依赖可以跳过
 npm run build # 重新构建 dist 目录
-sudo systemctl restart nginx # 重启nginx
+```
+
+构建完成后，记得重启 Nginx（或者如果你只是替换了静态文件，通常不需要重启，但为了保险起见）：
+
+```bash
+sudo systemctl restart nginx
 ```
 
 ### 第 4 步：更新后端 (Server)
@@ -55,6 +61,9 @@ sudo systemctl restart nginx # 重启nginx
 如果你修改了 `backend/` 下的 Python 代码：
 
 ```bash
+cd ../backend # 如果你刚才在 frontend，记得切回来
+# 或者直接 cd ~/你的项目文件夹/backend
+
 # 重启后端服务
 sudo systemctl restart blog
 ```
