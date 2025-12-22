@@ -1,0 +1,68 @@
+{
+  "artworks": [
+    {
+      "id": "1",
+      "title": "风酱的立绘Ⅰ",
+      "thumbnail": "/artwork/artwork1-thumb.jpg",
+      "fullsize": "/artwork/artwork1.jpg",
+      "description": "画师：Bilibili@Lyannnnan",
+      "date": "2025-04-11"
+    },
+    {
+      "id": "2",
+      "title": "风酱的立绘Ⅰ（线稿）",
+      "thumbnail": "/artwork/artwork2-thumb.jpg",
+      "fullsize": "/artwork/artwork2.jpg",
+      "description": "画师：Bilibili@Lyannnnan",
+      "date": "2025-04-7"
+    },
+    {
+      "id": "3",
+      "title": "夕的立绘Ⅰ",
+      "thumbnail": "/artwork/artwork4-thumb.jpg",
+      "fullsize": "/artwork/artwork4.jpg",
+      "description": "画师：Bilibili@Lyannnnan",
+      "date": "2025-05-09"
+    },
+    {
+      "id": "4",
+      "title": "夕的立绘Ⅰ（线稿）",
+      "thumbnail": "/artwork/artwork5-thumb.jpg",
+      "fullsize": "/artwork/artwork5.jpg",
+      "description": "画师：Bilibili@Lyannnnan",
+      "date": "2025-05-08"
+    },
+    {
+      "id": "5",
+      "title": "Dom的立绘Ⅰ",
+      "thumbnail": "/artwork/artwork6-thumb.jpg",
+      "fullsize": "/artwork/artwork6.jpg",
+      "description": "画师：Bilibili@Lyannnnan",
+      "date": "2025-05-25"
+    },
+    {
+      "id": "6",
+      "title": "Dom的立绘Ⅰ（线稿）",
+      "thumbnail": "/artwork/artwork7-thumb.jpg",
+      "fullsize": "/artwork/artwork7.jpg",
+      "description": "画师：Bilibili@Lyannnnan",
+      "date": "2025-05-20"
+    },
+    {
+      "id": "7",
+      "title": "小耗子的立绘Ⅰ（线稿）",
+      "thumbnail": "/artwork/artwork8-thumb.jpg",
+      "fullsize": "/artwork/artwork8.jpg",
+      "description": "画师：Bilibili@Lyannnnan",
+      "date": "2025-06-15"
+    },
+    {
+      "id": "8",
+      "title": "小耗子的立绘Ⅰ",
+      "thumbnail": "/artwork/artwork9-thumb.jpg",
+      "fullsize": "/artwork/artwork9.jpg",
+      "description": "画师：Bilibili@Lyannnnan",
+      "date": "2025-06-20"
+    }
+  ]
+}

@@ -1,71 +1,81 @@
-# Logs & System
-logs
+# ==========================
+# Global / System Files
+# ==========================
+.DS_Store
+Thumbs.db
+Desktop.ini
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
-.DS_Store
-Thumbs.db
-Desktop.ini
 
-# Dependency directories
-node_modules
-dist
-dist-ssr
-coverage
-*.local
-
-# IDE & Editors
+# ==========================
+# IDE & Editor Settings
+# ==========================
+.idea
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 !.vscode/launch.json
-.idea
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Build & Cache
-*.tsbuildinfo
-.eslintcache
+# ==========================
+# Frontend (Vue/Vite)
+# ==========================
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/coverage/
+frontend/*.local
+frontend/*.tsbuildinfo
 
 # Testing
-test-results/
-playwright-report/
-/cypress/videos/
-/cypress/screenshots/
+frontend/test-results/
+frontend/playwright-report/
 
-# --- Backend (Python/Flask) ---
+# ==========================
+# Backend (Python/Flask)
+# ==========================
 
-# Virtual Environments (Do not upload)
+# Virtual Environments
 backend/venv/
 venv/
 .venv/
 env/
-static/
 
 # Python Cache & Compiled files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Flask Instance Folder (Databases usually live here)
-# We ignore the actual DB file but keep the folder structure via README instructions
-backend/instance/
-instance/
+# Flask Instance Folder (Database usually lives here)
+backend/instance/*
+!backend/instance/.gitkeep
 
-# Database files
+# Database files (Ignore local DBs)
 *.sqlite3
 *.db
 
-# Environment Variables (Secrets)
+# Environment Variables (Secrets - NEVER COMMIT THIS)
 .env
-.flaskenv
+backend/.env
 
-# Uploads (Ignore content, keep folder)
+# ==========================
+# User Content / Uploads
+# ==========================
+
+# Ignore uploaded files in static folder, but keep the directory structure
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep
+
+# If you use this folder, ignore content too
 backend/uploads/*
 !backend/uploads/.gitkeep
+
+# Note: We do NOT ignore 'backend/static/artwork' or 'backend/static/friends'
+# because those seem to be your default seed data/images.

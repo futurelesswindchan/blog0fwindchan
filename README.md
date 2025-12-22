@@ -4,10 +4,7 @@
 >
 > A highly customizable, aesthetic full-stack personal blog built with Vue 3, TypeScript & Flask.
 
-![示例图片1](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview1.png)
-![示例图片2](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview2.png)
-![示例图片3](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview3.png)
-![示例图片4](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview4.png)
+![示例图片1](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview1.png)![示例图片2](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview2.png)![示例图片3](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview3.png)![示例图片4](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview4.png)
 
 ---
 
@@ -26,7 +23,7 @@
 ## 💖 核心亮点 (Core Features)
 
 - **🎨 赛博玻璃拟态美学 (Aero Glassmorphism)**
-  项目 UI 深度定制，实现了类似 Windows Aero 的磨砂玻璃质感~~ 也许吧OAO... ~~ 。  
+  项目 UI 深度定制，实现了类似 Windows Aero 的磨砂玻璃质感~~ 也许吧 OAO... ~~ 。  
   支持动态光影反射 (`ReflectionLayer`)、亮/暗主题一键切换，带来沉浸式的视觉享受！ヾ(_´∀ ˋ_)ﾉ
 
 - **✍️ 所见即所得的创作体验 (In-place Editing)**
@@ -39,7 +36,7 @@
 
 - **🔌 开箱即用的演示环境**
   别担心 `clone` 下来是个空架子！Σ(°Д°;  
-  项目内置了数**据迁移脚本** (`init_db.py`)，可以一键将 `public/` 目录下的示例文章和资源导入数据库，让你瞬间拥有一个内容完整的本地站点。
+  项目内置了数**据迁移脚本** (`init_db.py`)，可以一键将 `frontend/legacy_data/` 目录下的示例文章和资源导入数据库，让你瞬间拥有一个内容完整的本地站点。
 
 ---
 
@@ -48,7 +45,7 @@
 > **想立刻体验？或者自己动手部署？**
 >
 > 我们把最详细的教程、开发心得都写成了博客里的**预制文章**！  
-> 你只需要在本地把博客跑起来，再运行刚刚说的**数据迁移脚本**，就能在文章列表里找到它们啦！这样学习起来是不是更有趣？(o゜▽゜)o☆
+> 你只需要在本地把博客跑起来，再运行刚刚说的**数据迁移脚本**，就能在文章列表里找到它们啦！这样学习起来是不是更有趣？(o ゜ ▽ ゜)o☆
 >
 > 下面是让你跑起项目的“快速通道”~
 
@@ -107,16 +104,18 @@ python app.py
 
 #### Step 2: 前端点火！(Frontend Power On!)
 
-只有心脏当然是...不行的OAO！**请打开一个新的终端窗口**！
+只有心脏当然是...不行的 OAO！**请打开一个新的终端窗口**！
 
 ```bash
-# 1. 确保你在项目【根目录】下（不是 backend/，是 blog0fwindchan/）
-#    (如果你的上一个终端还在 backend/ 目录，需要先 `cd ..`)
+# 1. 确保你在项目【根目录】下 (blog0fwindchan/)
 
-# 2. 安装前端依赖
+# 2. 进入前端目录 (关键步骤！)
+cd frontend
+
+# 3. 安装前端依赖
 npm install
 
-# 3. 启动！
+# 4. 启动！
 npm run dev
 ```
 
@@ -143,8 +142,8 @@ npm run dev
 | 技术         | 描述                               |
 | :----------- | :--------------------------------- |
 | `Vue 3`      | 核心框架，全面拥抱 Composition API |
-| `TypeScript` | 全程类型支持，代码更健壮!(ﾟд⊙)     |
-| `Vite`       | 闪电般⚡的构建与开发体验           |
+| `TypeScript` | 全程类型支持，代码更健壮!(ﾟ д⊙)    |
+| `Vite`       | 闪电般 ⚡ 的构建与开发体验         |
 | `Pinia`      | 新一代状态管理，轻量且符合直觉     |
 
 - **HTTP**: `Axios` (配置了拦截器，用于自动化 JWT 处理)
@@ -154,14 +153,14 @@ npm run dev
 
 #### Backend
 
-| 技术                 | 描述                                        |
-| :------------------- | :------------------------------------------ |
-| `Python 3.10+`       | 后端开发语言                                |
-| `Flask`              | 轻量级 Web 框架，灵活易扩展                 |
+| 技术                 | 描述                                       |
+| :------------------- | :----------------------------------------- |
+| `Python 3.10+`       | 后端开发语言                               |
+| `Flask`              | 轻量级 Web 框架，灵活易扩展                |
 | `SQLite`             | 无需配置的嵌入式数据库，方便又快捷(/´∀`)~♥ |
-| `SQLAlchemy`         | ORM 库，使用 2.0 风格进行模型定义           |
-| `Flask-JWT-Extended` | 提供标准的 JWT 认证与 Token 管理            |
-| `python-dotenv`      | 安全地管理环境变量（如密钥）                |
+| `SQLAlchemy`         | ORM 库，使用 2.0 风格进行模型定义          |
+| `Flask-JWT-Extended` | 提供标准的 JWT 认证与 Token 管理           |
+| `python-dotenv`      | 安全地管理环境变量（如密钥）               |
 
 </details>
 
