@@ -77,7 +77,7 @@ cd blog0fwindchan
 cd backend
 
 # 3. 创建一个干净的“小房间”（Python虚拟环境）
-python -m venv venv
+python3 -m venv venv
 
 # 4. 激活这个小房间
 #    Windows:
