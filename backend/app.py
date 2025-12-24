@@ -260,36 +260,52 @@ class Artwork(db.Model):
 def upload_file():
     """
     通用文件上传接口。
-    前端需使用 multipart/form-data 格式，字段名为 'file'。
+    - file: 文件对象
+    - type: (可选) 上传类型，支持 'article' | 'artwork' | 'friend'
     """
-    # 检查请求中是否有文件部分
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
         
     file = request.files['file']
+    # 获取上传类型，默认为 'misc' (杂项)
+    upload_type = request.form.get('type', 'misc')
 
-    if file.filename is not None:
-        # 用户未选择文件
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    
+    if file and allowed_file(file.filename):
+        # 1. 确定存储子目录
+        # 为了安全，只允许特定的子目录名
+        allowed_types = {'article', 'artwork', 'friend', 'misc'}
+        if upload_type not in allowed_types:
+            upload_type = 'misc'
+            
+        # 2. 构建保存路径: static/uploads/<type>/
+        save_dir = os.path.join(app.config['UPLOAD_FOLDER'], upload_type)
         
-        if file and allowed_file(file.filename):
-            # 生成安全的文件名 (使用 UUID 防止重名)
+        # 确保目录存在
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # 3. 生成文件名
+        if file.filename is not None:
             ext = file.filename.rsplit('.', 1)[1].lower()
             filename = f"{uuid.uuid4().hex}.{ext}"
         
-            # 保存文件
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # 4. 保存文件
+            save_path = os.path.join(save_dir, filename)
             file.save(save_path)
-        
-            # 返回访问 URL
-            # Flask 默认托管 static 目录，所以 URL 是 /static/uploads/filename
-            url = f"/static/uploads/{filename}"
-        
+    
+            # 5. 返回 URL
+            # URL 格式: /static/uploads/<type>/<filename>
+            url = f"/static/uploads/{upload_type}/{filename}"
+    
             return jsonify({"message": "Upload successful", "url": url})
-    else: return jsonify({"error": "File Name is None"}), 400
+        else:
+            return jsonify({"message": "Upload failed, filename is none."})
     
     return jsonify({"error": "File type not allowed"}), 400
+
 # endregion
 
 
@@ -542,6 +558,73 @@ def delete_article(slug: str):
         return jsonify({"message": "Deleted"})
 
     return jsonify({"error": "Not found"}), 404
+
+
+@app.route("/api/admin/assets", methods=["GET"])
+@jwt_required()
+def get_article_assets():
+    """
+    获取文章专用素材库图片列表。
+    扫描 static/uploads/article 目录下的所有图片，按修改时间倒序排列。
+    """
+    # 目标目录
+    assets_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'article')
+    
+    # 如果目录不存在，返回空列表
+    if not os.path.exists(assets_dir):
+        return jsonify({"assets": []})
+        
+    assets = []
+    
+    # 遍历目录
+    with os.scandir(assets_dir) as entries:
+        for entry in entries:
+            if entry.is_file() and allowed_file(entry.name):
+                # 获取文件修改时间戳
+                mtime = entry.stat().st_mtime
+                # 构造 URL
+                url = f"/static/uploads/article/{entry.name}"
+                
+                assets.append({
+                    "name": entry.name,
+                    "url": url,
+                    "mtime": mtime,
+                    # 格式化时间方便前端展示 (可选)
+                    "date": datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
+                })
+    
+    # 按时间倒序排序 (最新的在前面)
+    assets.sort(key=lambda x: x['mtime'], reverse=True)
+    
+    return jsonify({"assets": assets})
+
+
+@app.route("/api/admin/assets", methods=["DELETE"])
+@jwt_required()
+def delete_article_asset():
+    """
+    删除文章素材库中的图片。
+    参数: filename (URL query param)
+    """
+    filename = request.args.get('filename')
+    if not filename:
+        return jsonify({"error": "Filename required"}), 400
+    
+    # 安全检查：只取文件名部分，防止目录遍历攻击 (../../)
+    safe_filename = os.path.basename(filename)
+    
+    # 目标路径
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'article', safe_filename)
+    
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            return jsonify({"message": "File deleted"})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    
+    return jsonify({"error": "File not found"}), 404
+
 # endregion
 
 

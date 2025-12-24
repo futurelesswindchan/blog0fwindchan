@@ -1,3 +1,4 @@
+/* frontend\src\styles\articleContent.css */
 /* 文章容器基础样式 */
 .article-view {
   max-width: 1200px;
@@ -71,4 +72,71 @@
       padding-bottom: calc(48px + 1.6rem);
     }
   }
+}
+/* =========================================
+   文章内部元素样式修正 (Markdown 渲染后)
+   ========================================= */
+
+/* 1. 图片样式优化 */
+.markdown-content img {
+  max-width: 100%; /* 限制最大宽度不超过容器 */
+  height: auto; /* 高度自适应保持比例 */
+  display: block; /*以此实现居中 */
+  margin: 1.5rem auto; /* 上下留白，左右居中 */
+  border-radius: 8px; /* 圆角，配合整体风格 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 轻微阴影增加层次感 */
+  transition: transform 0.3s ease; /* 为未来可能的点击放大做准备 */
+}
+
+/* 鼠标悬停时轻微上浮，增加交互感 */
+.markdown-content img:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* 2. 暗色模式适配 */
+.dark-theme .markdown-content img {
+  /* 在暗色模式下稍微降低图片亮度，防止刺眼 */
+  filter: brightness(0.85);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .markdown-content img:hover {
+  filter: brightness(1); /* 悬停时恢复亮度 */
+}
+
+/* 3. 补充一些排版细节 (可选，建议加上) */
+.markdown-content p {
+  margin-bottom: 1.2em; /* 段落间距 */
+  text-align: justify; /* 两端对齐，阅读体验更好 */
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.5em;
+  margin-bottom: 1.2em;
+}
+
+.markdown-content li {
+  margin-bottom: 0.4em;
+}
+
+/* 分割线美化 */
+.markdown-content hr {
+  height: 2px;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  margin: 3rem 0;
+}
+.dark-theme .markdown-content hr {
+  background: rgba(255, 255, 255, 0.1);
 }
