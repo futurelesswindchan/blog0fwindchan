@@ -65,15 +65,38 @@
         <!-- [编辑模式] Markdown 编辑框 -->
         <!-- 使用 v-show 保持状态，或者用 v-if 强制刷新 -->
         <div v-if="isEditing" class="editor-area">
+          <!-- ✨ 新增工具栏 -->
+          <div class="editor-toolbar">
+            <button class="toolbar-btn" title="插入图片" @click="showAssetModal = true">
+              <i class="fas fa-image"></i>
+            </button>
+            <!-- 占位符按钮 -->
+            <button class="toolbar-btn" title="粗体 (暂未实现)" disabled>
+              <i class="fas fa-bold"></i>
+            </button>
+            <button class="toolbar-btn" title="链接 (暂未实现)" disabled>
+              <i class="fas fa-link"></i>
+            </button>
+          </div>
+
+          <!-- 绑定 ref -->
           <textarea
+            ref="textareaRef"
             v-model="form.content"
             class="markdown-textarea"
             placeholder="# 开始你的创作..."
           ></textarea>
+
+          <!-- ✨ 引入素材库弹窗 -->
+          <AssetLibraryModal
+            v-if="showAssetModal"
+            @close="showAssetModal = false"
+            @select="handleInsertImage"
+          />
         </div>
 
         <!-- [预览模式] ContentTypeWriter 用于渲染 -->
-        <!-- 复用你现有的渲染组件，enabled=false 关闭打字机动画以实现静态展示 -->
+        <!-- 复用我们现有的渲染组件，enabled=false 关闭打字机动画以实现静态展示 -->
         <div v-else class="article-content markdown-content">
           <ContentTypeWriter
             :content="form.content"
@@ -109,14 +132,17 @@
 </template>
 
 <script setup lang="ts">
+import { useArticleContent } from '@/composables/useArticleContent'
+import { useCodeHighlight } from '@/composables/useCodeHighlight'
+import { useArticleInfo } from '@/composables/useArticleInfo'
+import { useArticleStore } from '@/views/stores/articleStore'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useArticleContent } from '@/composables/useArticleContent'
-import { useArticleInfo } from '@/composables/useArticleInfo'
-import { useCodeHighlight } from '@/composables/useCodeHighlight'
+import { nextTick } from 'vue'
+
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
+import AssetLibraryModal from '@/components/admin/AssetLibraryModal.vue'
 import api from '@/api'
-import { useArticleStore } from '@/views/stores/articleStore'
 
 import '@/styles/correctContentMargin.css'
 import '@/styles/articleContent.css'
@@ -138,6 +164,8 @@ const markdownOptions = {
 // 状态管理
 const isEditing = ref(true) // 默认为编辑模式（如果是新建）
 const saving = ref(false)
+const showAssetModal = ref(false)
+const textareaRef = ref<HTMLTextAreaElement | null>(null) // 绑定 textarea
 
 // 表单数据
 const form = reactive({
@@ -185,6 +213,30 @@ onMounted(async () => {
     isEditing.value = true
   }
 })
+
+// 处理图片插入
+const handleInsertImage = (url: string) => {
+  const textarea = textareaRef.value
+  if (!textarea) return
+
+  // 1. 获取光标位置
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+
+  // 2. 准备 Markdown 语法
+  const textToInsert = `\n![图片描述](${url})\n`
+
+  // 3. 拼接字符串
+  form.content = form.content.substring(0, start) + textToInsert + form.content.substring(end)
+
+  // 4. 恢复焦点并移动光标 (使用 nextTick 确保 DOM 更新后执行)
+  // 既然是在 script setup 中，可以直接用 nextTick
+  nextTick(() => {
+    textarea.focus()
+    // 将光标移动到插入内容的后面
+    textarea.selectionStart = textarea.selectionEnd = start + textToInsert.length
+  })
+}
 
 // 操作逻辑
 const toggleEdit = () => {
@@ -263,8 +315,8 @@ const goBack = () => {
 
 /* 保持与其他页面的 page-header 高度一致（编辑器模式下） */
 .page-header.editing {
-  min-height: 84px; /* 与其他页面标题栏接近的高度 */
-  align-items: center; /* 垂直居中内容 */
+  min-height: 84px;
+  align-items: center;
 }
 
 .page-header.editing .page-title-input {
@@ -304,7 +356,7 @@ const goBack = () => {
   width: 100%;
 }
 .page-title-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(0, 0, 0, 0.3);
 }
 
 .dark-theme .page-title-input::placeholder {
@@ -361,6 +413,57 @@ const goBack = () => {
 .meta-select option {
   background: #2c3e50;
   color: white;
+}
+
+/* 编辑时的工具栏 */
+.editor-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px 8px 0 0; /* 上圆角 */
+}
+
+.dark-theme .editor-toolbar {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.toolbar-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
+.dark-theme .toolbar-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* 修正 textarea 的圆角，因为它上面现在有工具栏了 */
+.markdown-textarea {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-top: 0; /* 去掉可能存在的 margin */
+  height: calc(100% - 48px); /* 减去工具栏高度，防止溢出 */
 }
 
 /* Markdown 编辑框区域 */
