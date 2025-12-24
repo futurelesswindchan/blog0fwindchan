@@ -1,3 +1,4 @@
+<!-- frontend\src\components\common\TypeWriter.vue -->
 <template>
   <div :class="['type-writer', { 'is-typing': isTyping }]">
     <slot v-if="!enabled">{{ text }}</slot>

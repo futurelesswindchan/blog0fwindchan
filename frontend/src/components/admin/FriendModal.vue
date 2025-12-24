@@ -1,3 +1,4 @@
+<!-- frontend\src\components\admin\FriendModal.vue -->
 <template>
   <Teleport to="body">
     <div class="modal-overlay" @click.self="$emit('close')">

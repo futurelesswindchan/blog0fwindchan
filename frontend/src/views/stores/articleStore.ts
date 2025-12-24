@@ -1,3 +1,4 @@
+// frontend\src\views\stores\articleStore.ts
 import { defineStore } from 'pinia'
 
 // --- 数据接口定义 (与后端返回结构对齐) ---

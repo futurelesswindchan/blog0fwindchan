@@ -1,3 +1,4 @@
+<!-- frontend\src\components\common\CuteToast.vue -->
 <template>
   <transition name="cute-fade">
     <div class="cute-toast" :class="type" v-if="visible" role="status" aria-live="polite">

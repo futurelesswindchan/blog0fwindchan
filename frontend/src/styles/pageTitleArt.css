@@ -1,5 +1,5 @@
 /* src\styles\pageTitleArt.css */
-.page-title-ark {
+.page-title-art {
   text-align: center;
   color: var(--accent-color);
   margin: 0 0 2rem 0;
@@ -9,6 +9,6 @@
   font-size: 3.5rem;
   letter-spacing: 5px;
 }
-.dark-theme .page-title-ark {
+.dark-theme .page-title-art {
   background-color: rgba(0, 0, 0, 0.1);
 }

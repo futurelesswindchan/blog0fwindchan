@@ -1,3 +1,4 @@
+// frontend\src\views\stores\useSettingsStore.ts
 import { defineStore } from 'pinia'
 
 // --- 1. 类型定义 ---

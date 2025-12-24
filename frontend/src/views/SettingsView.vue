@@ -1,6 +1,7 @@
+<!-- frontend\src\views\SettingsView.vue -->
 <template>
   <div class="settings-view-container">
-    <h2 class="page-title-ark">Settings</h2>
+    <h2 class="page-title-art">Settings</h2>
 
     <hr />
 

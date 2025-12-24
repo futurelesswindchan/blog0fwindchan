@@ -1,3 +1,4 @@
+<!-- frontend\src\components\common\ToastManager.vue -->
 <template>
   <div>
     <CuteToast

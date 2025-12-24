@@ -1,3 +1,4 @@
+<!-- frontend\src\components\common\LazyImage.vue -->
 <template>
   <div class="lazy-image-container" ref="containerRef" :style="containerStyle">
     <img

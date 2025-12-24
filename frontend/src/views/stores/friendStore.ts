@@ -1,3 +1,4 @@
+// frontend\src\views\stores\friendStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/api' // 引入封装好的 axios 实例
