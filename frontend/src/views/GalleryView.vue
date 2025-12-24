@@ -1,7 +1,7 @@
 <!-- src\views\GalleryView.vue -->
 <template>
   <div class="gallery-view-container">
-    <h2 class="page-title-ark">Gallery</h2>
+    <h2 class="page-title-art">Gallery</h2>
     <div class="gallery-view">
       <!-- 搜索栏 -->
       <FilterBar

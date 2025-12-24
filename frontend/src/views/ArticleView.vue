@@ -1,7 +1,7 @@
 <!-- ArticleView.vue (renamed from TechView.vue) -->
 <template>
   <div class="article-view-container">
-    <h2 class="page-title-ark">Articles</h2>
+    <h2 class="page-title-art">Articles</h2>
     <section class="article-view">
       <div class="article-categories">
         <!-- 技术手札 -->

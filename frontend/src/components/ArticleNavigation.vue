@@ -1,3 +1,4 @@
+<!-- frontend\src\components\ArticleNavigation.vue -->
 <template>
   <div class="bottom-nav">
     <button

@@ -1,3 +1,4 @@
+<!-- frontend\src\components\common\ContentTypeWriter.vue -->
 <template>
   <div class="content-type-writer" :class="{ 'is-typing': isTyping }">
     <div class="content-wrapper">

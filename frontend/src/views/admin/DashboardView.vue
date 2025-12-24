@@ -1,7 +1,7 @@
 <!-- src\views\admin\DashboardView.vue -->
 <template>
   <div class="dashboard-container">
-    <h2 class="page-title-ark">Dashboard</h2>
+    <h2 class="page-title-art">Dashboard</h2>
 
     <!-- Tab 切换栏 -->
     <div class="tabs-header">

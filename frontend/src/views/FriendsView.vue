@@ -1,6 +1,7 @@
+<!-- frontend\src\views\FriendsView.vue -->
 <template>
   <div class="friends-view-container">
-    <h2 class="page-title-ark">Friends</h2>
+    <h2 class="page-title-art">Friends</h2>
     <div class="friends-view">
       <!-- 搜索栏重新进行了封装 -->
       <FilterBar
