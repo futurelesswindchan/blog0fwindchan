@@ -742,10 +742,34 @@ def delete_artwork(id):
     return jsonify({"message": "Artwork deleted"})
 # endregion
 
+# ==========================================
+# region 🏁 启动逻辑与数据初始化
+# ==========================================
+
+def init_default_data():
+    """初始化默认数据：确保分类存在"""
+    # 这里定义博客需要的默认文章分类
+    default_categories = [
+        ("frontend", "技术手记"),
+        ("topics", "奇怪杂谈"),
+        ("novels", "幻想物语")
+    ]
+    
+    for slug, name in default_categories:
+        # 检查分类是否已存在
+        cat = Category.query.filter_by(slug=slug).first()
+        if not cat:
+            print(f"🛠️ 正在初始化缺失的分类: {name} ({slug})...")
+            new_cat = Category(slug=slug, name=name)
+            db.session.add(new_cat)
+    
+    db.session.commit()
+
 if __name__ == "__main__":
     with app.app_context():
-        # 这里保留 db.create_all() 也是一个好习惯，
-        # 它能确保直接运行 `python app.py` 时也能创建表。
-        # 这个操作是幂等的，即如果表已存在，它不会重复创建。
+        # 1. 创建表结构
         db.create_all()
+        # 2. 初始化默认分类数据
+        init_default_data()
+        
     app.run(debug=True, port=5000)
