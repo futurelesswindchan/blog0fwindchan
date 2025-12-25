@@ -499,6 +499,9 @@ def save_article():
     data = request.json or {}
     is_new = data.get("isNew", False)
 
+    # 初始化默认分类数据
+    init_default_data()
+
     # 必填校验
     if not data.get("title") or not data.get("slug") or not data.get("category"):
         return jsonify({"error": "Missing required fields"}), 400
