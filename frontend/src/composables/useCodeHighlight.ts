@@ -1,3 +1,4 @@
+// frontend\src\composables\useCodeHighlight.ts
 import hljs from 'highlight.js'
 
 export function useCodeHighlight() {

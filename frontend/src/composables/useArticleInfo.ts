@@ -1,3 +1,4 @@
+// frontend\src\composables\useArticleInfo.ts
 import { computed, type Ref, type ComputedRef } from 'vue'
 
 // 改进类型定义以支持响应式值

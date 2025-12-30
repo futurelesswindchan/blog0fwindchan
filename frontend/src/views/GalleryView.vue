@@ -48,7 +48,7 @@ import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import { computed, onMounted } from 'vue'
 import { useArtworkStore } from '@/views/stores/artworkStore'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore' // 🟢 引入 Store
+import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 
 import type { Artwork } from '@/views/stores/artworkStore'
 
@@ -60,7 +60,7 @@ import '@/styles/correctContentMargin.css'
 import '@/styles/pageTitleArt.css'
 
 const artworkStore = useArtworkStore()
-const modalStore = useGlobalModalStore() // 🟢
+const modalStore = useGlobalModalStore()
 const artworks = computed(() => artworkStore.artworks)
 const settingsStore = useSettingsStore()
 
@@ -76,14 +76,13 @@ onMounted(async () => {
   await artworkStore.fetchArtworks()
 })
 
-// 🟢 打开预览，传入当前图片和列表
+// 打开预览，传入当前图片和列表
 function openPreview(artwork: Artwork) {
   modalStore.openGalleryPreview(artwork, filteredItems.value)
 }
 </script>
 
 <style scoped>
-/* 仅保留画廊列表样式，移除所有 modal 相关样式 */
 .gallery-content {
   padding: 2rem;
 }

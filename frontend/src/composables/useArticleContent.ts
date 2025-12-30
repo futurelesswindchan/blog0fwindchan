@@ -1,3 +1,4 @@
+// frontend\src\composables\useArticleContent.ts
 import { ref, onMounted, onUnmounted } from 'vue'
 import VueMarkdown from 'vue-markdown-render'
 

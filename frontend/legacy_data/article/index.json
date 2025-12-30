@@ -1,60 +1,60 @@
 {
   "frontend": [
     {
-      "id": "about-blog",
+      "id": "blog-introduction-0",
       "uid": "frontend-1",
-      "title": "1.项目总览与架构解析",
-      "date": "2025-12-19",
-      "content": "/article/frontend/about-blog.md"
+      "title": "Vol.0 起源：为什么 2025 年了还在手撸博客？",
+      "date": "2025-12-30",
+      "content": "/article/frontend/blog-introduction-0.md"
     },
     {
-      "id": "architecture",
+      "id": "blog-introduction-1",
       "uid": "frontend-2",
-      "title": "2.前端架构与页面布局",
-      "date": "2025-12-19",
-      "content": "/article/frontend/architecture.md"
+      "title": "Vol.1 颜值即正义：传说中的的玻璃美学！",
+      "date": "2025-12-30",
+      "content": "/article/frontend/blog-introduction-1.md"
     },
     {
-      "id": "routing",
+      "id": "blog-introduction-2",
       "uid": "frontend-3",
-      "title": "3.路由与页面导航实现",
-      "date": "2025-12-19",
-      "content": "/article/frontend/routing.md"
+      "title": "Vol.2 动效的艺术：让文字像水一样流淌~",
+      "date": "2025-12-30",
+      "content": "/article/frontend/blog-introduction-2.md"
     },
     {
-      "id": "rendering",
+      "id": "blog-introduction-3",
       "uid": "frontend-4",
-      "title": "4.文章渲染与 Markdown 支持",
-      "date": "2025-12-19",
-      "content": "/article/frontend/md-rendering.md"
+      "title": "Vol.3 Markdown 渲染与代码高亮",
+      "date": "2025-12-30",
+      "content": "/article/frontend/blog-introduction-3.md"
     },
     {
-      "id": "data-management",
+      "id": "blog-introduction-4",
       "uid": "frontend-5",
-      "title": "5.数据管理与状态同步",
-      "date": "2025-12-19",
-      "content": "/article/frontend/data-management.md"
+      "title": "Vol.4 画廊与模态框：从能用就行到全局管理",
+      "date": "2025-12-30",
+      "content": "/article/frontend/blog-introduction-4.md"
     },
     {
-      "id": "responsive-design",
+      "id": "blog-introduction-5",
       "uid": "frontend-6",
-      "title": "6.后台管理系统实战",
-      "date": "2025-12-19",
-      "content": "/article/frontend/backend-refactoring.md"
+      "title": "# Vol.5 拒绝重复劳动：封装复用的哲学 & 一次离谱的白屏BUG！",
+      "date": "2025-12-30",
+      "content": "/article/frontend/blog-introduction-5.md"
     },
     {
-      "id": "theme",
+      "id": "blog-introduction-6",
       "uid": "frontend-7",
-      "title": "7.后端重构与全栈安全",
-      "date": "2025-12-19",
-      "content": "/article/frontend/admin-implementation.md"
+      "title": "Vol.6 后台管理（上）：为了偷懒，于是写了个 CMS (´･ω･`)?",
+      "date": "2025-12-30",
+      "content": "/article/frontend/blog-introduction-6.md"
     },
     {
-      "id": "fucked-serachbar",
+      "id": "dark-mode-implementation",
       "uid": "frontend-8",
-      "title": "（番外）搜索栏引发的血案",
-      "date": "2025-12-12",
-      "content": "article/frontend/fucked-serachbar.md"
+      "title": "深色模式实现详解",
+      "date": "2025-12-30",
+      "content": "/article/frontend/dark-mode-implementation.md"
     }
   ],
   "topics": [

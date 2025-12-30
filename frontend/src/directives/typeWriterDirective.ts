@@ -1,3 +1,4 @@
+// frontend\src\directives\typeWriterDirective.ts
 import { type Directive } from 'vue'
 
 interface TypeWriterOptions {
