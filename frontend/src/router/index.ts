@@ -1,8 +1,10 @@
+// src/router/index.ts
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import { useFriendStore } from '@/views/stores/friendStore'
 import { useArtworkStore } from '@/views/stores/artworkStore'
 import { useAdminStore } from '@/views/stores/adminStore'
+import { useGlobalModalStore } from '@/views/stores/globalModalStore' // ✨ 新增引入
 
 // 扩展路由元信息类型以包含 title 字段
 declare module 'vue-router' {
@@ -24,7 +26,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/HomeView.vue'),
         meta: { title: '正在首页发呆中...' },
       },
-      // 当访问 '/' 时重定向到 /home（保持 MainLayout）
+      // 当访问 '/' 时重定向到 /home
       {
         path: '',
         redirect: { name: 'Home' },
@@ -94,21 +96,11 @@ const routes: RouteRecordRaw[] = [
           title: '友情链接 ~ 野生小伙伴！',
         },
       },
-      {
-        path: 'settings',
-        name: 'Settings',
-        component: () => import('@/views/SettingsView.vue'),
-        meta: { title: '个性化设置 ~ 打造专属界面' },
-      },
+      // ❌ 已移除 Settings 路由 (改为模态框)
       {
         path: 'admin',
         children: [
-          {
-            path: 'login',
-            name: 'AdminLogin',
-            component: () => import('@/views/admin/LoginView.vue'),
-            meta: { title: '管理员登录 ~ 闲人免进哦' },
-          },
+          // ❌ 已移除 Login 路由 (改为模态框)
           {
             path: 'dashboard',
             name: 'AdminDashboard',
@@ -166,17 +158,25 @@ router.beforeEach(async (to, from, next) => {
   // 添加过渡类名到根元素
   document.documentElement.classList.add('page-transitioning')
 
-  // 1. 检查 Admin 权限（如果路由声明了 requiresAuth）
   try {
     const adminStore = useAdminStore()
-    // 使用类型断言确保 requiresAuth 存在
+
+    // 1. 检查 Admin 权限
     if (to.meta.requiresAuth && !adminStore.isAuthenticated) {
-      next({ name: 'AdminLogin', query: { redirect: to.fullPath } })
+      // ✨ 核心修改：如果未登录，不跳转到登录页，而是重定向回首页并弹出模态框
+      const modalStore = useGlobalModalStore()
+      modalStore.openLogin() // 呼出登录窗口
+
+      // 如果当前已经在首页，则拦截导航即可；否则重定向到首页
+      if (from.name === 'Home') {
+        next(false) // 取消导航
+      } else {
+        next({ name: 'Home' }) // 去首页待命
+      }
       return
     }
 
     // 2. 原有的预加载逻辑
-    // 根据路由名称预加载数据
     if (to.name === 'Friends') {
       const friendStore = useFriendStore()
       if (!friendStore.friends.length) {

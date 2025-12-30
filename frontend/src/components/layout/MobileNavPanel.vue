@@ -1,3 +1,4 @@
+<!-- frontend\src\components\layout\MobileNavPanel.vue -->
 <template>
   <nav
     class="mobile-nav"
@@ -29,43 +30,50 @@
         }"
         @click="handleClose"
       >
-        <font-awesome-icon :icon="item.iconType" fixed-width />
+        <!-- 统一图标容器 -->
+        <div class="icon-container">
+          <font-awesome-icon :icon="item.iconType" fixed-width />
+        </div>
         <span>{{ item.label }}</span>
       </router-link>
       <hr />
     </div>
 
-    <!-- 主题切换按钮 -->
-    <button class="nav-item theme-toggle" :style="themeButtonStyle" @click="$emit('toggle-theme')">
-      <i class="fas" :class="isDarkTheme ? 'fa-sun' : 'fa-moon'"></i>
-      <span>{{ isDarkTheme ? '切换到亮色主题' : '切换到暗色主题' }}</span>
+    <!-- 2. 设置按钮 -->
+    <button class="nav-item settings-item" @click="openSettings">
+      <div class="icon-container">
+        <font-awesome-icon :icon="['fas', 'cog']" fixed-width />
+      </div>
+      <span>设置界面</span>
     </button>
 
-    <!-- 设置按钮，放在主题切换按钮下方 -->
-    <router-link to="/settings" class="nav-item settings-item" @click="handleClose">
-      <font-awesome-icon :icon="['fas', 'cog']" fixed-width />
-      <span>设置</span>
-    </router-link>
+    <!-- 3. 主题切换 -->
+    <button class="nav-item theme-toggle" :style="themeButtonStyle" @click="$emit('toggle-theme')">
+      <!-- 统一图标容器，修复对齐 -->
+      <div class="icon-container">
+        <i class="fas" :class="isDarkTheme ? 'fa-sun' : 'fa-moon'"></i>
+      </div>
+      <span>{{ isDarkTheme ? '亮色主题' : '暗色主题' }}</span>
+    </button>
   </nav>
 </template>
 
 <script setup lang="ts">
+import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { ref, computed } from 'vue'
 
 const { isDarkTheme } = defineProps<{
   isDarkTheme: boolean
 }>()
 
-// 组件内部状态
 const emit = defineEmits(['close', 'toggle-theme'])
 const isClosing = ref(false)
+const modalStore = useGlobalModalStore()
 
-// 添加主题按钮样式计算属性
 const themeButtonStyle = computed(() => ({
   background: isDarkTheme ? 'rgba(251, 114, 153, 0.3)' : 'rgba(66, 133, 244, 0.5)',
 }))
 
-// 同步桌面版的路由配置
 const navItems = [
   {
     path: '/home',
@@ -75,24 +83,27 @@ const navItems = [
     matchPrefix: true,
   },
   { path: '/articles', iconType: ['fas', 'book-open'], label: '文章导航', matchPrefix: true },
+  { path: '/gallery', iconType: ['fas', 'images'], label: '绘画长廊', matchPrefix: true },
+  { path: '/friends', iconType: ['fas', 'paw'], label: '友情链接', matchPrefix: true },
   {
     path: '/admin/dashboard',
     iconType: ['fas', 'pen-nib'],
     label: '内容管理',
     matchPrefix: true,
   },
-  { path: '/gallery', iconType: ['fas', 'images'], label: '绘画长廊', matchPrefix: true },
-  { path: '/friends', iconType: ['fas', 'paw'], label: '友情链接', matchPrefix: true },
 ]
 
-// 优化关闭处理函数
+const openSettings = () => {
+  modalStore.openSettings()
+  handleClose()
+}
+
 const handleClose = () => {
   if (!isClosing.value) {
     isClosing.value = true
   }
 }
 
-// 优化动画结束处理函数
 const onAnimationEnd = () => {
   if (isClosing.value) {
     emit('close')
@@ -128,7 +139,6 @@ const onAnimationEnd = () => {
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* 修改进入动画 */
 @keyframes slideIn {
   0% {
     transform: translateX(-100%);
@@ -138,7 +148,6 @@ const onAnimationEnd = () => {
   }
 }
 
-/* 修改退出动画 */
 @keyframes slideOut {
   0% {
     transform: translateX(0);
@@ -148,16 +157,13 @@ const onAnimationEnd = () => {
   }
 }
 
-/* 添加动画类 */
 .mobile-nav {
   animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
-
 .mobile-nav.sliding-out {
   animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* 禁用所有可交互元素的点击高亮 */
 .nav-item,
 .close-btn,
 .theme-toggle {
@@ -166,7 +172,6 @@ const onAnimationEnd = () => {
   -webkit-user-select: none;
 }
 
-/* 优化按钮点击效果 */
 .close-btn:active,
 .theme-toggle:active,
 .nav-item:active {
@@ -181,14 +186,12 @@ const onAnimationEnd = () => {
   border-radius: 8px;
   padding: 0px 16px;
 }
-
 .nav-header h2 {
   margin: 0;
   font-size: 1.2rem;
   color: inherit;
   opacity: 0.9;
 }
-
 .close-btn {
   background: none;
   border: none;
@@ -206,32 +209,27 @@ hr {
   transition: all 0.3s ease;
   margin: 12px 0;
 }
-
 .dark-theme hr {
   background-color: rgba(255, 255, 255, 1);
 }
 
-/* 新增：双列布局 */
 .nav-items-grid {
+  word-break: keep-all;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px; /* 缩小间距，避免重叠 */
+  gap: 8px;
   align-items: stretch;
-  padding: 0 2px; /* 增加左右内边距 */
+  padding: 0 2px;
 }
-
-/* 让分隔线横跨两列 */
 .nav-items-grid hr {
   grid-column: 1 / -1;
 }
-
-/* 让每个nav-item自适应宽度并缩小 */
 .nav-items-grid .nav-item {
-  width: 95%; /* 缩小宽度，避免卡片贴边 */
+  width: 95%;
   min-width: 0;
-  font-size: 0.98rem; /* 字体略小 */
-  padding: 10px 15px; /* 缩小内边距 */
-  margin: 0 auto; /* 居中显示 */
+  font-size: 0.98rem;
+  padding: 10px 15px;
+  margin: 0 auto;
   box-sizing: border-box;
 }
 
@@ -242,9 +240,23 @@ hr {
   border-radius: 8px;
   color: rgba(0, 0, 0, 0.85);
   text-decoration: none;
-  gap: 12px;
+  gap: 12px; /* 控制图标和文字的间距 */
   transition: all 0.3s ease;
   background: rgba(0, 0, 0, 0.1);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* 移动端图标容器对齐 */
+.icon-container {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
 }
 
 .dark-theme .nav-item {
@@ -258,7 +270,6 @@ hr {
   background: rgba(0, 119, 255, 0.5);
   color: var(--accent-color);
 }
-
 .dark-theme .nav-item.router-link-exact-active,
 .dark-theme .nav-item.router-link-active,
 .dark-theme .nav-item.active {
@@ -271,37 +282,19 @@ hr {
   color: var(--accent-color);
   opacity: 0.9;
 }
-
 .dark-theme .nav-item svg,
 .dark-theme .theme-toggle i {
   opacity: 1;
 }
 
-/* 修改主题切换按钮样式 */
 .theme-toggle {
-  border: none;
-  cursor: pointer;
-  display: flex;
-  transition: all 0.3s var(--aero-animation);
   background: v-bind('themeButtonStyle.background') !important;
 }
 
-.dark-theme .theme-toggle {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* 添加点击状态样式 */
-.theme-toggle:active {
-  opacity: 0.7;
-  transform: scale(0.98);
-}
-
-/* 移动端导航栏动画优化 */
 @media (hover: none) {
   .mobile-overlay {
-    backdrop-filter: none; /* 移除背景模糊 */
+    backdrop-filter: none;
   }
-
   .mobile-nav {
     will-change: auto;
     backface-visibility: visible;
@@ -309,7 +302,6 @@ hr {
   }
 }
 
-/* 统一按钮高度 */
 .theme-toggle,
 .nav-items-grid .nav-item,
 .settings-item {
@@ -319,16 +311,6 @@ hr {
   align-items: center;
   box-sizing: border-box;
   transition: 0.3s ease;
-  /* 保持原有样式 */
-}
-
-/* 保证设置按钮样式不被覆盖 */
-.settings-item {
-  margin-top: 18px;
-  background: rgba(0, 119, 255, 0.13);
-  justify-content: flex-start;
-}
-.dark-theme .settings-item {
-  background: rgba(0, 119, 255, 0.18);
+  margin-bottom: 8px;
 }
 </style>

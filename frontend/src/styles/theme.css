@@ -273,22 +273,32 @@ hr {
    5. 滚动条美化
    ========================================= */
 
-/* 全局滚动条 */
+/* 全局滚动条 - 设置为悬浮样式 */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-  background: rgba(0, 0, 0, 0.05);
+  width: 8px;
+  height: 8px;
+  background-color: transparent;
 }
 
+/* 滚动条轨道 */
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+/* 滚动条滑块 */
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.4);
-  border: 2px solid transparent; /* 制造 padding 效果 */
-  border-radius: 10px;
+  background: rgba(120, 120, 120, 0.3);
+  border-radius: 4px;
+  border: 2px solid transparent;
   background-clip: content-box;
 }
 
+/* 鼠标悬停在滚动条上时加深颜色 */
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(120, 120, 120, 0.6);
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 
 /* 导航栏细滚动条 */
@@ -296,9 +306,8 @@ hr {
   width: 4px;
   background: transparent;
 }
-
 .nav-panel::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(120, 120, 120, 0.2);
   border-radius: 2px;
 }
 

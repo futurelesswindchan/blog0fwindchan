@@ -87,7 +87,8 @@
                 <td class="col-url url-col" :title="friend.url">{{ friend.url }}</td>
                 <td class="col-desc" :title="friend.desc">{{ friend.desc }}</td>
                 <td class="action-cell col-action">
-                  <button @click="openFriendModal(friend)" class="icon-btn edit">
+                  <!-- ✨ 修改：调用 Store 打开弹窗 -->
+                  <button @click="modalStore.openFriendModal(friend)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
                   </button>
                   <button @click="deleteFriend(friend.id)" class="icon-btn del">
@@ -112,7 +113,8 @@
               <div class="gallery-info">
                 <h4>{{ work.title }}</h4>
                 <div class="gallery-actions">
-                  <button @click="openArtworkModal(work)" class="icon-btn edit">
+                  <!-- ✨ 修改：调用 Store 打开弹窗 -->
+                  <button @click="modalStore.openArtworkModal(work)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
                   </button>
                   <button @click="deleteArtwork(work.id)" class="icon-btn del">
@@ -127,33 +129,21 @@
       </div>
     </div>
 
-    <!-- 弹窗组件 -->
-    <FriendModal
-      v-if="showFriendModal"
-      :friend="editingFriend"
-      @close="showFriendModal = false"
-      @submit="handleFriendSubmit"
-    />
-    <ArtworkModal
-      v-if="showArtworkModal"
-      :artwork="editingArtwork"
-      @close="showArtworkModal = false"
-      @submit="handleArtworkSubmit"
-    />
+    <!-- 移除：不再需要本地引入 Modal 组件 -->
   </div>
 </template>
 
 <script setup lang="ts">
 import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
-import { useArtworkStore, type Artwork } from '@/views/stores/artworkStore'
-import { useFriendStore, type Friend } from '@/views/stores/friendStore'
+
+import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useFriendStore } from '@/views/stores/friendStore'
+import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { useArticleContent } from '@/composables/useArticleContent'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
-import ArtworkModal from '@/components/admin/ArtworkModal.vue'
-import FriendModal from '@/components/admin/FriendModal.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import api from '@/api'
 
@@ -168,6 +158,7 @@ const { formatDate } = useArticleContent()
 const articleStore = useArticleStore()
 const friendStore = useFriendStore()
 const artworkStore = useArtworkStore()
+const modalStore = useGlobalModalStore()
 
 // Tabs 配置
 const tabs = [
@@ -207,14 +198,14 @@ const handleCreate = () => {
   if (currentTab.value === 'articles') {
     router.push({ name: 'EditorCreate' })
   } else if (currentTab.value === 'friends') {
-    openFriendModal(null)
+    modalStore.openFriendModal(null)
   } else {
-    openArtworkModal(null)
+    modalStore.openArtworkModal(null)
   }
 }
 
 // =========================================
-// 搜索与分页逻辑 (客户端实现)
+// 搜索与分页逻辑 (保持不变)
 // =========================================
 const pageSize = 10
 
@@ -222,14 +213,12 @@ const pageSize = 10
 const articleSearchText = ref('')
 const articlePage = ref(1)
 
-// 所有文章 (带分类)
 const allArticles = computed<ArticleWithCategory[]>(() => {
   return Object.entries(articleStore.articles).flatMap(([category, articles]) =>
     articles.map((article) => ({ ...article, category })),
   )
 })
 
-// 过滤后的文章
 const filteredArticles = computed(() => {
   const text = articleSearchText.value.toLowerCase()
   if (!text) return allArticles.value
@@ -239,14 +228,12 @@ const filteredArticles = computed(() => {
   )
 })
 
-// 分页后的文章
 const paginatedArticles = computed(() => {
   const start = (articlePage.value - 1) * pageSize
   const end = start + pageSize
   return filteredArticles.value.slice(start, end)
 })
 
-// 文章分页信息对象
 const articlePagination = computed(() => ({
   currentPage: articlePage.value,
   totalPages: Math.ceil(filteredArticles.value.length / pageSize) || 1,
@@ -258,7 +245,6 @@ const articlePagination = computed(() => ({
   },
 }))
 
-// 搜索时重置页码
 watch(articleSearchText, () => {
   articlePage.value = 1
 })
@@ -267,7 +253,6 @@ watch(articleSearchText, () => {
 const friendSearchText = ref('')
 const friendPage = ref(1)
 
-// 过滤后的友链
 const filteredFriends = computed(() => {
   const text = friendSearchText.value.toLowerCase()
   if (!text) return friendStore.friends
@@ -279,14 +264,12 @@ const filteredFriends = computed(() => {
   )
 })
 
-// 分页后的友链
 const paginatedFriends = computed(() => {
   const start = (friendPage.value - 1) * pageSize
   const end = start + pageSize
   return filteredFriends.value.slice(start, end)
 })
 
-// 友链分页信息对象
 const friendPagination = computed(() => ({
   currentPage: friendPage.value,
   totalPages: Math.ceil(filteredFriends.value.length / pageSize) || 1,
@@ -298,7 +281,6 @@ const friendPagination = computed(() => ({
   },
 }))
 
-// 搜索时重置页码
 watch(friendSearchText, () => {
   friendPage.value = 1
 })
@@ -307,7 +289,6 @@ watch(friendSearchText, () => {
 const gallerySearchText = ref('')
 const galleryPage = ref(1)
 
-// 过滤后的画廊
 const filteredGallery = computed(() => {
   const text = gallerySearchText.value.toLowerCase()
   if (!text) return artworkStore.artworks
@@ -317,14 +298,12 @@ const filteredGallery = computed(() => {
   )
 })
 
-// 分页后的画廊
 const paginatedGallery = computed(() => {
   const start = (galleryPage.value - 1) * pageSize
   const end = start + pageSize
   return filteredGallery.value.slice(start, end)
 })
 
-// 画廊分页信息对象
 const galleryPagination = computed(() => ({
   currentPage: galleryPage.value,
   totalPages: Math.ceil(filteredGallery.value.length / pageSize) || 1,
@@ -336,7 +315,6 @@ const galleryPagination = computed(() => ({
   },
 }))
 
-// 搜索时重置页码
 watch(gallerySearchText, () => {
   galleryPage.value = 1
 })
@@ -346,68 +324,36 @@ watch(gallerySearchText, () => {
 // =========================================
 
 // --- 文章操作 ---
-// 使用 ArticleWithCategory 类型
 const editArticle = (article: ArticleWithCategory) => {
   router.push({ name: 'EditorEdit', params: { category: article.category, slug: article.id } })
 }
 
-// 使用 ArticleWithCategory 类型
 const deleteArticle = async (article: ArticleWithCategory) => {
   if (confirm(`确定删除文章《${article.title}》吗？`)) {
     await api.delete(`/articles/${article.id}`)
-    await articleStore.fetchArticleIndex() // 立即刷新
+    await articleStore.fetchArticleIndex()
   }
 }
 
 // --- 友链操作 ---
-const showFriendModal = ref(false)
-const editingFriend = ref<Friend | null>(null)
-
-const openFriendModal = (friend: Friend | null) => {
-  editingFriend.value = friend
-  showFriendModal.value = true
-}
-
-// 使用 Partial<Friend> 类型，因为表单提交的数据可能不包含 id
-const handleFriendSubmit = async (data: Partial<Friend>) => {
-  if (editingFriend.value) {
-    await friendStore.updateFriend(editingFriend.value.id, data)
-  } else {
-    await friendStore.addFriend(data)
-  }
-  await friendStore.fetchFriends() // 立即刷新列表
-}
+// 移除本地状态和 openFriendModal 函数，直接在模板调用 modalStore
+// 移除 handleFriendSubmit，逻辑已移至 Modal 内部
 
 const deleteFriend = async (id: string) => {
   if (confirm('确定删除该友链吗？')) {
     await friendStore.deleteFriend(id)
-    await friendStore.fetchFriends() // 立即刷新列表
+    await friendStore.fetchFriends()
   }
 }
 
 // --- 画廊操作 ---
-const showArtworkModal = ref(false)
-const editingArtwork = ref<Artwork | null>(null)
-
-const openArtworkModal = (work: Artwork | null) => {
-  editingArtwork.value = work
-  showArtworkModal.value = true
-}
-
-// 使用 Partial<Artwork> 类型
-const handleArtworkSubmit = async (data: Partial<Artwork>) => {
-  if (editingArtwork.value) {
-    await artworkStore.updateArtwork(editingArtwork.value.id, data)
-  } else {
-    await artworkStore.addArtwork(data)
-  }
-  await artworkStore.fetchArtworks() // 立即刷新列表
-}
+// 移除本地状态和 openArtworkModal 函数，直接在模板调用 modalStore
+// 移除 handleArtworkSubmit，逻辑已移至 Modal 内部
 
 const deleteArtwork = async (id: string) => {
   if (confirm('确定删除该作品吗？')) {
     await artworkStore.deleteArtwork(id)
-    await artworkStore.fetchArtworks() // 立即刷新列表
+    await artworkStore.fetchArtworks()
   }
 }
 </script>
