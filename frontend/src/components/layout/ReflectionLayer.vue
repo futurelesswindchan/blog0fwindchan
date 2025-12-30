@@ -1,3 +1,4 @@
+<!-- frontend\src\components\layout\ReflectionLayer.vue -->
 <template>
   <div class="reflection-layer">
     <div class="reflection-content">

@@ -1,3 +1,4 @@
+<!-- frontend\src\views\articles\ArticleDetailView.vue -->
 <template>
   <div class="article-view-container">
     <div class="page-header">

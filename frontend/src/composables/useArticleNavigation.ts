@@ -1,3 +1,4 @@
+// frontend\src\composables\useArticleNavigation.ts
 import { computed, type ComputedRef } from 'vue'
 
 export interface NavigableArticle {
