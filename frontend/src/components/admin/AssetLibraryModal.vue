@@ -1,64 +1,87 @@
+<!-- src/components/admin/AssetLibraryModal.vue -->
 <template>
-  <Teleport to="body">
-    <div class="modal-overlay" @click.self="$emit('close')">
-      <div class="modal-content asset-modal">
-        <div class="modal-header">
-          <h3>文章素材库</h3>
-          <button class="close-btn" @click="$emit('close')">
-            <i class="fas fa-times"></i>
-          </button>
+  <BaseModal
+    :show="modalStore.showAssetLibrary"
+    width="850px"
+    height="700px"
+    @close="modalStore.closeAssetLibrary"
+  >
+    <div class="asset-layout">
+      <!-- 顶部工具栏 -->
+      <div class="asset-header">
+        <div class="header-left">
+          <h3>素材中心</h3>
+          <p class="asset-hint">
+            <span class="info">点击图片即可插入文章。</span>
+            <span class="warning">删除前请确认图片未被引用！</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- 内容区域 -->
+      <div class="asset-content">
+        <div v-if="loading" class="state-box">
+          <i class="fas fa-spinner fa-spin fa-2x"></i>
+          <p>加载素材中...</p>
+        </div>
+        <div v-else-if="assets.length === 0" class="state-box">
+          <i class="fas fa-box-open fa-3x"></i>
+          <p>空空如也，快去上传一张吧~</p>
         </div>
 
-        <!-- 工具栏：上传区 -->
-        <div class="asset-toolbar">
-          <button class="upload-btn" @click="triggerUpload" :disabled="uploading">
-            <i class="fas" :class="uploading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'"></i>
-            <span>{{ uploading ? '上传中...' : '上传新图片' }}</span>
-          </button>
-          <input
-            ref="fileInput"
-            type="file"
-            accept="image/*"
-            style="display: none"
-            @change="handleFileChange"
-          />
-          <span class="hint">点击图片即可插入到文章</span>
-        </div>
-
-        <!-- 图片网格 -->
-        <div class="asset-grid-wrapper">
-          <div v-if="loading" class="loading-state">加载中...</div>
-          <div v-else-if="assets.length === 0" class="empty-state">暂无素材，快去上传吧~</div>
-
-          <div v-else class="asset-grid">
-            <div
-              v-for="asset in assets"
-              :key="asset.url"
-              class="asset-item"
-              @click="selectAsset(asset)"
-            >
-              <!-- ✨ 新增：删除按钮 -->
-              <!-- @click.stop 阻止冒泡，防止触发 selectAsset -->
-              <div class="delete-btn" @click.stop="deleteAsset(asset)" title="删除这张图片">
-                <i class="fas fa-trash"></i>
+        <div v-else class="asset-grid">
+          <div
+            v-for="asset in assets"
+            :key="asset.url"
+            class="asset-card"
+            @click="handleSelect(asset)"
+          >
+            <div class="img-wrapper">
+              <img :src="asset.url" loading="lazy" />
+              <!-- 新增：悬停遮罩层 -->
+              <div class="hover-overlay">
+                <i class="fas fa-plus-circle"></i>
+                <span>插入</span>
               </div>
+            </div>
 
-              <div class="img-box">
-                <img :src="asset.url" loading="lazy" />
-              </div>
-              <div class="asset-meta">
-                <span class="asset-date">{{ asset.date.split(' ')[0] }}</span>
-              </div>
+            <div class="card-actions">
+              <button class="btn-icon delete" @click.stop="deleteAsset(asset)" title="永久删除">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+
+            <div class="asset-info">
+              <span class="date">{{ asset.date.split(' ')[0] }}</span>
+              <span class="name-truncate" :title="asset.name">{{ asset.name }}</span>
             </div>
           </div>
         </div>
       </div>
+
+      <div class="toolbar-actions">
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/*"
+          style="display: none"
+          @change="handleFileChange"
+        />
+        <!-- 使用全局样式 modal-btn-primary -->
+        <button class="modal-btn-primary" @click="triggerUpload" :disabled="uploading">
+          <i class="fas" :class="uploading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'"></i>
+          {{ uploading ? '正在上传...' : '上传新素材' }}
+        </button>
+      </div>
     </div>
-  </Teleport>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
+import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { AxiosError } from 'axios'
+import BaseModal from '../common/BaseModal.vue'
 import api from '@/api'
 
 interface Asset {
@@ -67,12 +90,18 @@ interface Asset {
   date: string
 }
 
-const emit = defineEmits(['close', 'select'])
-
+const modalStore = useGlobalModalStore()
 const assets = ref<Asset[]>([])
 const loading = ref(false)
 const uploading = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
+
+watch(
+  () => modalStore.showAssetLibrary,
+  (val) => {
+    if (val) fetchAssets()
+  },
+)
 
 const fetchAssets = async () => {
   loading.value = true
@@ -80,16 +109,13 @@ const fetchAssets = async () => {
     const res = await api.get('/admin/assets')
     assets.value = res.data.assets
   } catch (e) {
-    console.error('加载素材失败', e)
-    alert('素材库加载失败')
+    console.error(e)
   } finally {
     loading.value = false
   }
 }
 
-const triggerUpload = () => {
-  fileInput.value?.click()
-}
+const triggerUpload = () => fileInput.value?.click()
 
 const handleFileChange = async (e: Event) => {
   const target = e.target as HTMLInputElement
@@ -104,203 +130,237 @@ const handleFileChange = async (e: Event) => {
   try {
     await api.post('/upload', formData)
     await fetchAssets()
-  } catch (error) {
-    alert('上传失败')
-    console.error(error)
+  } catch (error: unknown) {
+    const err = error as AxiosError<{ error?: string }>
+    alert(`上传失败: ${err.response?.data.error || err.message}`)
   } finally {
     uploading.value = false
     if (fileInput.value) fileInput.value.value = ''
   }
 }
 
-const selectAsset = (asset: Asset) => {
-  emit('select', asset.url)
-  emit('close')
+const handleSelect = (asset: Asset) => {
+  modalStore.handleAssetSelect(asset.url)
 }
 
-// ✨ 新增：删除逻辑
 const deleteAsset = async (asset: Asset) => {
-  if (!confirm(`确定要永久删除这张图片吗？\n此操作不可恢复。`)) {
+  if (
+    !confirm(
+      `⚠️ 高危操作\n\n确定要永久删除图片 "${asset.name}" 吗？\n如果某些文章中正在使用此图片，将会导致图片无法显示！`,
+    )
+  )
     return
-  }
-
   try {
-    // 使用 params 传递 query string
-    await api.delete('/admin/assets', {
-      params: { filename: asset.name },
-    })
-    // 删除成功后刷新列表
+    await api.delete('/admin/assets', { params: { filename: asset.name } })
     await fetchAssets()
-  } catch (e) {
-    console.error('删除失败', e)
-    alert('删除失败，请检查控制台')
+  } catch (e: unknown) {
+    const err = e as AxiosError<{ error?: string }>
+    alert(`删除失败：${err.response?.data.error || err.message}`)
   }
 }
-
-onMounted(() => {
-  fetchAssets()
-})
 </script>
 
 <style scoped>
-/* ...保留之前的样式... */
-.asset-modal {
-  width: 800px;
-  max-width: 90vw;
-  height: 80vh;
+.asset-layout {
   display: flex;
   flex-direction: column;
-  padding: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  overflow: hidden;
+  height: 100%;
 }
 
-.modal-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+.asset-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: rgba(255, 255, 255, 0.5);
 }
 
-.close-btn {
-  background: none;
-  border: none;
+.header-left h3 {
+  margin: 0 0 0.3rem 0;
+  color: var(--accent-color);
   font-size: 1.2rem;
-  cursor: pointer;
+}
+
+.asset-hint {
+  margin: 0;
+  font-size: 0.85rem;
   color: #666;
-}
-
-.asset-toolbar {
-  padding: 10px 20px;
-  background: rgba(0, 0, 0, 0.02);
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.upload-btn {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: background 0.2s;
-}
-.upload-btn:hover {
-  background: #2563eb;
-}
-.upload-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
 }
 
-.hint {
-  font-size: 0.85rem;
-  color: #888;
+.asset-hint .info {
+  color: #339af0;
+}
+.asset-hint .warning {
+  color: #ff9f43;
 }
 
-.asset-grid-wrapper {
+.asset-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 1.5rem;
+  background: #f8f9fa;
+}
+.dark-theme .asset-content {
+  background: #1a1a1a;
+}
+
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  gap: 1rem;
 }
 
 .asset-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1.2rem;
 }
 
-.asset-item {
-  position: relative; /* ✨ 为了定位删除按钮 */
-  border: 2px solid transparent;
+/* --- 卡片样式优化 --- */
+.asset-card {
+  background: white;
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   cursor: pointer;
-  transition: all 0.2s;
-  background: #f5f5f5;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 5px solid transparent;
+}
+.dark-theme .asset-card {
+  background: #2a2a2a;
 }
 
-.asset-item:hover {
-  border-color: #3b82f6;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.asset-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  border-color: #0077ff;
 }
 
-/* ✨ 新增：删除按钮样式 */
-.delete-btn {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 24px;
-  height: 24px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ef4444; /* 红色 */
-  opacity: 0; /* 默认隐藏 */
-  transition: opacity 0.2s;
-  z-index: 10;
-}
-
-.delete-btn:hover {
-  background: #ef4444;
-  color: white;
-}
-
-/* 鼠标悬停在卡片上时显示删除按钮 */
-.asset-item:hover .delete-btn {
-  opacity: 1;
-}
-
-.img-box {
-  height: 100px;
+.img-wrapper {
+  height: 120px;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  background: #eee;
   overflow: hidden;
 }
-
-.img-box img {
+.img-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.asset-card:hover .img-wrapper img {
+  transform: scale(1.1); /* 图片微放大 */
 }
 
-.asset-meta {
-  padding: 4px 8px;
-  font-size: 0.75rem;
+/* 悬停遮罩层 */
+.hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s;
+  backdrop-filter: blur(2px);
+}
+.asset-card:hover .hover-overlay {
+  opacity: 1;
+}
+.hover-overlay i {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+.hover-overlay span {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+/* 信息栏 */
+.asset-info {
+  padding: 8px 10px;
+  font-size: 0.8rem;
   color: #666;
-  text-align: center;
   background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+.dark-theme .asset-info {
+  background: #2a2a2a;
+  color: #aaa;
+  border-top-color: rgba(255, 255, 255, 0.05);
 }
 
-/* 暗色模式适配 */
-.dark-theme .asset-modal {
-  background: rgba(30, 30, 30, 0.95);
-  color: #eee;
+.name-truncate {
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.dark-theme .asset-item {
-  background: #2a2a2a;
+
+/* 删除按钮优化 */
+.card-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 10;
 }
-.dark-theme .asset-meta {
-  background: #333;
-  color: #aaa;
+
+.btn-icon.delete {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #ff4757;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
-.dark-theme .delete-btn {
-  background: rgba(0, 0, 0, 0.8);
+
+.asset-card:hover .btn-icon.delete {
+  opacity: 1;
+  transform: scale(1);
 }
-.dark-theme .delete-btn:hover {
-  background: #ef4444;
+
+.btn-icon.delete:hover {
+  background: #ff4757;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+}
+
+.toolbar-actions {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.toolbar-actions .modal-btn-primary {
+  margin: 0 auto;
 }
 </style>

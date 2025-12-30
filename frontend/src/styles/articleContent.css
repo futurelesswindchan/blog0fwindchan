@@ -128,12 +128,29 @@
   margin-bottom: 0.4em;
 }
 
+.markdown-content td {
+  color: var(--light-text);
+}
+
+.dark-theme .markdown-content td {
+  color: var(--dark-text);
+}
+
+.markdown-content a {
+  color: var(--light-text);
+}
+
+.dark-theme .markdown-content a {
+  color: var(--dark-text);
+}
+
 .markdown-content hr {
   height: 2px;
   background: rgba(0, 0, 0, 0.1);
   border: none;
   margin: 3rem 0;
 }
+
 .dark-theme .markdown-content hr {
   background: rgba(255, 255, 255, 0.1);
 }

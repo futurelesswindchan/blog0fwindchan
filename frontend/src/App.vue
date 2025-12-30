@@ -1,35 +1,39 @@
+<!-- src/App.vue -->
 <template>
-  <!-- 仅保留最外层容器 -->
-  <router-view />
+  <div id="app-root" :class="{ 'dark-theme': isDarkTheme }">
+    <router-view v-slot="{ Component }">
+      <transition name="page-fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
+
+    <!-- === 全局模态框挂载点 === -->
+    <!-- 不使用 v-if，让组件常驻，由 BaseModal 内部控制显示和动画 -->
+
+    <LoginModal />
+    <SettingsModal />
+
+    <!-- 业务弹窗 -->
+    <!-- 即使不显示，组件也挂载着，但 BaseModal 会隐藏内容 -->
+    <!-- 传入 props 依然有效，因为 store 状态是响应式的 -->
+    <FriendModal />
+    <ArtworkModal />
+    <AssetLibraryModal />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useArticleContent } from '@/composables/useArticleContent'
+// 引入所有模态框组件
+import LoginModal from '@/components/admin/LoginModal.vue'
+import SettingsModal from '@/components/admin/SettingsModal.vue'
+import FriendModal from '@/components/admin/FriendModal.vue'
+import ArtworkModal from '@/components/admin/ArtworkModal.vue'
+import AssetLibraryModal from '@/components/admin/AssetLibraryModal.vue'
 
-const settingsStore = useSettingsStore()
-// 初始化时读取本地存储的设置
-settingsStore.loadSettings()
+const { isDarkTheme } = useArticleContent()
 </script>
 
 <style>
-/* 全局滚动条样式 */
-::-webkit-scrollbar {
-  display: none;
-}
-.page-transitioning {
-  pointer-events: none;
-  user-select: none;
-}
-
-/* 禁用移动端点击高亮 */
-* {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-}
-
-/* 禁用文本选择 */
-.no-select {
-  user-select: none;
-  -webkit-user-select: none;
-}
+@import '@/styles/theme.css';
 </style>
