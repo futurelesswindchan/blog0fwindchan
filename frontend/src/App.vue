@@ -12,6 +12,7 @@
 
     <LoginModal />
     <SettingsModal />
+    <GalleryPreviewModal />
 
     <!-- 业务弹窗 -->
     <!-- 即使不显示，组件也挂载着，但 BaseModal 会隐藏内容 -->
@@ -26,10 +27,11 @@
 import { useArticleContent } from '@/composables/useArticleContent'
 // 引入所有模态框组件
 import LoginModal from '@/components/admin/LoginModal.vue'
-import SettingsModal from '@/components/admin/SettingsModal.vue'
+import SettingsModal from '@/components/common/SettingsModal.vue'
 import FriendModal from '@/components/admin/FriendModal.vue'
 import ArtworkModal from '@/components/admin/ArtworkModal.vue'
 import AssetLibraryModal from '@/components/admin/AssetLibraryModal.vue'
+import GalleryPreviewModal from '@/components/common/GalleryPreviewModal.vue'
 
 const { isDarkTheme } = useArticleContent()
 </script>
