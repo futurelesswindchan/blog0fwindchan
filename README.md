@@ -1,10 +1,17 @@
 # 🍃 风风博客 (Wind Chan's Blog)
 
+![Vue.js](https://img.shields.io/badge/vuejs-%2335495e.svg?style=flat&logo=vuedotjs&logoColor=%234FC08D)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=flat&logo=typescript&logoColor=white)
+![Flask](https://img.shields.io/badge/flask-%23000.svg?style=flat&logo=flask&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=flat&logo=python&logoColor=ffdd54)
+![License](https://img.shields.io/badge/license-CC%20BY--NC--SA%204.0-lightgrey)
+
 > 一个基于 Vue 3 + TypeScript + Flask 打造的高颜值全栈个人博客系统 ✨
 >
 > A highly customizable, aesthetic full-stack personal blog built with Vue 3, TypeScript & Flask.
 
-![示例图片1](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview1.png)![示例图片2](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview2.png)![示例图片3](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview3.png)![示例图片4](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview4.png)
+![示例图片1](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview1.png)  
+![示例图片2](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview2.png)
 
 ---
 
@@ -36,7 +43,7 @@
 
 - **🔌 开箱即用的演示环境**
   别担心 `clone` 下来是个空架子！Σ(°Д°;  
-  项目内置了数**据迁移脚本** (`init_db.py`)，可以一键将 `frontend/legacy_data/` 目录下的示例文章和资源导入数据库，让你瞬间拥有一个内容完整的本地站点。
+  项目内置了 **数据迁移脚本** (`init_db.py`)，可以一键将 `frontend/legacy_data/` 目录下的示例文章和资源导入数据库，让你瞬间拥有一个内容完整的本地站点。
 
 ---
 
@@ -92,7 +99,7 @@ pip install -r requirements.txt
 #    按照提示输入用户名和密码
 flask create-admin
 
-# 7. 【推荐】一键让博客内容满满当当！
+# 7. 【可选】一键让博客内容满满当当！
 #    这个脚本会把所有教程和示例文章都导入数据库
 python init_db.py
 
@@ -126,7 +133,7 @@ npm run dev
 现在，在浏览器里打开 `http://localhost:5173`。
 
 - 如果你想学习网站开发经验，去 **“技术手记”** 分类，你会找到关于 **此博客开发** 的详细心得文章。
-- 如果你只想开箱即用，把项目修改为属于自己的博客并部署到公网，去 **“奇思妙想”** 分类，你会找到你想要的！。
+- 如果你只想开箱即用，把项目修改为属于自己的博客并部署到公网，去 **“奇思妙想”** 分类，你会找到你想要的！
 
 ---
 
