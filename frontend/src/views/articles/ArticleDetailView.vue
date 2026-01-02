@@ -43,6 +43,7 @@
       :prev-article="prevArticle"
       :next-article="nextArticle"
       :back-route-name="type === 'frontend' ? 'FrontEnd' : type === 'topics' ? 'Topics' : 'Novels'"
+      :current-category="type"
     />
   </div>
 </template>

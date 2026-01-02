@@ -65,6 +65,7 @@ interface Props {
   backRouteName: string
   currentParams?: Record<string, string>
   routeName?: string // 添加可选的路由名称
+  currentCategory?: string // 新增：接收当前的分类
 }
 
 const props = defineProps<Props>()
@@ -75,7 +76,24 @@ const navigate = (direction: 'prev' | 'next') => {
   const targetArticle = direction === 'prev' ? props.prevArticle : props.nextArticle
   if (!targetArticle) return
 
-  // 如果提供了指定的路由名称，直接使用
+  // 1. 优先处理：如果父组件传了 currentCategory，直接根据映射表跳转
+  if (props.currentCategory) {
+    const categoryMap: Record<string, string> = {
+      frontend: 'FrontEndArticle',
+      topics: 'TopicsArticle',
+      tools: 'TopicsArticle', // tools 通常也共用 Topics 模板
+      novels: 'NovelsArticle',
+    }
+
+    const targetRouteName = categoryMap[props.currentCategory]
+
+    if (targetRouteName) {
+      router.push({ name: targetRouteName, params: { id: targetArticle.id } })
+      return
+    }
+  }
+
+  // 2. 如果提供了指定的路由名称 (用于 Story 模式等特殊情况)
   if (props.routeName) {
     router.push({
       name: props.routeName,
@@ -87,7 +105,7 @@ const navigate = (direction: 'prev' | 'next') => {
     return
   }
 
-  // 根据 uid 判断文章类型并构建路由参数 (更健壮地处理 category)
+  // 3. 以此往下是原有的 uid 解析逻辑作为保底 (Fallback)
   const uidParts = (targetArticle.uid || '').split('-')
   const uidType = uidParts[0] || ''
   const uidCategory = uidParts[1] || ''
