@@ -11,8 +11,16 @@ export interface TypeWriterSettings {
 }
 
 // 分页设置接口
+// 升级：细化的分页设置接口
 export interface PaginationSettings {
-  itemsPerPage: number
+  // 前台展示
+  articles: number
+  friends: number
+  gallery: number
+  // 后台管理 (Admin)
+  adminArticles: number
+  adminFriends: number
+  adminGallery: number
 }
 
 // --- 2. 默认设置常量 ---
@@ -24,9 +32,14 @@ const defaultTypeWriterSettings: TypeWriterSettings = {
   enabled: true,
 }
 
-// 默认分页设置
+// 升级：为不同板块设置合理的默认值
 const defaultPaginationSettings: PaginationSettings = {
-  itemsPerPage: 6,
+  articles: 6, // 文章通常内容多，每页少一点
+  friends: 4, // 友链卡片大，每页少一点
+  gallery: 8, // 画廊看图，适中
+  adminArticles: 10, // 后台表格，每页显示多一点方便管理
+  adminFriends: 10,
+  adminGallery: 8,
 }
 
 // --- 3. Store 定义 ---
@@ -82,8 +95,13 @@ export const useSettingsStore = defineStore('settings', {
           if (parsed.typeWriter) {
             this.typeWriter = { ...this.typeWriter, ...parsed.typeWriter }
           }
+          // 关键修改：合并分页设置，使用 defaultPaginationSettings 垫底
           if (parsed.pagination) {
-            this.pagination = { ...this.pagination, ...parsed.pagination }
+            this.pagination = {
+              ...defaultPaginationSettings,
+              ...this.pagination,
+              ...parsed.pagination,
+            }
           }
         } catch (e) {
           console.error('读取设置失败，已重置为默认', e)

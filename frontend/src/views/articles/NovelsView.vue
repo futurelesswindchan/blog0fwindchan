@@ -91,7 +91,8 @@ const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
 
   // 这里使用了 computed，所以当 settingsStore 变化时，
   // useSearchAndSort 内部的 pageSize 也会变化，从而触发重新计算分页
-  itemsPerPage: computed(() => settingsStore.pagination.itemsPerPage),
+  // 使用 articles 专属分页配置
+  itemsPerPage: computed(() => settingsStore.pagination.articles),
 })
 
 // 组件挂载时，获取小说文章列表

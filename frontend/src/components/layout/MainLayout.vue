@@ -14,8 +14,8 @@
       ></div>
     </div>
 
-    <!-- 添加反光效果层 -->
-    <ReflectionLayer />
+    <!-- 添加反光效果层-->
+    <ReflectionLayer v-if="!isMobile" />
 
     <!-- 桌面端布局 -->
     <div v-if="!isMobile" class="content-container desktop-layout">

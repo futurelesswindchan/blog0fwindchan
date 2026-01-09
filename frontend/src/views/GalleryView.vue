@@ -69,7 +69,11 @@ const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   searchFields: (artwork) => [artwork.title],
   sortType: 'date',
   sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  itemsPerPage: computed(() => Math.ceil(settingsStore.pagination.itemsPerPage * 1.5)),
+
+  // 这里使用了 computed，所以当 settingsStore 变化时，
+  // useSearchAndSort 内部的 pageSize 也会变化，从而触发重新计算分页
+  // 使用 gallery 专属分页配置
+  itemsPerPage: computed(() => Math.ceil(settingsStore.pagination.gallery)),
 })
 
 onMounted(async () => {

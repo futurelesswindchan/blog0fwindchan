@@ -87,7 +87,6 @@
                 <td class="col-url url-col" :title="friend.url">{{ friend.url }}</td>
                 <td class="col-desc" :title="friend.desc">{{ friend.desc }}</td>
                 <td class="action-cell col-action">
-                  <!-- ✨ 修改：调用 Store 打开弹窗 -->
                   <button @click="modalStore.openFriendModal(friend)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
                   </button>
@@ -113,7 +112,6 @@
               <div class="gallery-info">
                 <h4>{{ work.title }}</h4>
                 <div class="gallery-actions">
-                  <!-- ✨ 修改：调用 Store 打开弹窗 -->
                   <button @click="modalStore.openArtworkModal(work)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
                   </button>
@@ -128,17 +126,15 @@
         <PaginationControls :pagination="galleryPagination" />
       </div>
     </div>
-
-    <!-- 移除：不再需要本地引入 Modal 组件 -->
   </div>
 </template>
 
 <script setup lang="ts">
 import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
-
 import { useArtworkStore } from '@/views/stores/artworkStore'
 import { useFriendStore } from '@/views/stores/friendStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useSettingsStore } from '@/views/stores/useSettingsStore' // 引入 SettingsStore
 import { useArticleContent } from '@/composables/useArticleContent'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -159,6 +155,7 @@ const articleStore = useArticleStore()
 const friendStore = useFriendStore()
 const artworkStore = useArtworkStore()
 const modalStore = useGlobalModalStore()
+const settingsStore = useSettingsStore() // 初始化
 
 // Tabs 配置
 const tabs = [
@@ -205,13 +202,14 @@ const handleCreate = () => {
 }
 
 // =========================================
-// 搜索与分页逻辑 (保持不变)
+// 搜索与分页逻辑
 // =========================================
-const pageSize = 10
 
 // --- 1. 文章搜索与分页 ---
 const articleSearchText = ref('')
 const articlePage = ref(1)
+// 使用后台专属配置
+const articlePageSize = computed(() => settingsStore.pagination.adminArticles)
 
 const allArticles = computed<ArticleWithCategory[]>(() => {
   return Object.entries(articleStore.articles).flatMap(([category, articles]) =>
@@ -229,14 +227,14 @@ const filteredArticles = computed(() => {
 })
 
 const paginatedArticles = computed(() => {
-  const start = (articlePage.value - 1) * pageSize
-  const end = start + pageSize
+  const start = (articlePage.value - 1) * articlePageSize.value
+  const end = start + articlePageSize.value
   return filteredArticles.value.slice(start, end)
 })
 
 const articlePagination = computed(() => ({
   currentPage: articlePage.value,
-  totalPages: Math.ceil(filteredArticles.value.length / pageSize) || 1,
+  totalPages: Math.ceil(filteredArticles.value.length / articlePageSize.value) || 1,
   prevPage: () => {
     if (articlePage.value > 1) articlePage.value--
   },
@@ -245,13 +243,16 @@ const articlePagination = computed(() => ({
   },
 }))
 
-watch(articleSearchText, () => {
+// 监听搜索或分页大小变化，重置页码
+watch([articleSearchText, articlePageSize], () => {
   articlePage.value = 1
 })
 
 // --- 2. 友链搜索与分页 ---
 const friendSearchText = ref('')
 const friendPage = ref(1)
+// 使用后台专属配置
+const friendPageSize = computed(() => settingsStore.pagination.adminFriends)
 
 const filteredFriends = computed(() => {
   const text = friendSearchText.value.toLowerCase()
@@ -265,14 +266,14 @@ const filteredFriends = computed(() => {
 })
 
 const paginatedFriends = computed(() => {
-  const start = (friendPage.value - 1) * pageSize
-  const end = start + pageSize
+  const start = (friendPage.value - 1) * friendPageSize.value
+  const end = start + friendPageSize.value
   return filteredFriends.value.slice(start, end)
 })
 
 const friendPagination = computed(() => ({
   currentPage: friendPage.value,
-  totalPages: Math.ceil(filteredFriends.value.length / pageSize) || 1,
+  totalPages: Math.ceil(filteredFriends.value.length / friendPageSize.value) || 1,
   prevPage: () => {
     if (friendPage.value > 1) friendPage.value--
   },
@@ -281,13 +282,15 @@ const friendPagination = computed(() => ({
   },
 }))
 
-watch(friendSearchText, () => {
+watch([friendSearchText, friendPageSize], () => {
   friendPage.value = 1
 })
 
 // --- 3. 画廊搜索与分页 ---
 const gallerySearchText = ref('')
 const galleryPage = ref(1)
+// 使用后台专属配置
+const galleryPageSize = computed(() => settingsStore.pagination.adminGallery)
 
 const filteredGallery = computed(() => {
   const text = gallerySearchText.value.toLowerCase()
@@ -299,14 +302,14 @@ const filteredGallery = computed(() => {
 })
 
 const paginatedGallery = computed(() => {
-  const start = (galleryPage.value - 1) * pageSize
-  const end = start + pageSize
+  const start = (galleryPage.value - 1) * galleryPageSize.value
+  const end = start + galleryPageSize.value
   return filteredGallery.value.slice(start, end)
 })
 
 const galleryPagination = computed(() => ({
   currentPage: galleryPage.value,
-  totalPages: Math.ceil(filteredGallery.value.length / pageSize) || 1,
+  totalPages: Math.ceil(filteredGallery.value.length / galleryPageSize.value) || 1,
   prevPage: () => {
     if (galleryPage.value > 1) galleryPage.value--
   },
@@ -315,7 +318,7 @@ const galleryPagination = computed(() => ({
   },
 }))
 
-watch(gallerySearchText, () => {
+watch([gallerySearchText, galleryPageSize], () => {
   galleryPage.value = 1
 })
 
@@ -336,9 +339,6 @@ const deleteArticle = async (article: ArticleWithCategory) => {
 }
 
 // --- 友链操作 ---
-// 移除本地状态和 openFriendModal 函数，直接在模板调用 modalStore
-// 移除 handleFriendSubmit，逻辑已移至 Modal 内部
-
 const deleteFriend = async (id: string) => {
   if (confirm('确定删除该友链吗？')) {
     await friendStore.deleteFriend(id)
@@ -347,9 +347,6 @@ const deleteFriend = async (id: string) => {
 }
 
 // --- 画廊操作 ---
-// 移除本地状态和 openArtworkModal 函数，直接在模板调用 modalStore
-// 移除 handleArtworkSubmit，逻辑已移至 Modal 内部
-
 const deleteArtwork = async (id: string) => {
   if (confirm('确定删除该作品吗？')) {
     await artworkStore.deleteArtwork(id)
