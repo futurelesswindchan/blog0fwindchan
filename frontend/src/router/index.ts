@@ -4,7 +4,7 @@ import MainLayout from '@/components/layout/MainLayout.vue'
 import { useFriendStore } from '@/views/stores/friendStore'
 import { useArtworkStore } from '@/views/stores/artworkStore'
 import { useAdminStore } from '@/views/stores/adminStore'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore' // ✨ 新增引入
+import { useGlobalModalStore } from '@/views/stores/globalModalStore' // 新增引入
 
 // 扩展路由元信息类型以包含 title 字段
 declare module 'vue-router' {
@@ -163,7 +163,7 @@ router.beforeEach(async (to, from, next) => {
 
     // 1. 检查 Admin 权限
     if (to.meta.requiresAuth && !adminStore.isAuthenticated) {
-      // ✨ 核心修改：如果未登录，不跳转到登录页，而是重定向回首页并弹出模态框
+      // 核心修改：如果未登录，不跳转到登录页，而是重定向回首页并弹出模态框
       const modalStore = useGlobalModalStore()
       modalStore.openLogin() // 呼出登录窗口
 

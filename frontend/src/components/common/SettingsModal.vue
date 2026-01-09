@@ -24,7 +24,7 @@
       </div>
 
       <!-- 中间滚动区域 -->
-      <!-- ✨ 修复：添加 ref 以便 JS 操作 -->
+      <!-- 修复：添加 ref 以便 JS 操作 -->
       <div class="settings-scroll-area" ref="scrollContainer">
         <!-- 分组 A: 打字机 -->
         <section id="section-typewriter" class="settings-group">
@@ -136,7 +136,7 @@
             />
           </div>
 
-          <!-- ✨ 核心修改：使用 v-if 控制后台设置的显示 -->
+          <!-- 核心修改：使用 v-if 控制后台设置的显示 -->
           <template v-if="isAdmin">
             <div class="divider-dashed"></div>
 
@@ -193,17 +193,17 @@
 import { reactive, ref, computed } from 'vue'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useAdminStore } from '@/views/stores/adminStore' // ✨ 引入 AdminStore
+import { useAdminStore } from '@/views/stores/adminStore' // 引入 AdminStore
 import { useToast } from '@/composables/useToast'
 import BaseModal from '../common/BaseModal.vue'
 import ToastManager from '../common/ToastManager.vue'
 
 const modalStore = useGlobalModalStore()
 const settingsStore = useSettingsStore()
-const adminStore = useAdminStore() // ✨ 初始化
+const adminStore = useAdminStore() // 初始化
 const { addToast } = useToast()
 
-// ✨ 计算属性：是否为管理员
+// 计算属性：是否为管理员
 const isAdmin = computed(() => adminStore.isAuthenticated)
 
 // 响应式绑定 Store 中的数据
@@ -217,7 +217,7 @@ const tabs = [
 const activeTab = ref('section-typewriter')
 const scrollContainer = ref<HTMLElement | null>(null)
 
-// ✨ 修复：更精准的滚动逻辑
+// 修复：更精准的滚动逻辑
 const scrollToSection = (id: string) => {
   activeTab.value = id
   const el = document.getElementById(id)
@@ -283,12 +283,12 @@ const reset = () => {
   gap: 0.5rem;
 }
 
-/* ✨ 修复：滚动区域样式优化 */
+/* 修复：滚动区域样式优化 */
 .settings-scroll-area {
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem 2rem;
-  position: relative; /* ✨ 关键：作为 offsetParent */
+  position: relative; /* 关键：作为 offsetParent */
   scroll-behavior: smooth;
 }
 
