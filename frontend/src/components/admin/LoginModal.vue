@@ -86,6 +86,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAdminStore } from '@/views/stores/adminStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useToast } from '@/composables/useToast'
+
 import BaseModal from '../common/BaseModal.vue'
 
 const username = ref('')
@@ -96,12 +98,13 @@ const errorMsg = ref('')
 const router = useRouter()
 const adminStore = useAdminStore()
 const modalStore = useGlobalModalStore()
+const { notify } = useToast()
 
 const handleLogin = async () => {
   loading.value = true
   errorMsg.value = ''
 
-  // 模拟仪式感延迟
+  // 来点小延迟让别人感觉你在干事）
   await new Promise((resolve) => setTimeout(resolve, 800))
 
   const success = await adminStore.login(username.value, password.value)
@@ -109,6 +112,11 @@ const handleLogin = async () => {
   if (success) {
     modalStore.closeLogin()
     router.push('/dashboard') // 登录成功去仪表盘
+
+    notify({
+      message: '欢迎回来，超级无敌Master！(^・ω・^)',
+      type: 'success',
+    })
   } else {
     errorMsg.value = '识别失败！你不是 Master QAQ！'
   }

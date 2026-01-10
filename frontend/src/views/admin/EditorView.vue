@@ -197,12 +197,12 @@
     <div class="floating-actions">
       <button v-if="!isEditing" class="action-btn edit" @click="toggleEdit">
         <i class="fas fa-pen"></i>
-        <span>正在预览文本...要修改或上传提交吗？</span>
+        <span>正在预览中，要修改或上传提交吗？</span>
       </button>
       <template v-else>
         <button class="action-btn cancel" @click="cancelEdit">
-          <i class="fas fa-times"></i>
-          <span>退出编辑模式</span>
+          <i class="fas fa-eye"></i>
+          <span>正在编辑中，要看看文章效果预览吗？</span>
         </button>
         <button class="action-btn save" @click="savePost" :disabled="saving">
           <i class="fas" :class="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
@@ -220,13 +220,13 @@ import { useArticleInfo } from '@/composables/useArticleInfo'
 import { useArticleStore } from '@/views/stores/articleStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { useToast } from '@/composables/useToast'
 import { useRouter, useRoute } from 'vue-router'
 import { AxiosError } from 'axios'
 
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
 import api from '@/api'
 
-// 样式引入保持不变
 import '@/styles/correctContentMargin.css'
 import '@/styles/articleContent.css'
 import '@/styles/articleInfo.css'
@@ -236,7 +236,9 @@ import '@/styles/codeBlock.css'
 const router = useRouter()
 const route = useRoute()
 const articleStore = useArticleStore()
-const modalStore = useGlobalModalStore() // 初始化 Store
+const modalStore = useGlobalModalStore()
+const { confirm, notify } = useToast()
+
 const { isDarkTheme, formatDate, markdownOptions: baseMarkdownOptions } = useArticleContent()
 const { codeHighlightOptions } = useCodeHighlight()
 
@@ -245,7 +247,6 @@ const markdownOptions = { ...baseMarkdownOptions, ...codeHighlightOptions }
 // 状态管理
 const isEditing = ref(true)
 const saving = ref(false)
-// ❌ 移除 showAssetModal
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 // 魔法菜单状态
@@ -291,10 +292,12 @@ const form = reactive({
   content: '',
 })
 
+// 计算文章内容
 const contentRef = computed(() => form.content)
 const { estimateWords } = useArticleInfo(contentRef)
 const isNewPost = computed(() => !route.params.slug)
 
+// 初始化加载文章数据
 onMounted(async () => {
   if (!isNewPost.value) {
     const category = route.params.category as string
@@ -394,17 +397,29 @@ const closeMagicMenu = () => {
   showMagicMenu.value = false
 }
 
-const toggleEdit = () => (isEditing.value = true)
-const cancelEdit = () => {
-  if (
-    confirm('确定退出编辑模式吗？会进入预览模式哦！\n只要不离开此页面，文章依然会保存修改进度~')
-  ) {
-    isEditing.value = false
-  }
+const toggleEdit = () => (
+  notify({
+    message: '已进入编辑模式，记得随时保存你的进度哦ヾ(•ω•`)o',
+    type: 'success',
+  }),
+  (isEditing.value = true)
+)
+
+const cancelEdit = async () => {
+  isEditing.value = false
+
+  notify({
+    message: '已进入预览模式，可以查看文章最终效果(￣▽￣)啦',
+    type: 'success',
+  })
 }
 const savePost = async () => {
   if (!form.title || !form.content || !form.slug) {
-    alert('请把内容填完整哦！')
+    notify({
+      message: '请把内容填完整再提交哦！(*￣3￣)',
+      type: 'warning',
+    })
+
     return
   }
   saving.value = true
@@ -416,6 +431,10 @@ const savePost = async () => {
         router.replace({ name: 'EditorEdit', params: { category: form.category, slug: form.slug } })
       }
     }
+    notify({
+      message: '文章上传成功！(＾▽＾)',
+      type: 'success',
+    })
   } catch (e: unknown) {
     const error = e as AxiosError<{ error: string }>
     const errorMsg = error.response?.data?.error || error.message || '未知错误'
@@ -424,11 +443,21 @@ const savePost = async () => {
     saving.value = false
   }
 }
-const goBack = () => {
+const goBack = async () => {
   if (isEditing.value) {
-    if (confirm('正在编辑中，确定要离开吗？')) {
+    const isConfirmed = await confirm(
+      '真的确定要直接离开吗(＃°Д°)？',
+      '正在编辑中的内容将不会被保存哦！',
+    )
+
+    if (isConfirmed) {
       router.back()
     }
+
+    notify({
+      message: '已离开文章编辑器啦(￣▽￣)ノ',
+      type: 'success',
+    })
   } else {
     router.back()
   }

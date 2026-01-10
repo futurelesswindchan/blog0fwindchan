@@ -89,7 +89,41 @@
 
         <div class="divider"></div>
 
-        <!-- 分组 B: 显示 -->
+        <!-- 分组 B: 消息通知 -->
+        <section id="section-toast" class="settings-group">
+          <div class="group-title">消息通知 (Notifications)</div>
+
+          <div class="setting-row">
+            <div class="row-label">
+              <span>弹窗位置</span>
+              <small>选择消息提示出现的位置。</small>
+            </div>
+            <select class="modal-select" v-model="toastSettings.position">
+              <option value="bottom-left">左下角 (Bottom Left)</option>
+              <option value="top-left">左上角 (Top Left)</option>
+              <option value="bottom-right">右下角 (Bottom Right)</option>
+              <option value="top-right">右上角 (Top Right)</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <div class="row-label">
+              <span>默认停留时间 (ms)</span>
+              <small>消息自动消失前的等待时间。</small>
+            </div>
+            <input
+              type="number"
+              class="modal-input short-input"
+              v-model.number="toastSettings.duration"
+              step="500"
+              min="1000"
+            />
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- 分组 C: 显示 -->
         <section id="section-display" class="settings-group">
           <div class="group-title">前台分页容量 (Frontend Pagination)</div>
 
@@ -191,13 +225,13 @@ import { reactive, ref, computed } from 'vue'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { useAdminStore } from '@/views/stores/adminStore'
-import { useToastStore } from '@/views/stores/toastStore'
+import { useToast } from '@/composables/useToast'
 import BaseModal from '../common/BaseModal.vue'
 
 const modalStore = useGlobalModalStore()
 const settingsStore = useSettingsStore()
 const adminStore = useAdminStore()
-const toastStore = useToastStore()
+const { confirm, notify } = useToast()
 
 // 计算属性：是否为管理员
 const isAdmin = computed(() => adminStore.isAuthenticated)
@@ -205,9 +239,11 @@ const isAdmin = computed(() => adminStore.isAuthenticated)
 // 响应式绑定 Store 中的数据
 const settings = reactive({ ...settingsStore.typeWriter })
 const paginationSettings = reactive({ ...settingsStore.pagination })
+const toastSettings = reactive({ ...settingsStore.toast })
 
 const tabs = [
   { id: 'section-typewriter', name: '动画特效', icon: 'fas fa-keyboard' },
+  { id: 'section-toast', name: '消息通知', icon: 'fas fa-bell' },
   { id: 'section-display', name: '界面显示', icon: 'fas fa-desktop' },
 ]
 const activeTab = ref('section-typewriter')
@@ -231,28 +267,35 @@ const scrollToSection = (id: string) => {
 const save = () => {
   settingsStore.setTypeWriterSettings(settings)
   settingsStore.setPaginationSettings(paginationSettings)
+  settingsStore.setToastSettings(toastSettings)
 
-  // 使用新的对象传参方式
-  toastStore.add({
-    message: '设置已保存并生效',
+  notify({
+    message: '设置已保存并生效了(☆▽☆)！',
     type: 'success',
   })
 
   setTimeout(() => modalStore.closeSettings(), 600)
 }
 
-const reset = () => {
-  if (!confirm('确定要恢复所有默认设置吗？')) return
+// 使用异步 confirm（来自 useToast composable）
+const reset = async () => {
+  const isConfirmed = await confirm(
+    '此操作将重置动画、分页和通知设置哦，不能撤销0w0~',
+    '真的要重置吗(￣ω￣(￣ω￣〃)',
+  )
+
+  if (!isConfirmed) return
 
   settingsStore.resetTypeWriterSettings()
   settingsStore.resetPaginationSettings()
+  settingsStore.resetToastSettings()
 
   // 重新同步本地 reactive 数据
   Object.assign(settings, settingsStore.typeWriter)
   Object.assign(paginationSettings, settingsStore.pagination)
+  Object.assign(toastSettings, settingsStore.toast)
 
-  // 使用新的对象传参方式
-  toastStore.add({
+  notify({
     message: '已恢复默认设置',
     type: 'success',
   })
