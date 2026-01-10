@@ -138,7 +138,7 @@ onUnmounted(() => {
 
 <!-- 全局模态框 UI 库 -->
 <style>
-/* 1. 主按钮 (Primary) */
+/* 1. 主按钮 */
 .modal-btn-primary {
   padding: 0.6rem 1.5rem;
   background: var(--accent-color, #0077ff);
@@ -168,7 +168,7 @@ onUnmounted(() => {
   transform: none;
 }
 
-/* 2. 文本按钮 (Text / Cancel) */
+/* 2. 文本按钮 */
 .modal-btn-text {
   padding: 0.6rem 1.2rem;
   background: transparent;
@@ -192,7 +192,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* 3. 危险按钮 (Danger) */
+/* 3. 危险按钮 */
 .modal-btn-danger {
   padding: 0.6rem 1.5rem;
   background: #ff4757;
@@ -209,7 +209,7 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
 }
 
-/* 4. 通用输入框 (Glass Input) */
+/* 4. 通用输入框 */
 .modal-input {
   width: 100%;
   padding: 0.6rem 1rem;
@@ -237,7 +237,7 @@ onUnmounted(() => {
   background: rgba(0, 0, 0, 0.4);
 }
 
-/* 5. 标签页导航 (Nav Pill) */
+/* 5. 标签页导航 */
 .modal-nav-pill {
   padding: 0.4rem 1rem;
   border-radius: 8px;
@@ -265,7 +265,7 @@ onUnmounted(() => {
   box-shadow: 0 2px 8px rgba(0, 119, 255, 0.25);
 }
 
-/* 6. 开关 (Toggle Switch) */
+/* 6. 开关 */
 .toggle-switch {
   width: 48px;
   height: 26px;
@@ -299,5 +299,37 @@ onUnmounted(() => {
 
 .dark-theme .toggle-switch {
   background: #444;
+}
+
+/* 7. 下拉选择框 */
+select {
+  appearance: none; /* 移除默认箭头 */
+  -webkit-appearance: none;
+  padding: 8px 36px 8px 12px; /* 右侧留出箭头空间 */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  font-size: 0.9rem;
+  color: var(--text-color);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  /* 自定义箭头图标 (使用SVG) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+select:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+select:focus {
+  border-color: var(--accent-color);
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.15);
 }
 </style>

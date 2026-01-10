@@ -1,8 +1,8 @@
-// frontend\src\views\stores\useSettingsStore.ts
 import { defineStore } from 'pinia'
 
 // --- 1. 类型定义 ---
 
+// 打字机效果设置
 export interface TypeWriterSettings {
   speed: number
   initialDelay: number
@@ -10,13 +10,17 @@ export interface TypeWriterSettings {
   enabled: boolean
 }
 
-// 分页设置接口
+// 消息弹窗设置
+export interface ToastSettings {
+  position: 'top-right' | 'top-center' | 'bottom-right' | 'bottom-left'
+  duration: number
+}
+
+// 分页设置
 export interface PaginationSettings {
-  // 前台展示
   articles: number
   friends: number
   gallery: number
-  // 后台管理 (Admin)
   adminArticles: number
   adminFriends: number
   adminGallery: number
@@ -24,6 +28,7 @@ export interface PaginationSettings {
 
 // --- 2. 默认设置常量 ---
 
+// 默认打字机效果设置
 const defaultTypeWriterSettings: TypeWriterSettings = {
   speed: 20,
   initialDelay: 400,
@@ -31,12 +36,18 @@ const defaultTypeWriterSettings: TypeWriterSettings = {
   enabled: true,
 }
 
-// 不同板块设置的默认值
+// 默认弹窗设置
+const defaultToastSettings: ToastSettings = {
+  position: 'bottom-left',
+  duration: 4000,
+}
+
+// 默认分页设置
 const defaultPaginationSettings: PaginationSettings = {
-  articles: 6, // 文章列表
-  friends: 4, // 友链卡片
-  gallery: 8, // 画廊看图
-  adminArticles: 10, // 后台表格
+  articles: 6,
+  friends: 4,
+  gallery: 8,
+  adminArticles: 10,
   adminFriends: 10,
   adminGallery: 8,
 }
@@ -45,63 +56,63 @@ const defaultPaginationSettings: PaginationSettings = {
 
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
-    // 打字机设置
     typeWriter: { ...defaultTypeWriterSettings },
-    // 分页设置
     pagination: { ...defaultPaginationSettings },
+    toast: { ...defaultToastSettings },
   }),
 
   actions: {
-    // --- 打字机相关 Action ---
+    // ... TypeWriter Actions ...
     setTypeWriterSettings(settings: Partial<TypeWriterSettings>) {
       this.typeWriter = { ...this.typeWriter, ...settings }
-      this.saveToLocalStorage() // 保存更改
+      this.saveToLocalStorage()
     },
-
     resetTypeWriterSettings() {
       this.typeWriter = { ...defaultTypeWriterSettings }
-      this.saveToLocalStorage() // 保存更改
+      this.saveToLocalStorage()
     },
 
-    // --- 分页相关 Action ---
+    // ... Pagination Actions ...
     setPaginationSettings(settings: Partial<PaginationSettings>) {
       this.pagination = { ...this.pagination, ...settings }
-      this.saveToLocalStorage() // 保存更改
+      this.saveToLocalStorage()
     },
-
     resetPaginationSettings() {
       this.pagination = { ...defaultPaginationSettings }
-      this.saveToLocalStorage() // 保存更改
+      this.saveToLocalStorage()
     },
 
-    // ---  持久化逻辑 ---
-    // 将当前所有设置保存到浏览器缓存
+    // ... Toast Actions ...
+    setToastSettings(settings: Partial<ToastSettings>) {
+      this.toast = { ...this.toast, ...settings }
+      this.saveToLocalStorage()
+    },
+    resetToastSettings() {
+      this.toast = { ...defaultToastSettings }
+      this.saveToLocalStorage()
+    },
+
+    // --- 持久化逻辑 ---
     saveToLocalStorage() {
       const settingsToSave = {
         typeWriter: this.typeWriter,
         pagination: this.pagination,
+        toast: this.toast, // 保存
       }
       localStorage.setItem('blog_settings', JSON.stringify(settingsToSave))
     },
 
-    // 从浏览器缓存加载设置
     loadSettings() {
       const saved = localStorage.getItem('blog_settings')
       if (saved) {
         try {
           const parsed = JSON.parse(saved)
-          // 合并保存的设置，保留默认值以防旧数据缺少新字段
-          if (parsed.typeWriter) {
-            this.typeWriter = { ...this.typeWriter, ...parsed.typeWriter }
-          }
-          // 合并分页设置，使用 defaultPaginationSettings 垫底
-          if (parsed.pagination) {
-            this.pagination = {
-              ...defaultPaginationSettings,
-              ...this.pagination,
-              ...parsed.pagination,
-            }
-          }
+          if (parsed.typeWriter)
+            this.typeWriter = { ...defaultTypeWriterSettings, ...parsed.typeWriter }
+          if (parsed.pagination)
+            this.pagination = { ...defaultPaginationSettings, ...parsed.pagination }
+          // 加载
+          if (parsed.toast) this.toast = { ...defaultToastSettings, ...parsed.toast }
         } catch (e) {
           console.error('读取设置失败，已重置为默认', e)
         }
