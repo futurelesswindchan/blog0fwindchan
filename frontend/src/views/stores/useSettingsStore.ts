@@ -11,7 +11,6 @@ export interface TypeWriterSettings {
 }
 
 // 分页设置接口
-// 升级：细化的分页设置接口
 export interface PaginationSettings {
   // 前台展示
   articles: number
@@ -32,12 +31,12 @@ const defaultTypeWriterSettings: TypeWriterSettings = {
   enabled: true,
 }
 
-// 升级：为不同板块设置合理的默认值
+// 不同板块设置的默认值
 const defaultPaginationSettings: PaginationSettings = {
-  articles: 6, // 文章通常内容多，每页少一点
-  friends: 4, // 友链卡片大，每页少一点
-  gallery: 8, // 画廊看图，适中
-  adminArticles: 10, // 后台表格，每页显示多一点方便管理
+  articles: 6, // 文章列表
+  friends: 4, // 友链卡片
+  gallery: 8, // 画廊看图
+  adminArticles: 10, // 后台表格
   adminFriends: 10,
   adminGallery: 8,
 }
@@ -95,7 +94,7 @@ export const useSettingsStore = defineStore('settings', {
           if (parsed.typeWriter) {
             this.typeWriter = { ...this.typeWriter, ...parsed.typeWriter }
           }
-          // 关键修改：合并分页设置，使用 defaultPaginationSettings 垫底
+          // 合并分页设置，使用 defaultPaginationSettings 垫底
           if (parsed.pagination) {
             this.pagination = {
               ...defaultPaginationSettings,

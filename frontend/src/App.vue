@@ -20,6 +20,9 @@
     <FriendModal />
     <ArtworkModal />
     <AssetLibraryModal />
+
+    <!-- Toast Manager -->
+    <ToastManager />
   </div>
 </template>
 
@@ -32,6 +35,7 @@ import FriendModal from '@/components/admin/FriendModal.vue'
 import ArtworkModal from '@/components/admin/ArtworkModal.vue'
 import AssetLibraryModal from '@/components/admin/AssetLibraryModal.vue'
 import GalleryPreviewModal from '@/components/common/GalleryPreviewModal.vue'
+import ToastManager from '@/components/common/ToastManager.vue'
 
 const { isDarkTheme } = useArticleContent()
 </script>

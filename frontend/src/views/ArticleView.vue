@@ -11,9 +11,9 @@
           </div>
           <div class="card-content">
             <h3>技术手札</h3>
-            <p class="description">网站开发笔记与心得（前后端技术栈等等等等~0vo）</p>
+            <p class="description">网站前后端开发笔记与心得，以及各种实用技术分享0w0！</p>
             <div class="article-stats">
-              <span class="article-count">{{ frontendArticlesCount }} 篇文章</span>
+              <span class="article-count">目前共有 {{ frontendArticlesCount }} 篇文章</span>
               <button class="view-btn">
                 查看文章
                 <i class="fas fa-arrow-right"></i>
@@ -33,9 +33,9 @@
           </div>
           <div class="card-content">
             <h3>幻想物语</h3>
-            <p class="description">非常非常神秘的连载与短篇故事？！（更新非——常——慢）</p>
+            <p class="description">非常非常神秘的连载与短篇故事？！（随缘更新中—v—）</p>
             <div class="article-stats">
-              <span class="article-count">{{ novelsArticlesCount }} 篇文章</span>
+              <span class="article-count">目前共有 {{ novelsArticlesCount }} 篇文章</span>
               <button class="view-btn">
                 查看文章
                 <i class="fas fa-arrow-right"></i>
@@ -55,9 +55,11 @@
           </div>
           <div class="card-content">
             <h3>奇怪杂谈</h3>
-            <p class="description">关于生活、兴趣与日常的随笔，当然也有一些奇奇怪怪的教程awa？</p>
+            <p class="description">
+              关于生活、兴趣与日常的随笔... 总之就是各种奇奇怪怪的东西啦OAO！
+            </p>
             <div class="article-stats">
-              <span class="article-count">{{ topicsArticlesCount }} 篇文章</span>
+              <span class="article-count">目前共有 {{ topicsArticlesCount }} 篇文章</span>
               <button class="view-btn">
                 查看文章
                 <i class="fas fa-arrow-right"></i>

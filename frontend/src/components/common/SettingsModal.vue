@@ -24,7 +24,6 @@
       </div>
 
       <!-- 中间滚动区域 -->
-      <!-- 修复：添加 ref 以便 JS 操作 -->
       <div class="settings-scroll-area" ref="scrollContainer">
         <!-- 分组 A: 打字机 -->
         <section id="section-typewriter" class="settings-group">
@@ -136,7 +135,7 @@
             />
           </div>
 
-          <!-- 核心修改：使用 v-if 控制后台设置的显示 -->
+          <!-- 后台设置 -->
           <template v-if="isAdmin">
             <div class="divider-dashed"></div>
 
@@ -184,8 +183,6 @@
         <button class="modal-btn-primary" @click="save">保存更改</button>
       </div>
     </div>
-
-    <ToastManager />
   </BaseModal>
 </template>
 
@@ -193,15 +190,14 @@
 import { reactive, ref, computed } from 'vue'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useAdminStore } from '@/views/stores/adminStore' // 引入 AdminStore
-import { useToast } from '@/composables/useToast'
+import { useAdminStore } from '@/views/stores/adminStore'
+import { useToastStore } from '@/views/stores/toastStore'
 import BaseModal from '../common/BaseModal.vue'
-import ToastManager from '../common/ToastManager.vue'
 
 const modalStore = useGlobalModalStore()
 const settingsStore = useSettingsStore()
-const adminStore = useAdminStore() // 初始化
-const { addToast } = useToast()
+const adminStore = useAdminStore()
+const toastStore = useToastStore()
 
 // 计算属性：是否为管理员
 const isAdmin = computed(() => adminStore.isAuthenticated)
@@ -217,19 +213,14 @@ const tabs = [
 const activeTab = ref('section-typewriter')
 const scrollContainer = ref<HTMLElement | null>(null)
 
-// 修复：更精准的滚动逻辑
+// 滚动逻辑
 const scrollToSection = (id: string) => {
   activeTab.value = id
   const el = document.getElementById(id)
   const container = scrollContainer.value
 
   if (el && container) {
-    // offsetTop 是相对于 offsetParent 的距离。
-    // 我们在 CSS 中将 .settings-scroll-area 设置为 relative，
-    // 这样 el.offsetTop 就直接等于它在滚动容器内的位置了。
-    // 减去 20px 是为了留出一点视觉呼吸空间。
     const top = el.offsetTop - 20
-
     container.scrollTo({
       top: top,
       behavior: 'smooth',
@@ -240,7 +231,13 @@ const scrollToSection = (id: string) => {
 const save = () => {
   settingsStore.setTypeWriterSettings(settings)
   settingsStore.setPaginationSettings(paginationSettings)
-  addToast('设置已保存并生效', 'success')
+
+  // 使用新的对象传参方式
+  toastStore.add({
+    message: '设置已保存并生效',
+    type: 'success',
+  })
+
   setTimeout(() => modalStore.closeSettings(), 600)
 }
 
@@ -254,7 +251,11 @@ const reset = () => {
   Object.assign(settings, settingsStore.typeWriter)
   Object.assign(paginationSettings, settingsStore.pagination)
 
-  addToast('已恢复默认设置', 'success')
+  // 使用新的对象传参方式
+  toastStore.add({
+    message: '已恢复默认设置',
+    type: 'success',
+  })
 }
 </script>
 
@@ -283,12 +284,12 @@ const reset = () => {
   gap: 0.5rem;
 }
 
-/* 修复：滚动区域样式优化 */
+/* 滚动区域样式 */
 .settings-scroll-area {
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem 2rem;
-  position: relative; /* 关键：作为 offsetParent */
+  position: relative; /* 作为 offsetParent */
   scroll-behavior: smooth;
 }
 
