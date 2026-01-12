@@ -32,16 +32,16 @@
         @change="handleFileChange"
       />
     </div>
-
-    <!-- 错误提示 -->
-    <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useToast } from '@/composables/useToast'
 import { ref } from 'vue'
+
 import api from '@/api'
-import type { AxiosError } from 'axios'
+
+const { notify } = useToast()
 
 defineProps<{
   modelValue: string
@@ -54,11 +54,9 @@ const emit = defineEmits<{
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
-const errorMsg = ref('')
 
 // 触发文件选择
 const triggerSelect = () => {
-  errorMsg.value = ''
   fileInput.value?.click()
 }
 
@@ -70,7 +68,11 @@ const handleFileChange = async (event: Event) => {
 
   // 简单校验
   if (!file.type.startsWith('image/')) {
-    errorMsg.value = '请选择图片文件'
+    notify({
+      type: 'error',
+      title: '大笨蛋！这传的是什么哇！(＃°Д°)',
+      message: '请上传图片文件啦！是图片，不是奇奇怪怪的东西哦！',
+    })
     return
   }
 
@@ -90,19 +92,11 @@ const handleFileChange = async (event: Event) => {
       emit('update:modelValue', response.data.url)
     }
   } catch (err: unknown) {
-    console.error('Upload failed', err)
-
-    let message = '上传失败'
-
-    // 判断是否为 Axios 错误
-    const axiosError = err as AxiosError<{ error?: string }>
-    if (axiosError.response?.data?.error) {
-      message += ': ' + axiosError.response.data.error
-    } else if (err instanceof Error) {
-      message += ': ' + err.message
-    }
-
-    errorMsg.value = message
+    notify({
+      type: 'error',
+      title: '图片上传失败了呢！(；´д｀)ゞ',
+      message: `${err}`,
+    })
   } finally {
     uploading.value = false
     if (fileInput.value) fileInput.value.value = ''
