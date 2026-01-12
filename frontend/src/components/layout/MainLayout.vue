@@ -138,11 +138,13 @@
 </template>
 
 <script setup lang="ts">
+import { useThrottledScrollHandler } from '@/composables/useThrottledScrollHandler'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useToast } from '@/composables/useToast'
 import { useRoute } from 'vue-router'
+
 import NavPanel from './NavPanel.vue'
 import MobileNavPanel from './MobileNavPanel.vue'
-import { useThrottledScrollHandler } from '@/composables/useThrottledScrollHandler'
 import TypeWriter from '@/components/common/TypeWriter.vue'
 import ReflectionLayer from './ReflectionLayer.vue'
 
@@ -152,6 +154,8 @@ const lightWallpaper = '/assets/images/wallpaper.webp'
 const darkWallpaper = '/assets/images/dark-theme-wallpaper.webp'
 
 const navExpanded = ref(false)
+
+const { notify } = useToast()
 
 // 当前页面标题
 const route = useRoute()
@@ -174,6 +178,11 @@ const wallpaperStyle = computed(() => ({
 const toggleWallpaper = () => {
   isDarkTheme.value = !isDarkTheme.value
   localStorage.setItem('theme', isDarkTheme.value ? 'dark' : 'light')
+
+  notify({
+    message: `已切换到${isDarkTheme.value ? '暗色' : '亮色'}主题了哦(/≧▽≦)/`,
+    type: 'success',
+  })
 }
 
 // 初始化主题

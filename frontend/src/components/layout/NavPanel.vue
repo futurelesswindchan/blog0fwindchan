@@ -137,7 +137,7 @@ const isDarkTheme = computed(() => !!props.isDarkTheme)
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 12px 12px 12px 17px; /* 左侧 padding 统一 */
+  padding: 12px 12px 12px 17px;
   border-radius: 8px;
   color: inherit;
   text-decoration: none;
@@ -182,17 +182,17 @@ const isDarkTheme = computed(() => !!props.isDarkTheme)
   transform: none;
 }
 
-/* ✨ 核心修复：统一图标容器样式 */
+/* 统一图标容器样式 */
 .icon-container {
   width: 24px;
   height: 24px;
-  margin-right: 12px; /* 默认有右边距 */
+  margin-right: 12px;
   font-size: 1.2em;
   flex-shrink: 0;
-  display: flex; /* 强制 Flex 布局 */
-  align-items: center; /* 垂直居中 */
-  justify-content: center; /* 水平居中 */
-  transition: margin 0.3s; /* 边距过渡 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: margin 0.3s;
 }
 
 .nav-panel.expanded {
@@ -244,15 +244,15 @@ const isDarkTheme = computed(() => !!props.isDarkTheme)
   background: v-bind('themeButtonStyle.background') !important;
 }
 
-/* ✨ 核心修复：收起状态下的样式重置 */
+/* 收起状态下的样式重置 */
 .nav-panel:not(.expanded) .nav-item {
-  justify-content: center; /* 按钮内容居中 */
-  padding-left: 0; /* 移除内边距 */
+  justify-content: center;
+  padding-left: 0;
   padding-right: 0;
 }
 
 .nav-panel:not(.expanded) .icon-container {
-  margin-right: 0; /* 移除图标右边距，防止挤偏 */
+  margin-right: 0;
 }
 
 /* 隐藏所有文字标签 */

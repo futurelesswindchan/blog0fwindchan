@@ -50,9 +50,7 @@
 
       <!-- 3. 底部 -->
       <div class="modal-footer">
-        <button type="button" class="modal-btn-text" @click="modalStore.closeArtworkModal">
-          放弃
-        </button>
+        <button type="button" class="modal-btn-text" @click="CancleSubmit">放弃</button>
         <button type="submit" form="artwork-form" class="modal-btn-primary" :disabled="submitting">
           {{ submitting ? '上传中...' : '确认收录' }}
         </button>
@@ -65,11 +63,15 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useToast } from '@/composables/useToast'
+
 import BaseModal from '../common/BaseModal.vue'
 import ImageUploader from '@/components/admin/ImageUploader.vue'
 
 const modalStore = useGlobalModalStore()
 const artworkStore = useArtworkStore()
+
+const { notify, confirm } = useToast()
 
 const submitting = ref(false)
 const isEdit = computed(() => !!modalStore.editingArtwork)
@@ -102,6 +104,21 @@ watch(
   { immediate: true },
 )
 
+const CancleSubmit = async () => {
+  const isConfirmed = await confirm(
+    '正在编辑中的绘画作品将不会被保存哦！',
+    '真的确定要直接离开吗0w0？',
+  )
+  if (isConfirmed) {
+    modalStore.closeArtworkModal()
+
+    notify({
+      message: '已离开画廊编辑器啦(￣▽￣)ノ',
+      type: 'success',
+    })
+  }
+}
+
 const handleSubmit = async () => {
   submitting.value = true
   try {
@@ -113,9 +130,19 @@ const handleSubmit = async () => {
     }
     await artworkStore.fetchArtworks()
     modalStore.closeArtworkModal()
+
+    notify({
+      type: 'success',
+      message: '已成功保存对画廊的更改哦！OvO',
+    })
   } catch (e) {
-    console.error(e)
-    alert('操作失败')
+    // console.error(e)
+    // alert('操作失败')
+    notify({
+      type: 'error',
+      title: '操作失败了呢…>_<',
+      message: `${e}`,
+    })
   } finally {
     submitting.value = false
   }

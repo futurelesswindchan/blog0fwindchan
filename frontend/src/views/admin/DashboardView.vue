@@ -134,8 +134,9 @@ import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStor
 import { useArtworkStore } from '@/views/stores/artworkStore'
 import { useFriendStore } from '@/views/stores/friendStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useSettingsStore } from '@/views/stores/useSettingsStore' // 引入 SettingsStore
+import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useArticleContent } from '@/composables/useArticleContent'
+import { useToast } from '@/composables/useToast'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -149,6 +150,7 @@ type ArticleWithCategory = ArticleSummary & { category: string }
 
 const router = useRouter()
 const { formatDate } = useArticleContent()
+const { notify, confirm } = useToast()
 
 // Stores
 const articleStore = useArticleStore()
@@ -326,31 +328,51 @@ watch([gallerySearchText, galleryPageSize], () => {
 // CRUD 操作逻辑
 // =========================================
 
+const notifyDeleteSuccess = () => {
+  notify({
+    type: 'success',
+    title: '删除成功了哦！OvO',
+    message: `如果列表中显示依然存在，请尝试刷新页面的啦-v-`,
+  })
+}
+
 // --- 文章操作 ---
 const editArticle = (article: ArticleWithCategory) => {
   router.push({ name: 'EditorEdit', params: { category: article.category, slug: article.id } })
 }
 
 const deleteArticle = async (article: ArticleWithCategory) => {
-  if (confirm(`确定删除文章《${article.title}》吗？`)) {
+  const isConfirmed = await confirm(
+    '确定删除吗OAO？将会永久消失哦（真的很久！）',
+    `${article.title}`,
+  )
+
+  if (isConfirmed) {
     await api.delete(`/articles/${article.id}`)
     await articleStore.fetchArticleIndex()
+    notifyDeleteSuccess()
   }
 }
 
 // --- 友链操作 ---
 const deleteFriend = async (id: string) => {
-  if (confirm('确定删除该友链吗？')) {
+  const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定删除该友链吗OAO？')
+
+  if (isConfirmed) {
     await friendStore.deleteFriend(id)
     await friendStore.fetchFriends()
+    notifyDeleteSuccess()
   }
 }
 
 // --- 画廊操作 ---
 const deleteArtwork = async (id: string) => {
-  if (confirm('确定删除该作品吗？')) {
+  const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定删除该作品吗OAO？')
+
+  if (isConfirmed) {
     await artworkStore.deleteArtwork(id)
     await artworkStore.fetchArtworks()
+    notifyDeleteSuccess()
   }
 }
 </script>

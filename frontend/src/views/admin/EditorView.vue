@@ -399,7 +399,8 @@ const closeMagicMenu = () => {
 
 const toggleEdit = () => (
   notify({
-    message: '已进入编辑模式，记得随时保存你的进度哦ヾ(•ω•`)o',
+    title: '已进入编辑模式ヾ(•ω•`)o',
+    message: '记得随时保存你的进度哦！',
     type: 'success',
   }),
   (isEditing.value = true)
@@ -409,7 +410,8 @@ const cancelEdit = async () => {
   isEditing.value = false
 
   notify({
-    message: '已进入预览模式，可以查看文章最终效果(￣▽￣)啦',
+    title: '已进入预览模式(＾▽＾)',
+    message: '可以查看文章最终效果啦~',
     type: 'success',
   })
 }
@@ -432,7 +434,8 @@ const savePost = async () => {
       }
     }
     notify({
-      message: '文章上传成功！(＾▽＾)',
+      title: '文章上传成功！(＾▽＾)',
+      message: '如果列表中没有显示或修改未生效，请尝试刷新页面哦！',
       type: 'success',
     })
   } catch (e: unknown) {
@@ -446,18 +449,17 @@ const savePost = async () => {
 const goBack = async () => {
   if (isEditing.value) {
     const isConfirmed = await confirm(
+      '正在编辑中的文章内容将不会被保存哦！',
       '真的确定要直接离开吗(＃°Д°)？',
-      '正在编辑中的内容将不会被保存哦！',
     )
 
     if (isConfirmed) {
       router.back()
+      notify({
+        message: '已离开文章编辑器啦(￣▽￣)ノ',
+        type: 'success',
+      })
     }
-
-    notify({
-      message: '已离开文章编辑器啦(￣▽￣)ノ',
-      type: 'success',
-    })
   } else {
     router.back()
   }

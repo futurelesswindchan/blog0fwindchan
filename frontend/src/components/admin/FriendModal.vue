@@ -45,9 +45,7 @@
       <!-- 3. 底部 (固定) -->
       <div class="modal-footer">
         <!-- 使用全局样式 modal-btn-* -->
-        <button type="button" class="modal-btn-text" @click="modalStore.closeFriendModal">
-          取消
-        </button>
+        <button type="button" class="modal-btn-text" @click="CancleSubmit">取消</button>
         <!-- form 属性关联上面的 form id，这样按钮在 form 外面也能提交 -->
         <button type="submit" form="friend-form" class="modal-btn-primary" :disabled="submitting">
           {{ submitting ? '提交中...' : '确定' }}
@@ -61,11 +59,15 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { useFriendStore } from '@/views/stores/friendStore'
+import { useToast } from '@/composables/useToast'
+
 import BaseModal from '../common/BaseModal.vue'
 import ImageUploader from '@/components/admin/ImageUploader.vue'
 
 const modalStore = useGlobalModalStore()
 const friendStore = useFriendStore()
+
+const { notify, confirm } = useToast()
 
 const submitting = ref(false)
 const isEdit = computed(() => !!modalStore.editingFriend)
@@ -100,6 +102,20 @@ watch(
   { immediate: true },
 )
 
+const CancleSubmit = async () => {
+  const isConfirmed = await confirm(
+    '正在编辑中的友链内容将不会被保存哦！',
+    '真的确定要直接离开吗0w0？',
+  )
+  if (isConfirmed) {
+    modalStore.closeFriendModal()
+    notify({
+      message: '已离开友链编辑器啦(￣▽￣)ノ',
+      type: 'success',
+    })
+  }
+}
+
 const handleSubmit = async () => {
   submitting.value = true
   try {
@@ -117,9 +133,19 @@ const handleSubmit = async () => {
 
     await friendStore.fetchFriends()
     modalStore.closeFriendModal()
+
+    notify({
+      type: 'success',
+      message: '已成功保存对友链的更改哦！OvO',
+    })
   } catch (e) {
-    console.error(e)
-    alert('提交失败')
+    // console.error(e)
+    // alert('操作失败')
+    notify({
+      type: 'error',
+      title: '操作失败了呢…>_<',
+      message: `${e}`,
+    })
   } finally {
     submitting.value = false
   }
