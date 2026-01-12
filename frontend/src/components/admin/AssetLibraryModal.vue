@@ -81,8 +81,12 @@
 import { ref, watch } from 'vue'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { AxiosError } from 'axios'
+import { useToast } from '@/composables/useToast'
+
 import BaseModal from '../common/BaseModal.vue'
 import api from '@/api'
+
+const { notify, confirm } = useToast()
 
 interface Asset {
   name: string
@@ -109,7 +113,13 @@ const fetchAssets = async () => {
     const res = await api.get('/admin/assets')
     assets.value = res.data.assets
   } catch (e) {
-    console.error(e)
+    const err = e as AxiosError<{ error?: string }>
+
+    notify({
+      type: 'error',
+      title: '素材加载失败了(＃°Д°)！',
+      message: `无法获取素材列表：${err.response?.data.error || err.message}`,
+    })
   } finally {
     loading.value = false
   }
@@ -130,9 +140,30 @@ const handleFileChange = async (e: Event) => {
   try {
     await api.post('/upload', formData)
     await fetchAssets()
+
+    notify({
+      type: 'success',
+      message: '图片上传成功ヾ(•ω•`)o',
+    })
   } catch (error: unknown) {
     const err = error as AxiosError<{ error?: string }>
-    alert(`上传失败: ${err.response?.data.error || err.message}`)
+
+    let title = ''
+    let message = ''
+
+    if (err.response?.data.error === 'File type not allowed') {
+      title = '大笨蛋！这传的是什么哇！(＃°Д°)'
+      message = '请上传图片文件啦！是图片，不是奇奇怪怪的东西哦！'
+    } else {
+      title = '坏消息！图片上传失败了哦...'
+      message = `${err.response?.data.error || err.message}`
+    }
+
+    notify({
+      type: 'error',
+      title: title,
+      message: message,
+    })
   } finally {
     uploading.value = false
     if (fileInput.value) fileInput.value.value = ''
@@ -144,18 +175,29 @@ const handleSelect = (asset: Asset) => {
 }
 
 const deleteAsset = async (asset: Asset) => {
-  if (
-    !confirm(
-      `⚠️ 高危操作\n\n确定要永久删除图片 "${asset.name}" 吗？\n如果某些文章中正在使用此图片，将会导致图片无法显示！`,
-    )
+  const isConfirmed = await confirm(
+    '如果某些文章中正在使用此图片，将会导致图片无法显示！',
+    `真的真的要删除图片 "${asset.name}" 吗？`,
   )
-    return
+
+  if (!isConfirmed) return
+
   try {
     await api.delete('/admin/assets', { params: { filename: asset.name } })
     await fetchAssets()
+
+    notify({
+      type: 'success',
+      message: '图片已经从库里移除了哦',
+    })
   } catch (e: unknown) {
     const err = e as AxiosError<{ error?: string }>
-    alert(`删除失败：${err.response?.data.error || err.message}`)
+
+    notify({
+      type: 'error',
+      title: '呜呜呜...图片删除失败了QAQ!',
+      message: `${err.response?.data.error || err.message}`,
+    })
   }
 }
 </script>
