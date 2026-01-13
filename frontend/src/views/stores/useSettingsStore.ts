@@ -10,7 +10,14 @@ export interface TypeWriterSettings {
   enabled: boolean
 }
 
-// 消息弹窗设置
+// 粒子效果设置接口
+export interface ParticleSettings {
+  enabled: boolean
+  count: number
+  baseSpeed: number
+}
+
+// 吐司弹窗设置接口
 export interface ToastSettings {
   position: 'top-right' | 'top-center' | 'bottom-right' | 'bottom-left'
   duration: number
@@ -36,7 +43,14 @@ const defaultTypeWriterSettings: TypeWriterSettings = {
   enabled: true,
 }
 
-// 默认弹窗设置
+// 默认粒子设置
+const defaultParticleSettings: ParticleSettings = {
+  enabled: true,
+  count: 80,
+  baseSpeed: 0.5,
+}
+
+// 默认吐司弹窗设置
 const defaultToastSettings: ToastSettings = {
   position: 'bottom-left',
   duration: 4000,
@@ -57,6 +71,7 @@ const defaultPaginationSettings: PaginationSettings = {
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     typeWriter: { ...defaultTypeWriterSettings },
+    particles: { ...defaultParticleSettings },
     pagination: { ...defaultPaginationSettings },
     toast: { ...defaultToastSettings },
   }),
@@ -69,6 +84,16 @@ export const useSettingsStore = defineStore('settings', {
     },
     resetTypeWriterSettings() {
       this.typeWriter = { ...defaultTypeWriterSettings }
+      this.saveToLocalStorage()
+    },
+
+    // ... Particle Actions ...
+    setParticleSettings(settings: Partial<ParticleSettings>) {
+      this.particles = { ...this.particles, ...settings }
+      this.saveToLocalStorage()
+    },
+    resetParticleSettings() {
+      this.particles = { ...defaultParticleSettings }
       this.saveToLocalStorage()
     },
 
@@ -96,8 +121,9 @@ export const useSettingsStore = defineStore('settings', {
     saveToLocalStorage() {
       const settingsToSave = {
         typeWriter: this.typeWriter,
+        particles: this.particles,
         pagination: this.pagination,
-        toast: this.toast, // 保存
+        toast: this.toast,
       }
       localStorage.setItem('blog_settings', JSON.stringify(settingsToSave))
     },
@@ -109,9 +135,9 @@ export const useSettingsStore = defineStore('settings', {
           const parsed = JSON.parse(saved)
           if (parsed.typeWriter)
             this.typeWriter = { ...defaultTypeWriterSettings, ...parsed.typeWriter }
+          if (parsed.particles) this.particles = { ...defaultParticleSettings, ...parsed.particles }
           if (parsed.pagination)
             this.pagination = { ...defaultPaginationSettings, ...parsed.pagination }
-          // 加载
           if (parsed.toast) this.toast = { ...defaultToastSettings, ...parsed.toast }
         } catch (e) {
           console.error('读取设置失败，已重置为默认', e)

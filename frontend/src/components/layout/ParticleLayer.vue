@@ -1,245 +1,323 @@
 <template>
-  <div class="particle-layer" :style="{ opacity: layerOpacity }">
+  <!-- 当设置启用时才渲染 Canvas 容器，节省 DOM 资源 -->
+  <div v-if="settingsStore.particles.enabled" class="particle-layer" aria-hidden="true">
     <canvas ref="canvasRef"></canvas>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { useSettingsStore } from '@/views/stores/useSettingsStore'
 
 const props = defineProps<{
   isDarkTheme: boolean
 }>()
 
+const settingsStore = useSettingsStore()
+
+/** 画布引用 */
 const canvasRef = ref<HTMLCanvasElement | null>(null)
-const layerOpacity = ref(0) // 用于切换主题时的淡入淡出过渡
-
+/** Canvas 上下文 */
 let ctx: CanvasRenderingContext2D | null = null
+/** 动画帧 ID */
 let animationFrameId: number | null = null
+/** 粒子数组 */
 let particles: Particle[] = []
-let canvasWidth = 0
-let canvasHeight = 0
 
-// --- 1. 粒子类定义 ---
+/**
+ * 粒子形状枚举
+ */
+type ShapeType = 'triangle' | 'square' | 'hexagon' | 'diamond' | 'shard' | 'circle' | 'star'
 
-interface Particle {
+/**
+ * 粒子类
+ * 负责单个粒子的状态管理与绘制
+ */
+class Particle {
   x: number
   y: number
-  vx: number // 水平速度
-  vy: number // 垂直速度
+  vx: number
+  vy: number
   size: number
   color: string
-
-  // 棱镜特有属性
+  shape: ShapeType
   rotation: number
   rotationSpeed: number
+  opacity: number
+  opacitySpeed: number
 
-  // 星尘特有属性
-  alpha: number // 当前透明度
-  targetAlpha: number // 目标透明度（用于闪烁）
-  pulseSpeed: number // 闪烁速度
+  /**
+   * 初始化粒子状态
+   * @param w 画布宽度
+   * @param h 画布高度
+   * @param colors 当前主题颜色数组
+   * @param isDark 是否为暗色模式
+   * @param baseSpeed 基础速度配置
+   */
+  constructor(w: number, h: number, colors: string[], isDark: boolean, baseSpeed: number) {
+    this.x = Math.random() * w
+    this.y = Math.random() * h
+
+    // 根据主题设定粒子大小范围
+    this.size = isDark ? Math.random() * 4 + 3 : Math.random() * 6 + 4
+
+    // 根据主题设定粒子速度，并应用全局速度配置
+    const speed = isDark ? baseSpeed * 0.6 : baseSpeed
+    const angle = Math.random() * Math.PI * 2
+    this.vx = Math.cos(angle) * speed
+    this.vy = Math.sin(angle) * speed
+
+    // 暗色主题统一使用白色，亮色使用主题颜色
+    this.color = isDark
+      ? 'rgba(255,255,255,0.4)'
+      : colors[Math.floor(Math.random() * colors.length)]
+
+    // 根据主题分配形状
+    const shapes: ShapeType[] = isDark
+      ? ['circle', 'star']
+      : ['triangle', 'shard', 'diamond', 'hexagon', 'square']
+    this.shape = shapes[Math.floor(Math.random() * shapes.length)]
+
+    // 设定旋转属性
+    this.rotation = Math.random() * Math.PI * 2
+    this.rotationSpeed = (Math.random() - 0.5) * 0.02
+
+    // 设定透明度及呼吸效果
+    this.opacity = isDark ? Math.random() * 0.4 + 0.6 : 0.8
+    this.opacitySpeed = isDark ? (Math.random() - 0.5) * 0.02 : 0
+  }
+
+  /**
+   * 更新粒子位置与状态
+   */
+  update(w: number, h: number) {
+    this.x += this.vx
+    this.y += this.vy
+    this.rotation += this.rotationSpeed
+
+    const buffer = 50
+    if (this.x < -buffer) this.x = w + buffer
+    if (this.x > w + buffer) this.x = -buffer
+    if (this.y < -buffer) this.y = h + buffer
+    if (this.y > h + buffer) this.y = -buffer
+
+    if (this.opacitySpeed !== 0) {
+      this.opacity += this.opacitySpeed
+      if (this.opacity > 1 || this.opacity < 0.4) {
+        this.opacitySpeed = -this.opacitySpeed
+      }
+    }
+  }
+
+  /**
+   * 在画布上绘制粒子
+   */
+  draw(ctx: CanvasRenderingContext2D) {
+    ctx.save()
+    ctx.translate(this.x, this.y)
+    ctx.rotate(this.rotation)
+    ctx.globalAlpha = this.opacity
+    ctx.fillStyle = this.color
+
+    if (this.shape === 'circle' || this.shape === 'star') {
+      ctx.globalCompositeOperation = 'lighter'
+    }
+
+    ctx.beginPath()
+    switch (this.shape) {
+      case 'circle':
+        this.drawCircle(ctx)
+        break
+      case 'star':
+        this.drawStar(ctx)
+        break
+      case 'triangle':
+        this.drawPolygon(ctx, 3)
+        break
+      case 'square':
+        this.drawPolygon(ctx, 4)
+        break
+      case 'hexagon':
+        this.drawPolygon(ctx, 6)
+        break
+      case 'diamond':
+        this.drawDiamond(ctx)
+        break
+      case 'shard':
+        this.drawShard(ctx)
+        break
+    }
+    ctx.fill()
+    ctx.restore()
+  }
+
+  drawCircle(ctx: CanvasRenderingContext2D) {
+    ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2)
+  }
+
+  drawStar(ctx: CanvasRenderingContext2D) {
+    const r = this.size * 0.3
+    const R = this.size
+    ctx.moveTo(0, -R)
+    ctx.quadraticCurveTo(0, -r, R, 0)
+    ctx.quadraticCurveTo(0, r, 0, R)
+    ctx.quadraticCurveTo(0, r, -R, 0)
+    ctx.quadraticCurveTo(0, -r, 0, -R)
+    ctx.closePath()
+  }
+
+  drawPolygon(ctx: CanvasRenderingContext2D, sides: number) {
+    const step = (Math.PI * 2) / sides
+    const startAngle = -Math.PI / 2
+    ctx.moveTo(Math.cos(startAngle) * this.size, Math.sin(startAngle) * this.size)
+    for (let i = 1; i < sides; i++) {
+      ctx.lineTo(
+        Math.cos(startAngle + step * i) * this.size,
+        Math.sin(startAngle + step * i) * this.size,
+      )
+    }
+    ctx.closePath()
+  }
+
+  drawDiamond(ctx: CanvasRenderingContext2D) {
+    ctx.moveTo(0, -this.size * 1.5)
+    ctx.lineTo(this.size, 0)
+    ctx.lineTo(0, this.size * 1.5)
+    ctx.lineTo(-this.size, 0)
+    ctx.closePath()
+  }
+
+  drawShard(ctx: CanvasRenderingContext2D) {
+    ctx.moveTo(0, -this.size)
+    ctx.lineTo(this.size, this.size)
+    ctx.lineTo(-this.size * 0.8, this.size * 0.6)
+    ctx.closePath()
+  }
 }
 
-// --- 2. 核心工具函数 ---
+// --- 核心逻辑 ---
 
-// 获取 CSS 变量颜色
-const getThemeColors = () => {
-  const styles = getComputedStyle(document.documentElement)
-
-  // 读取 reflection-1 到 reflection-7
+const getThemeColors = (): string[] => {
+  const appRoot = document.getElementById('app-root') || document.body
+  const style = getComputedStyle(appRoot)
   const colors: string[] = []
+
   for (let i = 1; i <= 7; i++) {
-    const color = styles.getPropertyValue(`--reflection-${i}`).trim()
+    let color = style.getPropertyValue(`--reflection-${i}`).trim()
+    if (props.isDarkTheme && color.startsWith('rgba')) {
+      color = color.replace(/,[\s\d\.]+\)$/, ', 0.8)')
+    }
     if (color) colors.push(color)
   }
 
-  // 如果读取失败（比如变量未定义），提供兜底颜色
+  // 如果没有定义主题颜色，使用默认颜色
   if (colors.length === 0) {
     return props.isDarkTheme
-      ? ['rgba(155, 200, 230, 0.5)', 'rgba(255, 255, 255, 0.5)']
-      : ['rgba(255, 100, 100, 0.3)', 'rgba(100, 200, 255, 0.3)']
+      ? ['rgba(20, 232, 193, 0.8)', 'rgba(24, 110, 210, 0.8)']
+      : ['rgba(216, 15, 15, 0.17)', 'rgba(211, 135, 29, 0.17)']
   }
   return colors
 }
 
-// 生成随机数
-const random = (min: number, max: number) => Math.random() * (max - min) + min
-
-// --- 3. 初始化粒子 ---
-
+// 初始化粒子数组
 const initParticles = () => {
-  particles = []
+  if (!canvasRef.value) return
+  const w = canvasRef.value.width
+  const h = canvasRef.value.height
   const colors = getThemeColors()
 
-  // 粒子数量：根据屏幕面积计算，避免在大屏太稀疏或小屏太密集
-  // 基准：1080p -> 亮色60个，暗色100个
-  const area = canvasWidth * canvasHeight
-  const count = props.isDarkTheme
-    ? Math.floor(area / 20000) // 星尘多一点
-    : Math.floor(area / 35000) // 棱镜少一点，避免杂乱
+  // 从 Store 获取配置
+  const { count, baseSpeed } = settingsStore.particles
 
+  particles = []
   for (let i = 0; i < count; i++) {
-    const color = colors[Math.floor(Math.random() * colors.length)]
-
-    particles.push({
-      x: random(0, canvasWidth),
-      y: random(0, canvasHeight),
-      vx: props.isDarkTheme ? random(-0.2, 0.2) : random(-0.5, 0.5), // 暗色更慢
-      vy: props.isDarkTheme ? random(-0.2, 0.2) : random(-0.5, 0.5),
-      size: props.isDarkTheme ? random(0.5, 2.5) : random(3, 8), // 星尘小，棱镜大
-      color: color,
-      rotation: random(0, 360),
-      rotationSpeed: random(-1, 1),
-      alpha: random(0.1, 0.8),
-      targetAlpha: random(0.1, 0.8),
-      pulseSpeed: random(0.005, 0.02),
-    })
+    particles.push(new Particle(w, h, colors, props.isDarkTheme, baseSpeed))
   }
-}
-
-// --- 4. 渲染逻辑 ---
-
-// 绘制棱镜 (三角形)
-const drawPrism = (p: Particle) => {
-  if (!ctx) return
-  ctx.save()
-  ctx.translate(p.x, p.y)
-  ctx.rotate((p.rotation * Math.PI) / 180)
-  ctx.beginPath()
-  // 绘制等边三角形
-  const r = p.size
-  ctx.moveTo(0, -r)
-  ctx.lineTo(r * 0.866, r * 0.5)
-  ctx.lineTo(-r * 0.866, r * 0.5)
-  ctx.closePath()
-
-  ctx.fillStyle = p.color
-  ctx.fill()
-
-  // 添加一点边框让它更像玻璃
-  // ctx.strokeStyle = 'rgba(255,255,255,0.3)'
-  // ctx.lineWidth = 0.5
-  // ctx.stroke()
-
-  ctx.restore()
-}
-
-// 绘制星尘 (圆形 + 闪烁)
-const drawStardust = (p: Particle) => {
-  if (!ctx) return
-  ctx.beginPath()
-  ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-
-  // 处理颜色透明度，模拟闪烁
-  // 这里我们需要解析 rgba 字符串来修改透明度，或者简单地使用 globalAlpha
-  ctx.save()
-  ctx.globalAlpha = p.alpha
-  ctx.fillStyle = p.color
-  ctx.fill()
-
-  // 核心发光点
-  if (p.size > 1.5) {
-    ctx.globalAlpha = p.alpha * 0.5
-    ctx.shadowBlur = 10
-    ctx.shadowColor = p.color
-    ctx.fill()
-  }
-
-  ctx.restore()
-}
-
-const update = () => {
-  if (!ctx || !canvasRef.value) return
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight)
-
-  particles.forEach((p) => {
-    // 1. 移动
-    p.x += p.vx
-    p.y += p.vy
-
-    // 2. 边界检查 (无缝循环)
-    if (p.x < -20) p.x = canvasWidth + 20
-    if (p.x > canvasWidth + 20) p.x = -20
-    if (p.y < -20) p.y = canvasHeight + 20
-    if (p.y > canvasHeight + 20) p.y = -20
-
-    // 3. 特殊属性更新
-    if (props.isDarkTheme) {
-      // 星尘：闪烁逻辑
-      if (Math.abs(p.alpha - p.targetAlpha) < 0.01) {
-        p.targetAlpha = random(0.1, 0.8) // 随机下一个目标透明度
-      }
-
-      const diff = p.targetAlpha - p.alpha
-      p.alpha += diff * p.pulseSpeed
-
-      drawStardust(p)
-    } else {
-      // 棱镜：旋转逻辑
-      p.rotation += p.rotationSpeed
-      drawPrism(p)
-    }
-  })
-
-  animationFrameId = requestAnimationFrame(update)
-}
-
-// --- 5. 生命周期管理 ---
-
-const initCanvas = () => {
-  const canvas = canvasRef.value
-  if (!canvas) return
-
-  canvasWidth = window.innerWidth
-  canvasHeight = window.innerHeight
-  canvas.width = canvasWidth
-  canvas.height = canvasHeight
-  ctx = canvas.getContext('2d')
-
-  initParticles()
-
-  // 淡入
-  setTimeout(() => {
-    layerOpacity.value = 1
-  }, 100)
-
-  update()
 }
 
 const handleResize = () => {
   if (!canvasRef.value) return
-  canvasWidth = window.innerWidth
-  canvasHeight = window.innerHeight
-  canvasRef.value.width = canvasWidth
-  canvasRef.value.height = canvasHeight
-
-  // 重新生成粒子以适应新尺寸
+  canvasRef.value.width = window.innerWidth
+  canvasRef.value.height = window.innerHeight
   initParticles()
 }
+
+const render = () => {
+  if (!ctx || !canvasRef.value) return
+  const w = canvasRef.value.width
+  const h = canvasRef.value.height
+  ctx.clearRect(0, 0, w, h)
+
+  particles.forEach((p) => {
+    p.update(w, h)
+    p.draw(ctx!)
+  })
+
+  animationFrameId = requestAnimationFrame(render)
+}
+
+// --- 生命周期与监听 ---
+
+// 启动函数
+const start = () => {
+  if (!canvasRef.value) return
+  canvasRef.value.width = window.innerWidth
+  canvasRef.value.height = window.innerHeight
+  ctx = canvasRef.value.getContext('2d')
+
+  initParticles()
+  render()
+  window.addEventListener('resize', handleResize)
+}
+
+// 停止函数
+const stop = () => {
+  if (animationFrameId) cancelAnimationFrame(animationFrameId)
+  window.removeEventListener('resize', handleResize)
+  ctx = null
+  // 这里不需要设 canvasRef 为 null，因为 v-if 会处理 DOM 移除
+}
+
+onMounted(() => {
+  if (settingsStore.particles.enabled) {
+    start()
+  }
+})
+
+onUnmounted(() => {
+  stop()
+})
 
 // 监听主题变化
 watch(
   () => props.isDarkTheme,
   () => {
-    // 1. 淡出当前层
-    layerOpacity.value = 0
-
-    // 2. 等待淡出动画完成后，切换粒子数据，再淡入
-    setTimeout(() => {
-      initParticles() // 重新读取 CSS 变量并生成新粒子
-      layerOpacity.value = 1
-    }, 500) // 对应 CSS transition 时间
+    if (settingsStore.particles.enabled) {
+      setTimeout(initParticles, 100)
+    }
   },
 )
 
-onMounted(() => {
-  initCanvas()
-  window.addEventListener('resize', handleResize)
-})
+// 监听 Store 中的启用状态
+watch(
+  () => settingsStore.particles.enabled,
+  (enabled) => {
+    if (enabled) {
+      // 等待 v-if 渲染 DOM
+      nextTick(() => {
+        start()
+      })
+    } else {
+      stop()
+    }
+  },
+)
 
-onUnmounted(() => {
-  if (animationFrameId) cancelAnimationFrame(animationFrameId)
-  window.removeEventListener('resize', handleResize)
+// 监听 Store 中的数量和速度变化
+watch([() => settingsStore.particles.count, () => settingsStore.particles.baseSpeed], () => {
+  if (settingsStore.particles.enabled) {
+    initParticles()
+  }
 })
 </script>
 
@@ -250,8 +328,8 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 0; /* 确保在 MainLayout 中位于正确层级 */
+  z-index: 0;
   pointer-events: none;
-  transition: opacity 0.5s ease-in-out; /* 主题切换时的柔和过渡 */
+  overflow: hidden;
 }
 </style>

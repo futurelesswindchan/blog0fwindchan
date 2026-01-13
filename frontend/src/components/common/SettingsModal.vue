@@ -25,15 +25,72 @@
 
       <!-- 中间滚动区域 -->
       <div class="settings-scroll-area" ref="scrollContainer">
-        <!-- 分组 A: 打字机 -->
-        <section id="section-typewriter" class="settings-group">
-          <div class="group-title">首页打字机特效 (TypeWriter)</div>
+        <!-- 分组 A: 视觉特效（包含粒子与打字机） -->
+        <section id="section-visual-effects" class="settings-group">
+          <div class="group-title">视觉特效 (Visual Effects)</div>
 
-          <!-- 启用开关 -->
+          <!-- 子分组：背景粒子 -->
+          <div class="sub-group-label">背景粒子 (Particles)</div>
+
           <div class="setting-row">
             <div class="row-label">
-              <span>启用动画</span>
-              <small>关闭后首页将直接显示完整文本，适合低性能设备。</small>
+              <span>启用粒子</span>
+              <small>只有PC端能享受传说中的的动态背景哦ヾ(•ω•`)o</small>
+            </div>
+            <button
+              class="toggle-switch"
+              :class="{ active: particleSettings.enabled }"
+              @click="particleSettings.enabled = !particleSettings.enabled"
+            >
+              <div class="toggle-knob"></div>
+            </button>
+          </div>
+
+          <template v-if="particleSettings.enabled">
+            <div class="setting-row">
+              <div class="row-label">
+                <span>粒子数量</span>
+                <small>小心一点哦，过多可能导致卡顿！awa</small>
+              </div>
+              <div class="slider-container">
+                <input
+                  type="range"
+                  v-model.number="particleSettings.count"
+                  min="10"
+                  max="300"
+                  step="10"
+                />
+                <span class="slider-value">{{ particleSettings.count }}</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="row-label">
+                <span>运动速度</span>
+                <small>调节粒子的漂浮快↑慢↓ ( ⓛ ω ⓛ *)</small>
+              </div>
+              <div class="slider-container">
+                <input
+                  type="range"
+                  v-model.number="particleSettings.baseSpeed"
+                  min="0.1"
+                  max="2.0"
+                  step="0.1"
+                />
+                <span class="slider-value">{{ particleSettings.baseSpeed }}</span>
+              </div>
+            </div>
+          </template>
+
+          <div class="divider-dashed"></div>
+
+          <!-- 子分组：打字机 -->
+          <div class="sub-group-label">文章打字机 (TypeWriter)</div>
+
+          <div class="setting-row">
+            <div class="row-label">
+              <span>启用打字动画</span>
+              <small>关闭后首页将直接显示完整文本，不再磨叽咧！</small>
             </div>
             <button
               class="toggle-switch"
@@ -44,11 +101,10 @@
             </button>
           </div>
 
-          <!-- 详细参数 -->
           <div class="setting-row">
             <div class="row-label">
               <span>启动延迟 (ms)</span>
-              <small>进入页面后，等待多久开始打字。</small>
+              <small>进入页面后，要等待这么久才会开始打字哦</small>
             </div>
             <input
               type="number"
@@ -61,7 +117,7 @@
           <div class="setting-row">
             <div class="row-label">
               <span>打字间隔 (ms)</span>
-              <small>数值越小，速度越快。</small>
+              <small>数值越小，打字速度当然就越快的啦</small>
             </div>
             <input
               type="number"
@@ -75,7 +131,7 @@
           <div class="setting-row">
             <div class="row-label">
               <span>块大小 (Chunk Size)</span>
-              <small>每次渲染的字符数，长文建议调大。</small>
+              <small>每次打出的字符数，长文建议调大一点点♪(´▽｀)</small>
             </div>
             <input
               type="number"
@@ -96,7 +152,7 @@
           <div class="setting-row">
             <div class="row-label">
               <span>弹窗位置</span>
-              <small>选择消息提示出现的位置。</small>
+              <small>选择吐司弹窗会在哪里出现！</small>
             </div>
             <select class="modal-select" v-model="toastSettings.position">
               <option value="bottom-left">左下角 (Bottom Left)</option>
@@ -109,7 +165,7 @@
           <div class="setting-row">
             <div class="row-label">
               <span>默认停留时间 (ms)</span>
-              <small>消息自动消失前的等待时间。</small>
+              <small>吐司弹窗自己溜走前的等待时间ovO</small>
             </div>
             <input
               type="number"
@@ -125,12 +181,13 @@
 
         <!-- 分组 C: 显示 -->
         <section id="section-display" class="settings-group">
-          <div class="group-title">前台分页容量 (Frontend Pagination)</div>
+          <div class="group-title">分页容量 (Pagination)</div>
+          <div class="sub-group-label">前台分页容量 (Frontend Pagination)</div>
 
           <div class="setting-row">
             <div class="row-label">
               <span>文章列表</span>
-              <small>首页及分类页每页显示的文章数。</small>
+              <small>文章列表中每页显示的文章卡片数哦</small>
             </div>
             <input
               type="number"
@@ -144,7 +201,7 @@
           <div class="setting-row">
             <div class="row-label">
               <span>友链列表</span>
-              <small>友链页面每页显示的卡片数。</small>
+              <small>友链页面每页显示的卡片数！</small>
             </div>
             <input
               type="number"
@@ -158,7 +215,7 @@
           <div class="setting-row">
             <div class="row-label">
               <span>画廊列表</span>
-              <small>画廊页面每页显示的图片数。</small>
+              <small>画廊页面每页显示的图片数OwO</small>
             </div>
             <input
               type="number"
@@ -173,7 +230,7 @@
           <template v-if="isAdmin">
             <div class="divider-dashed"></div>
 
-            <div class="group-title">后台管理分页 (Admin Pagination)</div>
+            <div class="sub-group-label">后台管理分页 (Admin Pagination)</div>
 
             <div class="setting-grid">
               <div class="setting-grid-item">
@@ -238,15 +295,16 @@ const isAdmin = computed(() => adminStore.isAuthenticated)
 
 // 响应式绑定 Store 中的数据
 const settings = reactive({ ...settingsStore.typeWriter })
+const particleSettings = reactive({ ...settingsStore.particles })
 const paginationSettings = reactive({ ...settingsStore.pagination })
 const toastSettings = reactive({ ...settingsStore.toast })
 
 const tabs = [
-  { id: 'section-typewriter', name: '动画特效', icon: 'fas fa-keyboard' },
+  { id: 'section-visual-effects', name: '视觉特效', icon: 'fas fa-wand-magic-sparkles' },
   { id: 'section-toast', name: '消息通知', icon: 'fas fa-bell' },
-  { id: 'section-display', name: '界面显示', icon: 'fas fa-desktop' },
+  { id: 'section-display', name: '分页容量', icon: 'fas fa-th-list' },
 ]
-const activeTab = ref('section-typewriter')
+const activeTab = ref('section-visual-effects')
 const scrollContainer = ref<HTMLElement | null>(null)
 
 // 滚动逻辑
@@ -264,8 +322,10 @@ const scrollToSection = (id: string) => {
   }
 }
 
+// 保存逻辑
 const save = () => {
   settingsStore.setTypeWriterSettings(settings)
+  settingsStore.setParticleSettings(particleSettings)
   settingsStore.setPaginationSettings(paginationSettings)
   settingsStore.setToastSettings(toastSettings)
 
@@ -277,21 +337,23 @@ const save = () => {
   setTimeout(() => modalStore.closeSettings(), 600)
 }
 
-// 使用异步 confirm（来自 useToast composable）
+// 重置逻辑
 const reset = async () => {
   const isConfirmed = await confirm(
-    '此操作将重置动画、分页和通知设置哦，不能撤销0w0~',
+    '此操作将重置所有的设置参数哦，不能撤销0w0~',
     '真的要重置吗(￣ω￣(￣ω￣〃)',
   )
 
   if (!isConfirmed) return
 
   settingsStore.resetTypeWriterSettings()
+  settingsStore.resetParticleSettings()
   settingsStore.resetPaginationSettings()
   settingsStore.resetToastSettings()
 
   // 重新同步本地 reactive 数据
   Object.assign(settings, settingsStore.typeWriter)
+  Object.assign(particleSettings, settingsStore.particles)
   Object.assign(paginationSettings, settingsStore.pagination)
   Object.assign(toastSettings, settingsStore.toast)
 
@@ -343,14 +405,25 @@ const reset = async () => {
 }
 
 .group-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #888;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--light-text);
   text-transform: uppercase;
   margin-bottom: 1.2rem;
   letter-spacing: 0.5px;
-  border-left: 3px solid var(--accent-color);
+  border-left: 3px solid #0077ff;
+  background: #0077ff0a;
   padding-left: 8px;
+}
+
+.sub-group-label {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--light-text);
+  opacity: 0.8;
+  margin: 1rem 0 0.5rem 0;
+  padding-left: 0.5rem;
+  border-left: 3px solid var(--light-text);
 }
 
 .setting-row {
