@@ -332,4 +332,18 @@ select:focus {
   background-color: #fff;
   box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.15);
 }
+
+/* 8. 滑块容器 */
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-value {
+  min-width: 30px;
+  text-align: right;
+  font-family: 'JetBrainsMono', monospace;
+  font-size: 0.9rem;
+}
 </style>
