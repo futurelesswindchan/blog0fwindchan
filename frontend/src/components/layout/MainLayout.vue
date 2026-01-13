@@ -5,7 +5,7 @@
     :class="{ 'dark-theme': isDarkTheme }"
     ref="pageWrapper"
   >
-    <!-- 壁纸层 -->
+    <!-- 1.壁纸层 -->
     <div class="wallpaper-container">
       <div
         class="wallpaper"
@@ -14,17 +14,21 @@
       ></div>
     </div>
 
-    <!-- 添加反光效果层-->
+    <!-- 2.反光效果层 -->
     <ReflectionLayer v-if="!isMobile" />
 
-    <!-- 桌面端布局 -->
+    <!-- 3.粒子层 -->
+    <ParticleLayer v-if="!isMobile" :is-dark-theme="isDarkTheme" />
+
+    <!-- 4.桌面端布局 -->
     <div v-if="!isMobile" class="content-container desktop-layout">
-      <!-- 标题栏 -->
+      <!-- a.标题栏 -->
       <header class="title-bar glass-container">
         <div class="left-group">
           <img :src="logo" class="logo" />
           <h1>风风博客</h1>
         </div>
+
         <div class="center-group" v-if="!isMobile">
           <div class="time-display">
             <div class="time-row">
@@ -34,6 +38,7 @@
             </div>
           </div>
         </div>
+
         <div class="right-group">
           <span class="current-location" :class="{ 'nav-open': showMobileNav }">
             <TypeWriter
@@ -48,14 +53,16 @@
         </div>
       </header>
 
-      <!-- 导航+内容区 -->
+      <!-- b.侧边栏+内容区 -->
       <div class="main-content">
+        <!-- 侧边栏导航 -->
         <NavPanel
           :is-expanded="navExpanded"
           :is-dark-theme="isDarkTheme"
           @toggle="navExpanded = !navExpanded"
           @toggle-theme="toggleWallpaper"
         />
+
         <!-- 内容视图 -->
         <div class="content-view glass-container">
           <router-view v-slot="{ Component }">
@@ -69,6 +76,7 @@
                 <component :is="Component" :key="route.name || route.path" />
               </transition>
             </template>
+
             <template v-else>
               <div style="color: red; padding: 2em; text-align: center">
                 组件未找到（Component is undefined），请检查路由配置和页面组件是否正常导出。
@@ -79,11 +87,12 @@
       </div>
     </div>
 
-    <!-- 移动端布局 -->
+    <!-- 5.移动端布局 -->
     <div v-else class="content-container mobile-layout">
-      <!-- 移动端标题栏 -->
+      <!-- a.标题栏 -->
       <header class="mobile-header glass-container">
         <img :src="logo" class="logo" alt="博客logo" />
+
         <div class="mobile-title">
           <!-- 添加包装器 -->
           <TypeWriter
@@ -95,12 +104,13 @@
             :auto-start="true"
           />
         </div>
+
         <button class="nav-toggle" @click="showMobileNav = true">
           <i class="fas fa-bars"></i>
         </button>
       </header>
 
-      <!-- 移动端侧边栏 -->
+      <!-- b.移动端侧边栏 -->
       <MobileNavPanel
         v-show="showMobileNav"
         :is-dark-theme="isDarkTheme"
@@ -108,12 +118,12 @@
         @toggle-theme="toggleWallpaper"
       />
 
-      <!-- 移动端遮罩层 -->
+      <!-- c.移动端遮罩层 -->
       <Transition name="fade">
         <div v-if="showMobileNav" class="mobile-overlay" @click="showMobileNav = false"></div>
       </Transition>
 
-      <!-- 内容区域 -->
+      <!-- d.内容区域 -->
       <div class="content-view glass-container">
         <router-view v-slot="{ Component }">
           <template v-if="Component">
@@ -126,6 +136,7 @@
               <component :is="Component" :key="route.name || route.path" />
             </transition>
           </template>
+
           <template v-else>
             <div style="color: red; padding: 2em; text-align: center">
               组件未找到（Component is undefined），请检查路由配置和页面组件是否正常导出。
@@ -143,10 +154,11 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { useRoute } from 'vue-router'
 
-import NavPanel from './NavPanel.vue'
-import MobileNavPanel from './MobileNavPanel.vue'
 import TypeWriter from '@/components/common/TypeWriter.vue'
 import ReflectionLayer from './ReflectionLayer.vue'
+import MobileNavPanel from './MobileNavPanel.vue'
+import ParticleLayer from './ParticleLayer.vue'
+import NavPanel from './NavPanel.vue'
 
 // 修改图片导入
 const logo = '/favicon.png'
@@ -193,7 +205,6 @@ onMounted(() => {
 
 // 移动端状态控制
 const isMobile = ref(false)
-const pageWrapper = ref<HTMLElement | null>(null)
 const showMobileNav = ref(false)
 
 // 添加滚动位置记录
