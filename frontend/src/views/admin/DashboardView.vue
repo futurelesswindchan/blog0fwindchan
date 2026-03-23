@@ -125,6 +125,50 @@
         </div>
         <PaginationControls :pagination="galleryPagination" />
       </div>
+
+      <!-- 4. 计划列表 -->
+      <div v-else-if="currentTab === 'plans'" class="tab-content">
+        <FilterBar v-model:searchText="planSearchText" placeholder="搜索计划内容..." />
+        <div class="list-wrapper">
+          <div v-if="activityStore.isLoadingPlans" class="loading">加载中...</div>
+          <table v-else class="data-table">
+            <thead>
+              <tr>
+                <th class="col-status">状态</th>
+                <th class="col-content">计划内容</th>
+                <th class="col-date">更新日期</th>
+                <th class="col-action">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="plan in paginatedPlans" :key="plan.id">
+                <td class="col-status">
+                  <span class="badge" :class="`badge-${plan.status}`">
+                    {{
+                      plan.status === 'todo'
+                        ? '📌 待办'
+                        : plan.status === 'doing'
+                          ? '🔥 进行中'
+                          : '✅ 已完成'
+                    }}
+                  </span>
+                </td>
+                <td class="col-content" :title="plan.content">{{ plan.content }}</td>
+                <td class="col-date">{{ plan.update_date }}</td>
+                <td class="action-cell col-action">
+                  <button @click="modalStore.openPlanModal(plan)" class="icon-btn edit">
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button @click="deletePlan(plan.id)" class="icon-btn del">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <PaginationControls :pagination="planPagination" />
+      </div>
     </div>
   </div>
 </template>
@@ -136,6 +180,7 @@ import { useFriendStore } from '@/views/stores/friendStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useArticleContent } from '@/composables/useArticleContent'
+import { useActivityStore } from '@/views/stores/activityStore'
 import { useToast } from '@/composables/useToast'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -157,13 +202,15 @@ const articleStore = useArticleStore()
 const friendStore = useFriendStore()
 const artworkStore = useArtworkStore()
 const modalStore = useGlobalModalStore()
-const settingsStore = useSettingsStore() // 初始化
+const settingsStore = useSettingsStore()
+const activityStore = useActivityStore()
 
 // Tabs 配置
 const tabs = [
   { key: 'articles', label: '文章管理' },
   { key: 'friends', label: '友链管理' },
   { key: 'gallery', label: '画廊管理' },
+  { key: 'plans', label: '计划管理' },
 ] as const
 const currentTab = ref<(typeof tabs)[number]['key']>('articles')
 
@@ -176,6 +223,7 @@ const refreshAllData = () => {
   articleStore.fetchArticleIndex()
   friendStore.fetchFriends()
   artworkStore.fetchArtworks()
+  activityStore.fetchPlans()
 }
 
 // --- 顶部按钮逻辑 ---
@@ -184,13 +232,17 @@ const createButtonText = computed(() => {
     case 'friends':
       return '有新朋友'
     case 'gallery':
-      return '上传作品'
+      return '传新作品'
+    case 'plans':
+      return '定新计划'
     default:
       return '写新文章'
   }
 })
 const createButtonIcon = computed(() => {
-  return currentTab.value === 'gallery' ? 'fa-image' : 'fa-pencil-alt'
+  if (currentTab.value === 'gallery') return 'fa-image'
+  if (currentTab.value === 'plans') return 'fa-list-check'
+  return 'fa-pencil-alt'
 })
 
 const handleCreate = () => {
@@ -198,6 +250,8 @@ const handleCreate = () => {
     router.push({ name: 'EditorCreate' })
   } else if (currentTab.value === 'friends') {
     modalStore.openFriendModal(null)
+  } else if (currentTab.value === 'plans') {
+    modalStore.openPlanModal(null)
   } else {
     modalStore.openArtworkModal(null)
   }
@@ -324,6 +378,36 @@ watch([gallerySearchText, galleryPageSize], () => {
   galleryPage.value = 1
 })
 
+// --- 4. 计划搜索与分页 ---
+const planSearchText = ref('')
+const planPage = ref(1)
+// 使用后台专属配置
+const planPageSize = computed(() => settingsStore.pagination.adminPlans)
+
+const filteredPlans = computed(() => {
+  const text = planSearchText.value.toLowerCase()
+  if (!text) return activityStore.plans
+  return activityStore.plans.filter((plan) => plan.content.toLowerCase().includes(text))
+})
+const paginatedPlans = computed(() => {
+  const start = (planPage.value - 1) * planPageSize.value
+  const end = start + planPageSize.value
+  return filteredPlans.value.slice(start, end)
+})
+const planPagination = computed(() => ({
+  currentPage: planPage.value,
+  totalPages: Math.ceil(filteredPlans.value.length / planPageSize.value) || 1,
+  prevPage: () => {
+    if (planPage.value > 1) planPage.value--
+  },
+  nextPage: () => {
+    if (planPage.value < planPagination.value.totalPages) planPage.value++
+  },
+}))
+watch([planSearchText, planPageSize], () => {
+  planPage.value = 1
+})
+
 // =========================================
 // CRUD 操作逻辑
 // =========================================
@@ -372,6 +456,16 @@ const deleteArtwork = async (id: string) => {
   if (isConfirmed) {
     await artworkStore.deleteArtwork(id)
     await artworkStore.fetchArtworks()
+    notifyDeleteSuccess()
+  }
+}
+
+// --- 计划操作 ---
+const deletePlan = async (id: number) => {
+  const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定要删除这个计划吗OAO？')
+  if (isConfirmed) {
+    await activityStore.deletePlan(id)
+    await activityStore.fetchPlans()
     notifyDeleteSuccess()
   }
 }

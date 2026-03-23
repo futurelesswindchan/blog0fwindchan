@@ -393,6 +393,7 @@ const openAssetLibrary = () => {
 const toggleMagicMenu = () => {
   showMagicMenu.value = !showMagicMenu.value
 }
+
 const closeMagicMenu = () => {
   showMagicMenu.value = false
 }
@@ -415,6 +416,7 @@ const cancelEdit = async () => {
     type: 'success',
   })
 }
+
 const savePost = async () => {
   if (!form.title || !form.content || !form.slug) {
     notify({
@@ -446,6 +448,7 @@ const savePost = async () => {
     saving.value = false
   }
 }
+
 const goBack = async () => {
   if (isEditing.value) {
     const isConfirmed = await confirm(
@@ -470,10 +473,12 @@ const goBack = async () => {
 .editor-mode {
   position: relative;
 }
+
 .page-header.editing {
   min-height: 84px;
   align-items: center;
 }
+
 .page-header.editing .page-title-input {
   height: 100%;
   display: flex;
@@ -481,6 +486,7 @@ const goBack = async () => {
   padding: 0 1rem;
   font-size: 1.5rem;
 }
+
 .page-header .back-area {
   display: inline-flex;
   align-items: center;
@@ -488,11 +494,13 @@ const goBack = async () => {
   padding: 0 0.75rem;
   cursor: pointer;
 }
+
 .page-header.editing .back-area {
   align-self: stretch;
   display: flex;
   align-items: center;
 }
+
 .page-title-input {
   flex: 1;
   font-size: 1.5rem;
@@ -505,15 +513,19 @@ const goBack = async () => {
   height: 100%;
   width: 100%;
 }
+
 .page-title-input::placeholder {
   color: rgba(0, 0, 0, 0.3);
 }
+
 .dark-theme .page-title-input::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
+
 .editing-meta {
   padding: 1rem;
 }
+
 .meta-input-group {
   display: flex;
   gap: 1rem;
@@ -523,6 +535,7 @@ const goBack = async () => {
   align-items: center;
   padding: 0.6rem 0;
 }
+
 .input-wrapper {
   display: flex;
   align-items: center;
@@ -535,13 +548,16 @@ const goBack = async () => {
   box-shadow: 0 0 10px rgba(0, 119, 255, 0.12);
   transition: all 0.25s var(--aero-animation);
 }
+
 .dark-theme .input-wrapper {
   background: rgba(255, 255, 255, 0.05);
 }
+
 .input-wrapper i {
   color: var(--accent-color);
   font-size: 0.9rem;
 }
+
 .meta-input,
 .meta-select {
   background: transparent;
@@ -551,10 +567,12 @@ const goBack = async () => {
   width: 100%;
   font-size: 0.95rem;
 }
+
 .meta-select option {
   background: #2c3e50;
   color: white;
 }
+
 .editor-toolbar {
   display: flex;
   align-items: center;
@@ -565,23 +583,28 @@ const goBack = async () => {
   border-radius: 8px 8px 0 0;
   flex-wrap: wrap;
 }
+
 .dark-theme .editor-toolbar {
   background: rgba(255, 255, 255, 0.05);
   border-bottom-color: rgba(255, 255, 255, 0.05);
 }
+
 .toolbar-group {
   display: flex;
   gap: 4px;
 }
+
 .toolbar-divider {
   width: 1px;
   height: 20px;
   background: rgba(0, 0, 0, 0.1);
   margin: 0 4px;
 }
+
 .dark-theme .toolbar-divider {
   background: rgba(255, 255, 255, 0.1);
 }
+
 .toolbar-btn {
   width: 32px;
   height: 32px;
@@ -596,32 +619,40 @@ const goBack = async () => {
   transition: all 0.2s;
   font-size: 0.9rem;
 }
+
 .dark-theme .toolbar-btn {
   color: #aaa;
 }
+
 .toolbar-btn:hover {
   background: rgba(0, 0, 0, 0.08);
   color: var(--accent-color);
 }
+
 .dark-theme .toolbar-btn:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
 .magic-btn {
   width: auto;
   padding: 0 8px;
   gap: 6px;
   color: #9c27b0;
 }
+
 .magic-btn.active {
   background: rgba(156, 39, 176, 0.1);
 }
+
 .btn-label {
   font-size: 0.85rem;
   font-weight: 600;
 }
+
 .relative {
   position: relative;
 }
+
 .magic-dropdown {
   position: absolute;
   top: 100%;
@@ -636,25 +667,30 @@ const goBack = async () => {
   overflow: hidden;
   animation: slideDown 0.2s ease-out;
 }
+
 .dark-theme .magic-dropdown {
   background: #2a2a2a;
   border-color: rgba(255, 255, 255, 0.1);
 }
+
 @keyframes slideDown {
   from {
     opacity: 0;
     transform: translateY(-5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 .magic-tabs {
   display: flex;
   background: rgba(0, 0, 0, 0.03);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
+
 .magic-tabs span {
   flex: 1;
   text-align: center;
@@ -664,25 +700,30 @@ const goBack = async () => {
   color: #666;
   transition: all 0.2s;
 }
+
 .magic-tabs span.active {
   background: white;
   color: var(--accent-color);
   font-weight: bold;
   border-bottom: 2px solid var(--accent-color);
 }
+
 .dark-theme .magic-tabs span.active {
   background: #2a2a2a;
 }
+
 .magic-content {
   padding: 10px;
   max-height: 200px;
   overflow-y: auto;
 }
+
 .magic-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
 }
+
 .magic-item {
   width: 100%;
   aspect-ratio: 1;
@@ -696,16 +737,19 @@ const goBack = async () => {
   font-weight: bold;
   transition: transform 0.1s;
 }
+
 .magic-item:hover {
   transform: scale(1.1);
   z-index: 1;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
 .magic-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
+
 .magic-list-item {
   padding: 8px;
   text-align: left;
@@ -715,27 +759,33 @@ const goBack = async () => {
   cursor: pointer;
   transition: background 0.2s;
 }
+
 .magic-list-item:hover {
   background: rgba(0, 0, 0, 0.03);
 }
+
 .dark-theme .magic-list-item:hover {
   background: rgba(255, 255, 255, 0.05);
 }
+
 .markdown-textarea {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   margin-top: 0;
   height: calc(100% - 48px);
 }
+
 .editor-area {
   min-height: 60vh;
   padding: 1rem;
   background: rgba(255, 255, 255, 0.75);
   border-radius: 8px;
 }
+
 .dark-theme .editor-area {
   background: rgba(0, 0, 0, 0.75);
 }
+
 .markdown-textarea {
   width: 100%;
   height: 60vh;
@@ -750,6 +800,7 @@ const goBack = async () => {
   line-height: 1.6;
   padding: 0.5rem;
 }
+
 .floating-actions {
   display: flex;
   justify-content: center;
@@ -757,6 +808,7 @@ const goBack = async () => {
   gap: 1.2rem;
   margin: 2rem 0 0 0;
 }
+
 .action-btn {
   margin: 0 0 1.5rem 0;
   padding: 0.8rem 1.5rem;
@@ -771,29 +823,35 @@ const goBack = async () => {
   box-shadow: 0 0 10px rgba(0, 119, 255, 0.2);
   transition: all 0.3s var(--aero-animation);
 }
+
 .dark-theme .action-btn {
   background: rgba(0, 0, 0, 0.3);
   color: #90caf9;
 }
+
 .action-btn:hover {
   color: white;
   background: rgb(0, 119, 255);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 119, 255, 0.3);
 }
+
 .dark-theme .action-btn:hover {
   background: rgb(0, 119, 255);
   color: white;
 }
+
 .action-btn:active {
   transform: scale(0.98);
   opacity: 0.85;
 }
+
 .action-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
 }
+
 .capitalize {
   text-transform: capitalize;
 }

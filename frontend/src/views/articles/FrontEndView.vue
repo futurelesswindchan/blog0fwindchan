@@ -19,7 +19,9 @@
         <span>加载中...</span>
       </div>
 
-      <div v-else-if="articleStore.error" class="error-message">{{ articleStore.error }}</div>
+      <div v-else-if="articleStore.error" class="error-message">
+        {{ articleStore.error }}
+      </div>
 
       <div
         v-else

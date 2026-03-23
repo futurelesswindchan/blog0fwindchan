@@ -31,6 +31,7 @@ export interface PaginationSettings {
   adminArticles: number
   adminFriends: number
   adminGallery: number
+  adminPlans: number
 }
 
 // --- 2. 默认设置常量 ---
@@ -64,6 +65,7 @@ const defaultPaginationSettings: PaginationSettings = {
   adminArticles: 10,
   adminFriends: 10,
   adminGallery: 8,
+  adminPlans: 10,
 }
 
 // --- 3. Store 定义 ---

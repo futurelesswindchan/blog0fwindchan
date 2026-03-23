@@ -20,6 +20,7 @@
     <FriendModal />
     <ArtworkModal />
     <AssetLibraryModal />
+    <PlanModal />
 
     <!-- Toast Manager -->
     <ToastManager />
@@ -33,6 +34,7 @@ import LoginModal from '@/components/admin/LoginModal.vue'
 import SettingsModal from '@/components/common/SettingsModal.vue'
 import FriendModal from '@/components/admin/FriendModal.vue'
 import ArtworkModal from '@/components/admin/ArtworkModal.vue'
+import PlanModal from '@/components/admin/PlanModal.vue'
 import AssetLibraryModal from '@/components/admin/AssetLibraryModal.vue'
 import GalleryPreviewModal from '@/components/common/GalleryPreviewModal.vue'
 import ToastManager from '@/components/common/ToastManager.vue'
