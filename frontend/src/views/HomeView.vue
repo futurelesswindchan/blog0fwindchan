@@ -1,14 +1,13 @@
 <!-- src/views/HomeView.vue -->
 <template>
   <div class="home-dashboard">
-    <!-- A区: Hero Dashboard -->
+    <!-- Hero: 个人信息展示区 -->
     <section class="hero-section glass-container">
       <div class="hero-content">
-        <!-- 左侧：头像与状态 -->
+        <!-- 左侧：头像（点击翻转显示二维码）+ 状态 -->
         <div class="profile-group">
           <div class="avatar-wrapper" @click="toggleAvatarFlip">
             <div class="avatar-inner" :class="{ 'is-flipped': isAvatarFlipped }">
-              <!-- 正面：头像 -->
               <div class="avatar-front">
                 <LazyImage
                   :src="avatarUrl"
@@ -17,7 +16,6 @@
                   :containerStyle="{ width: '100%', height: '100%' }"
                 />
               </div>
-              <!-- 背面：二维码 -->
               <div class="avatar-back">
                 <LazyImage
                   :src="qrCodeUrl"
@@ -33,12 +31,12 @@
             <h1 class="nickname">Wind Chan</h1>
             <div class="status-badge">
               <span class="status-dot"></span>
-              <span class="status-text">Coding & Dreaming...</span>
+              <span class="status-text">正在摸鱼中awa...</span>
             </div>
           </div>
         </div>
 
-        <!-- 右侧：Slogan 打字机 -->
+        <!-- 右侧：Slogan 打字机 + 社交链接 -->
         <div class="slogan-group">
           <TypeWriter :text="sloganText" :speed="80" :delay="500" class="slogan-text" />
           <p class="slogan-sub">
@@ -46,7 +44,6 @@
             这里记录着代码、故事和...忘了还有什么了！QAQ
           </p>
 
-          <!-- 社交链接集成在 Hero 区域 -->
           <div class="social-links">
             <a
               v-for="link in socialLinks"
@@ -129,7 +126,7 @@
 
     <!-- C区: Navigation Portals (传送门) -->
     <section class="portal-section">
-      <h2 class="section-title"><i class="fas fa-compass"></i> 探索世界</h2>
+      <h2 class="section-title"><i class="fas fa-compass"></i> 快捷导航</h2>
 
       <div class="portal-grid">
         <div
@@ -150,6 +147,15 @@
         </div>
       </div>
     </section>
+
+    <!-- D区: Stats & Plans (轨迹与未来awa) -->
+    <section class="stats-plan-section">
+      <h2 class="section-title"><i class="fas fa-chart-line"></i> 轨迹与未来</h2>
+      <div class="stats-grid">
+        <ContributionHeatmap class="glass-container heatmap-container" />
+        <PlanBoard class="glass-container plan-container" />
+      </div>
+    </section>
   </div>
 </template>
 
@@ -159,8 +165,10 @@ import { useArtworkStore } from '@/views/stores/artworkStore'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
+import ContributionHeatmap from '@/components/home/ContributionHeatmap.vue'
 import TypeWriter from '@/components/common/TypeWriter.vue'
 import LazyImage from '@/components/common/LazyImage.vue'
+import PlanBoard from '@/components/home/PlanBoard.vue'
 
 // --- 资源路径 ---
 const avatarUrl = '/assets/images/logo.webp'
@@ -735,4 +743,25 @@ const features = [
 :deep(.dark-theme) .card-icon {
   opacity: 0.1; /* 深色模式下图标稍微明显一点 */
 }
+
+/* --- D区 --- */
+.stats-plan-section {
+  animation: slideUp 0.8s ease backwards;
+  animation-delay: 0.4s;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3rem;
+}
+
+.heatmap-container,
+.plan-container {
+  padding: 1.8rem;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+/* ------------- */
 </style>

@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Friend } from './friendStore'
 import type { Artwork } from './artworkStore'
+import type { PlanItem } from './activityStore'
 
 export const useGlobalModalStore = defineStore('globalModal', () => {
   // --- 1. 系统级弹窗 ---
@@ -37,7 +38,21 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     editingArtwork.value = null
   }
 
-  // --- 4. 工具级弹窗：素材库 ---
+  // --- 4. 业务级弹窗：计划看板 ---
+  const showPlanModal = ref(false)
+  const editingPlan = ref<PlanItem | null>(null)
+
+  const openPlanModal = (plan: PlanItem | null = null) => {
+    editingPlan.value = plan
+    showPlanModal.value = true
+  }
+
+  const closePlanModal = () => {
+    showPlanModal.value = false
+    editingPlan.value = null
+  }
+
+  // --- 5. 工具级弹窗：素材库 ---
   const showAssetLibrary = ref(false)
   const onAssetSelectCallback = ref<((url: string) => void) | null>(null)
   const openAssetLibrary = (callback?: (url: string) => void) => {
@@ -53,7 +68,7 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     closeAssetLibrary()
   }
 
-  // --- 5. 画廊预览 (Gallery Preview) ---
+  // --- 6. 画廊预览 (Gallery Preview) ---
   const showGalleryPreview = ref(false)
   const previewArtwork = ref<Artwork | null>(null)
   const previewList = ref<Artwork[]>([]) // 存储当前列表，用于导航
@@ -113,5 +128,9 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     hasPrev,
     hasNext,
     navigateGallery,
+    showPlanModal,
+    editingPlan,
+    openPlanModal,
+    closePlanModal,
   }
 })

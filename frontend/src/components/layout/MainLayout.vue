@@ -348,11 +348,10 @@ const afterEnter = () => {
   width: 100%;
   position: relative;
   z-index: 1;
-  /* 添加过渡效果 */
   transition: padding-right 0.3s var(--aero-animation);
 }
 
-/* 优化壁纸容器样式 */
+/* 壁纸容器样式 */
 .wallpaper-container {
   position: fixed;
   top: 0;
@@ -365,10 +364,10 @@ const afterEnter = () => {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   will-change: transform;
-  background-color: var(--bg-color); /* 添加背景色防止闪白 */
+  background-color: gray;
 }
 
-/* 优化壁纸样式 */
+/* 壁纸样式 */
 .wallpaper {
   position: fixed;
   top: 0;
@@ -414,7 +413,7 @@ const afterEnter = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  pointer-events: none; /* 防止干扰鼠标事件 */
+  pointer-events: none;
 }
 
 /* 修改时间组样式 */
@@ -627,7 +626,6 @@ const afterEnter = () => {
 .view-component {
   width: 100%;
   min-height: 200px;
-  /* 移除 position: absolute/left/top */
   transition: box-shadow 0.5s ease;
 }
 
@@ -764,18 +762,6 @@ const afterEnter = () => {
 
 /* 深色主题适配 */
 .dark-theme .mobile-title :deep(.type-writer) {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* 移动端光标样式优化 */
-.mobile-title :deep(.cursor) {
-  display: inline-block;
-  margin-left: 2px;
-  color: var(--accent-color);
-  animation: blink 1s infinite;
-}
-
-.dark-theme .mobile-title :deep(.cursor) {
   color: rgba(255, 255, 255, 0.9);
 }
 

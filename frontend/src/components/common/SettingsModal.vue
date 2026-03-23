@@ -263,6 +263,16 @@
                   max="100"
                 />
               </div>
+              <div class="setting-grid-item">
+                <label>计划管理</label>
+                <input
+                  type="number"
+                  class="modal-input tiny-input"
+                  v-model.number="paginationSettings.adminPlans"
+                  min="5"
+                  max="100"
+                />
+              </div>
             </div>
           </template>
         </section>

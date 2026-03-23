@@ -70,6 +70,7 @@ db = SQLAlchemy(app)
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # endregion
 
 
@@ -248,6 +249,77 @@ class Artwork(db.Model):
             "description": self.description,
             "date": self.date,
         }
+    
+class Contribution(db.Model):
+    """用于存储每日贡献度（提交次数）的模型，驱动热力图显示。
+
+    Attributes:
+        id: 自增主键。
+        date: 贡献发生的日期，格式为 'YYYY-MM-DD'，具有唯一性。
+        count: 当日的累计提交/更新次数。
+    """
+
+    def __init__(self, date: str, count: int = 1):
+        """初始化贡献度记录。
+
+        Args:
+            date: 日期字符串。
+            count: 初始计数值，默认为 1。
+        """
+        self.date = date
+        self.count = count
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    date: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    count: Mapped[int] = mapped_column(Integer, default=0)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """将贡献记录转换为字典格式。
+
+        Returns:
+            包含日期和计数的字典。
+        """
+        return {"date": self.date, "count": self.count}
+
+class Plan(db.Model):
+    """用于存储近期计划/待办事项的模型。
+
+    Attributes:
+        id: 自增主键。
+        content: 计划的具体内容。
+        status: 计划状态，可选值为 'todo' (待办), 'doing' (进行中), 'done' (已完成)。
+        update_date: 最后一次更新状态的日期，用于自动隐藏逻辑。
+    """
+
+    def __init__(self, content: str, status: str = 'todo'):
+        """初始化计划看板项。
+
+        Args:
+            content: 计划内容描述。
+            status: 初始状态，默认为 'todo'。
+        """
+        self.content = content
+        self.status = status
+        self.update_date = datetime.now().strftime("%Y-%m-%d")
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    content: Mapped[str] = mapped_column(String(200), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default='todo')
+    update_date: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """将计划项转换为字典格式。
+
+        Returns:
+            包含计划详情的字典。
+        """
+        return {
+            "id": self.id,
+            "content": self.content,
+            "status": self.status,
+            "update_date": self.update_date
+        }
+    
 # endregion 
 
 
@@ -399,6 +471,39 @@ def get_artworks() -> Response:
 
     works = db.session.execute(db.select(Artwork)).scalars().all()
     return jsonify({"artworks": [w.to_dict() for w in works]})
+
+@app.route("/api/contributions")
+def get_contributions() -> Response:
+    """获取所有历史贡献数据，用于前端热力图展示。
+
+    Returns:
+        包含日期统计数组的 JSON 响应。
+    """
+    contribs = db.session.execute(db.select(Contribution)).scalars().all()
+    return jsonify([c.to_dict() for c in contribs])
+
+@app.route("/api/plans")
+def get_plans() -> Response:
+    """获取计划看板列表，并应用“7天自动隐藏”逻辑。
+    
+    逻辑：返回所有 'todo' 和 'doing' 的项；
+    对于 'done' 的项，仅返回更新日期在 7 天内的内容。
+
+    Returns:
+        过滤后的计划列表 JSON 响应。
+    """
+    all_plans = db.session.execute(db.select(Plan)).scalars().all()
+    filtered_plans = []
+    
+    # 计算 7 天前的截止日期
+    cutoff_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+
+    for p in all_plans:
+        if p.status != 'done' or p.update_date >= cutoff_date:
+            filtered_plans.append(p.to_dict())
+            
+    return jsonify(filtered_plans)
+
 # endregion
 
 
@@ -443,6 +548,7 @@ def refresh():
     new_access_token = create_access_token(identity=current_user_id)
 
     return jsonify(access_token=new_access_token)
+
 # endregion
 
 
@@ -478,6 +584,8 @@ def create_admin():
     db.session.add(new_user)
     db.session.commit()
     print(f"管理员 '{username}' 创建成功！")
+
+# endregion
 
 
 # ==========================================
@@ -539,7 +647,19 @@ def save_article():
             article.content = data.get("content", "")
             article.category_id = category.id
 
-        db.session.commit()
+        # --- 更新每日贡献热力图 ---
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        # 尝试获取今天的贡献记录
+        contrib = Contribution.query.filter_by(date=today_str).first()
+
+        if contrib:
+            contrib.count += 1  # 已经肝过了，计数累加 awa
+        else:
+            new_contrib = Contribution(date=today_str, count=1)  # 今天的第一份努力！
+            db.session.add(new_contrib)
+        # ---------------------------------------
+
+        db.session.commit() # 统一提交文章修改和贡献计数
 
         return jsonify({"message": "Article saved successfully", "id": article.slug})
 
@@ -685,6 +805,7 @@ def delete_friend(id):
     db.session.delete(friend)
     db.session.commit()
     return jsonify({"message": "Friend deleted"})
+
 # endregion
 
 
@@ -743,6 +864,75 @@ def delete_artwork(id):
     db.session.delete(work)
     db.session.commit()
     return jsonify({"message": "Artwork deleted"})
+
+# endregion
+
+# ==========================================
+# region 📋 计划看板管理接口
+# ==========================================
+
+@app.route("/api/admin/plans", methods=["POST"])
+@jwt_required()
+def add_plan():
+    """新增一条计划事项。
+
+    Returns:
+        成功创建的计划项字典。
+    """
+    data = request.json or {}
+    if not data.get("content"):
+        return jsonify({"error": "Content is required"}), 400
+    
+    new_plan = Plan(content=data["content"])
+    db.session.add(new_plan)
+    db.session.commit()
+    return jsonify(new_plan.to_dict())
+
+@app.route("/api/admin/plans/<int:id>", methods=["PUT"])
+@jwt_required()
+def update_plan(id: int):
+    """更新计划内容或状态。
+
+    Args:
+        id: 计划项的数据库 ID。
+
+    Returns:
+        更新后的计划项字典。
+    """
+    data = request.json or {}
+    plan = db.session.get(Plan, id)
+    if not plan:
+        return jsonify({"error": "Plan not found"}), 404
+    
+    # 如果状态发生了改变，同步更新 update_date
+    if "status" in data and data["status"] != plan.status:
+        plan.status = data["status"]
+        plan.update_date = datetime.now().strftime("%Y-%m-%d")
+        
+    plan.content = data.get("content", plan.content)
+    
+    db.session.commit()
+    return jsonify(plan.to_dict())
+
+@app.route("/api/admin/plans/<int:id>", methods=["DELETE"])
+@jwt_required()
+def delete_plan(id: int):
+    """删除指定的计划项。
+
+    Args:
+        id: 计划项的数据库 ID。
+
+    Returns:
+        操作成功的提示信息。
+    """
+    plan = db.session.get(Plan, id)
+    if not plan:
+        return jsonify({"error": "Plan not found"}), 404
+    
+    db.session.delete(plan)
+    db.session.commit()
+    return jsonify({"message": "Plan deleted"})
+
 # endregion
 
 # ==========================================

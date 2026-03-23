@@ -240,7 +240,7 @@ hr {
   border-radius: 8px;
   color: rgba(0, 0, 0, 0.85);
   text-decoration: none;
-  gap: 12px; /* 控制图标和文字的间距 */
+  gap: 12px;
   transition: all 0.3s ease;
   background: rgba(0, 0, 0, 0.1);
   border: none;
