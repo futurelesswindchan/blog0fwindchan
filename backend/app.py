@@ -1,3 +1,4 @@
+# backend\app.py
 import os
 import uuid
 
@@ -289,23 +290,27 @@ class Plan(db.Model):
         content: 计划的具体内容。
         status: 计划状态，可选值为 'todo' (待办), 'doing' (进行中), 'done' (已完成)。
         update_date: 最后一次更新状态的日期，用于自动隐藏逻辑。
+        sort_order: 排序权重，数值越小越靠前。
     """
 
-    def __init__(self, content: str, status: str = 'todo'):
+    def __init__(self, content: str, status: str = 'todo', sort_order: int = 0):
         """初始化计划看板项。
 
         Args:
             content: 计划内容描述。
             status: 初始状态，默认为 'todo'。
+            sort_order: 排序权重，默认为 0。
         """
         self.content = content
         self.status = status
+        self.sort_order = sort_order
         self.update_date = datetime.now().strftime("%Y-%m-%d")
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     content: Mapped[str] = mapped_column(String(200), nullable=False)
     status: Mapped[str] = mapped_column(String(20), default='todo')
     update_date: Mapped[str] = mapped_column(String(20), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
     def to_dict(self) -> Dict[str, Any]:
         """将计划项转换为字典格式。
@@ -317,7 +322,8 @@ class Plan(db.Model):
             "id": self.id,
             "content": self.content,
             "status": self.status,
-            "update_date": self.update_date
+            "update_date": self.update_date,
+            "sort_order": self.sort_order
         }
     
 # endregion 
@@ -478,6 +484,7 @@ def get_contributions() -> Response:
 
     Returns:
         包含日期统计数组的 JSON 响应。
+        
     """
     contribs = db.session.execute(db.select(Contribution)).scalars().all()
     return jsonify([c.to_dict() for c in contribs])
@@ -488,11 +495,15 @@ def get_plans() -> Response:
     
     逻辑：返回所有 'todo' 和 'doing' 的项；
     对于 'done' 的项，仅返回更新日期在 7 天内的内容。
+    按照 sort_order 升序排列。
 
     Returns:
         过滤后的计划列表 JSON 响应。
+
     """
-    all_plans = db.session.execute(db.select(Plan)).scalars().all()
+
+    # 增加排序逻辑：按照 sort_order 升序获取数据
+    all_plans = db.session.execute(db.select(Plan).order_by(Plan.sort_order.asc())).scalars().all()
     filtered_plans = []
     
     # 计算 7 天前的截止日期
@@ -874,16 +885,23 @@ def delete_artwork(id):
 @app.route("/api/admin/plans", methods=["POST"])
 @jwt_required()
 def add_plan():
-    """新增一条计划事项。
+    """新增一条计划事项（需要 access_token）。
 
     Returns:
         成功创建的计划项字典。
+
     """
     data = request.json or {}
     if not data.get("content"):
         return jsonify({"error": "Content is required"}), 400
     
-    new_plan = Plan(content=data["content"])
+    # 获取前端创建时传来的状态，如果未提供则默认为 'todo'
+    status = data.get("status", "todo")
+    
+    # 自动计算新计划的排序（排在最末尾）
+    max_order = db.session.query(db.func.max(Plan.sort_order)).scalar() or 0
+    
+    new_plan = Plan(content=data["content"], status=status, sort_order=max_order + 1)
     db.session.add(new_plan)
     db.session.commit()
     return jsonify(new_plan.to_dict())
@@ -891,13 +909,14 @@ def add_plan():
 @app.route("/api/admin/plans/<int:id>", methods=["PUT"])
 @jwt_required()
 def update_plan(id: int):
-    """更新计划内容或状态。
+    """更新计划内容或状态（需要 access_token）。
 
     Args:
         id: 计划项的数据库 ID。
 
     Returns:
         更新后的计划项字典。
+
     """
     data = request.json or {}
     plan = db.session.get(Plan, id)
@@ -917,13 +936,14 @@ def update_plan(id: int):
 @app.route("/api/admin/plans/<int:id>", methods=["DELETE"])
 @jwt_required()
 def delete_plan(id: int):
-    """删除指定的计划项。
+    """删除指定的计划项（需要 access_token）。
 
     Args:
         id: 计划项的数据库 ID。
 
     Returns:
         操作成功的提示信息。
+
     """
     plan = db.session.get(Plan, id)
     if not plan:
@@ -932,6 +952,29 @@ def delete_plan(id: int):
     db.session.delete(plan)
     db.session.commit()
     return jsonify({"message": "Plan deleted"})
+
+@app.route("/api/admin/plans/reorder", methods=["PUT"])
+@jwt_required()
+def reorder_plans() -> Response:
+    """批量更新计划项的排序（需要 access_token）。
+
+    期望接收 JSON 格式的列表，包含字典，如 [{"id": 1, "sort_order": 0}, ...]
+
+    Returns:
+        操作成功的提示信息响应。
+
+    """
+    data = request.json or []
+    for item in data:
+        plan_id = item.get("id")
+        sort_order = item.get("sort_order")
+        if plan_id is not None and sort_order is not None:
+            plan = db.session.get(Plan, plan_id)
+            if plan:
+                plan.sort_order = sort_order
+                
+    db.session.commit()
+    return jsonify({"message": "Reorder successful"})
 
 # endregion
 

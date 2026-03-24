@@ -1,3 +1,4 @@
+// frontend\src\views\stores\activityStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/api/index'
@@ -18,6 +19,7 @@ export interface PlanItem {
   content: string
   status: 'todo' | 'doing' | 'done'
   update_date: string
+  sort_order: number
 }
 
 /**
@@ -87,6 +89,15 @@ export const useActivityStore = defineStore('activity', () => {
     await api.delete(`/admin/plans/${id}`)
   }
 
+  /**
+   * 批量更新计划事项的排序。
+   *
+   * @param payload - 包含计划 ID 与新排序权重的数组。
+   */
+  const reorderPlans = async (payload: { id: number; sort_order: number }[]) => {
+    await api.put('/admin/plans/reorder', payload)
+  }
+
   return {
     contributions,
     plans,
@@ -96,5 +107,6 @@ export const useActivityStore = defineStore('activity', () => {
     addPlan,
     updatePlan,
     deletePlan,
+    reorderPlans,
   }
 })

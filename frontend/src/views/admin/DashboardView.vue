@@ -156,6 +156,12 @@
                 <td class="col-content" :title="plan.content">{{ plan.content }}</td>
                 <td class="col-date">{{ plan.update_date }}</td>
                 <td class="action-cell col-action">
+                  <button @click="movePlanUp(plan)" class="icon-btn edit" title="上移">
+                    <i class="fas fa-arrow-up"></i>
+                  </button>
+                  <button @click="movePlanDown(plan)" class="icon-btn edit" title="下移">
+                    <i class="fas fa-arrow-down"></i>
+                  </button>
                   <button @click="modalStore.openPlanModal(plan)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
                   </button>
@@ -180,7 +186,7 @@ import { useFriendStore } from '@/views/stores/friendStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useArticleContent } from '@/composables/useArticleContent'
-import { useActivityStore } from '@/views/stores/activityStore'
+import { PlanItem, useActivityStore } from '@/views/stores/activityStore'
 import { useToast } from '@/composables/useToast'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -461,6 +467,59 @@ const deleteArtwork = async (id: string) => {
 }
 
 // --- 计划操作 ---
+
+/**
+ * 交换两个计划项的顺序，并同步至远端服务器。
+ *
+ * @param indexA - 第一个计划项的数组索引。
+ * @param indexB - 第二个计划项的数组索引。
+ */
+const swapPlanOrder = async (indexA: number, indexB: number) => {
+  const plans = activityStore.plans
+
+  // 在本地数组中交换位置以实现 UI 的即时响应
+  const temp = plans[indexA]
+  plans[indexA] = plans[indexB]
+  plans[indexB] = temp
+  // 重新分配全局的 sort_order 保证连续且无冲突
+  const payload = plans.map((p, index) => {
+    p.sort_order = index
+    return {
+      id: p.id,
+      sort_order: index,
+    }
+  })
+  try {
+    await activityStore.reorderPlans(payload)
+  } catch (error) {
+    notify({
+      type: 'error',
+      title: '排序保存失败',
+      message: `${error}`,
+    })
+    // 发生异常时回退到服务器数据
+    await activityStore.fetchPlans()
+  }
+}
+
+const movePlanUp = async (plan: PlanItem) => {
+  const index = activityStore.plans.findIndex((p) => p.id === plan.id)
+  if (index > 0) {
+    await swapPlanOrder(index, index - 1)
+  } else {
+    notify({ type: 'info', message: '已经是第一个啦，不能再往上咧0w0' })
+  }
+}
+
+const movePlanDown = async (plan: PlanItem) => {
+  const index = activityStore.plans.findIndex((p) => p.id === plan.id)
+  if (index >= 0 && index < activityStore.plans.length - 1) {
+    await swapPlanOrder(index, index + 1)
+  } else {
+    notify({ type: 'info', message: '已经是最后一个啦，踩到底咯qwq' })
+  }
+}
+
 const deletePlan = async (id: number) => {
   const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定要删除这个计划吗OAO？')
   if (isConfirmed) {
@@ -683,31 +742,51 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   6. 列宽控制与文本截断 (移动端适配核心)
+   6. 列宽控制与文本截断
    ========================================= */
 
-/* 桌面端默认宽度分配 */
+/* 计划管理 */
+.col-status {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.col-date {
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.col-action {
+  width: 180px;
+  min-width: 180px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* 计划内容 */
+.col-content {
+  width: auto;
+  white-space: normal; /* 允许内容较多时换行，或者保持 ellipsis */
+  word-break: break-all;
+}
+
+/* 文章、友链等其他页面的 */
 .col-title {
   width: 40%;
 }
+
 .col-category {
   width: 15%;
-}
-.col-date {
-  width: 20%;
-}
-.col-action {
-  width: 15%;
-  min-width: 100px;
-  text-align: right;
 }
 
 .col-name {
   width: 25%;
 }
+
 .col-url {
   width: 35%;
 }
+
 .col-desc {
   width: 25%;
 }
@@ -772,9 +851,25 @@ const deletePlan = async (id: number) => {
    ========================================= */
 .action-cell {
   display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end; /* 按钮靠右 */
-  overflow: visible; /* 允许按钮阴影溢出 */
+  gap: 6px;
+  justify-content: flex-end;
+  overflow: visible;
+}
+
+/* 适配移动端：在小屏幕上隐藏次要列 */
+@media (max-width: 768px) {
+  .col-date {
+    display: none;
+  }
+
+  .col-action {
+    width: 140px;
+    min-width: 140px;
+  }
+
+  .col-content {
+    font-size: 0.9rem;
+  }
 }
 
 .icon-btn {
