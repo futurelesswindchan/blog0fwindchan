@@ -32,6 +32,7 @@ export interface PaginationSettings {
   adminFriends: number
   adminGallery: number
   adminPlans: number
+  adminSponsors: number
 }
 
 // --- 2. 默认设置常量 ---
@@ -60,12 +61,13 @@ const defaultToastSettings: ToastSettings = {
 // 默认分页设置
 const defaultPaginationSettings: PaginationSettings = {
   articles: 6,
-  friends: 4,
+  friends: 16,
   gallery: 8,
   adminArticles: 10,
   adminFriends: 10,
   adminGallery: 8,
   adminPlans: 10,
+  adminSponsors: 10,
 }
 
 // --- 3. Store 定义 ---

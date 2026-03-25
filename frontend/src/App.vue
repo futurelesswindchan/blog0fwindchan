@@ -9,7 +9,6 @@
 
     <!-- === 全局模态框挂载点 === -->
     <!-- 不使用 v-if，让组件常驻，由 BaseModal 内部控制显示和动画 -->
-
     <LoginModal />
     <SettingsModal />
     <GalleryPreviewModal />
@@ -21,6 +20,7 @@
     <ArtworkModal />
     <AssetLibraryModal />
     <PlanModal />
+    <SponsorModal />
 
     <!-- Toast Manager -->
     <ToastManager />
@@ -35,6 +35,7 @@ import SettingsModal from '@/components/common/SettingsModal.vue'
 import FriendModal from '@/components/admin/FriendModal.vue'
 import ArtworkModal from '@/components/admin/ArtworkModal.vue'
 import PlanModal from '@/components/admin/PlanModal.vue'
+import SponsorModal from '@/components/admin/SponsorModal.vue'
 import AssetLibraryModal from '@/components/admin/AssetLibraryModal.vue'
 import GalleryPreviewModal from '@/components/common/GalleryPreviewModal.vue'
 import ToastManager from '@/components/common/ToastManager.vue'
