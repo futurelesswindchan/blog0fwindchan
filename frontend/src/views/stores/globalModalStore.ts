@@ -4,11 +4,13 @@ import { ref, computed } from 'vue'
 import type { Friend } from './friendStore'
 import type { Artwork } from './artworkStore'
 import type { PlanItem } from './activityStore'
+import type { Sponsor } from './sponsorStore'
 
 export const useGlobalModalStore = defineStore('globalModal', () => {
   // --- 1. 系统级弹窗 ---
   const showLogin = ref(false)
   const showSettings = ref(false)
+
   const openLogin = () => (showLogin.value = true)
   const closeLogin = () => (showLogin.value = false)
   const openSettings = () => (showSettings.value = true)
@@ -17,6 +19,7 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
   // --- 2. 业务级弹窗：友链 ---
   const showFriendModal = ref(false)
   const editingFriend = ref<Friend | null>(null)
+
   const openFriendModal = (friend: Friend | null = null) => {
     editingFriend.value = friend
     showFriendModal.value = true
@@ -29,6 +32,7 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
   // --- 3. 业务级弹窗：画廊编辑 ---
   const showArtworkModal = ref(false)
   const editingArtwork = ref<Artwork | null>(null)
+
   const openArtworkModal = (work: Artwork | null = null) => {
     editingArtwork.value = work
     showArtworkModal.value = true
@@ -52,9 +56,23 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     editingPlan.value = null
   }
 
-  // --- 5. 工具级弹窗：素材库 ---
+  // --- 5. 业务级弹窗：投喂列表 ---
+  const showSponsorModal = ref(false)
+  const editingSponsor = ref<Sponsor | null>(null)
+
+  const openSponsorModal = (sponsor: Sponsor | null = null) => {
+    editingSponsor.value = sponsor
+    showSponsorModal.value = true
+  }
+  const closeSponsorModal = () => {
+    showSponsorModal.value = false
+    editingSponsor.value = null
+  }
+
+  // --- 6. 工具级弹窗：素材库 ---
   const showAssetLibrary = ref(false)
   const onAssetSelectCallback = ref<((url: string) => void) | null>(null)
+
   const openAssetLibrary = (callback?: (url: string) => void) => {
     if (callback) onAssetSelectCallback.value = callback
     showAssetLibrary.value = true
@@ -68,7 +86,7 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     closeAssetLibrary()
   }
 
-  // --- 6. 画廊预览 (Gallery Preview) ---
+  // --- 7. 画廊预览 (Gallery Preview) ---
   const showGalleryPreview = ref(false)
   const previewArtwork = ref<Artwork | null>(null)
   const previewList = ref<Artwork[]>([]) // 存储当前列表，用于导航
@@ -132,5 +150,9 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     editingPlan,
     openPlanModal,
     closePlanModal,
+    showSponsorModal,
+    editingSponsor,
+    openSponsorModal,
+    closeSponsorModal,
   }
 })

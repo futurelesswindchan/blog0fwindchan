@@ -1,43 +1,50 @@
-<!-- src/components/admin/PlanModal.vue -->
+<!-- src/components/admin/SponsorModal.vue -->
 <template>
   <BaseModal
-    :show="modalStore.showPlanModal"
-    width="500px"
+    :show="modalStore.showSponsorModal"
+    width="600px"
     height="auto"
-    @close="modalStore.closePlanModal"
+    @close="modalStore.closeSponsorModal"
   >
     <div class="modal-layout">
       <div class="modal-header">
-        <h3>{{ isEdit ? '修改计划中' : '制定新计划！' }}</h3>
+        <h3>{{ isEdit ? '修改投喂记录' : '新增投喂大佬！' }}</h3>
       </div>
 
       <div class="modal-scroll-area">
-        <form id="plan-form" @submit.prevent="handleSubmit" class="modal-form">
+        <form id="sponsor-form" @submit.prevent="handleSubmit" class="modal-form">
           <div class="form-group">
-            <label>计划内容 <span class="required">*</span></label>
+            <label>大佬昵称 <span class="required">*</span></label>
+            <input v-model="form.name" required placeholder="awa..." class="modal-input" />
+          </div>
+
+          <ImageUploader v-model="form.avatar" label="大佬头像" />
+
+          <div class="form-group">
+            <label>主页链接</label>
+            <input v-model="form.url" placeholder="https://..." class="modal-input" />
+          </div>
+
+          <div class="form-group">
+            <label>留言寄语</label>
             <textarea
-              v-model="form.content"
-              required
-              placeholder="比如：给画廊加个3D效果..."
+              v-model="form.message"
+              placeholder="留下一抹星光..."
               class="modal-input"
               rows="3"
             ></textarea>
           </div>
 
           <div class="form-group">
-            <label>当前状态 <span class="required">*</span></label>
-            <select v-model="form.status" class="modal-input">
-              <option value="todo">📌 待办 (Todo)</option>
-              <option value="doing">🔥 进行中 (Doing)</option>
-              <option value="done">✅ 已完成 (Done)</option>
-            </select>
+            <label>投喂日期</label>
+            <input type="date" v-model="form.date" class="modal-input" />
           </div>
         </form>
       </div>
 
       <div class="modal-footer">
         <button type="button" class="modal-btn-text" @click="handleCancel">取消</button>
-        <button type="submit" form="plan-form" class="modal-btn-primary" :disabled="submitting">
+        <button type="submit" form="sponsor-form" class="modal-btn-primary" :disabled="submitting">
           {{ submitting ? '提交中...' : '确定' }}
         </button>
       </div>
@@ -48,59 +55,71 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useActivityStore } from '@/views/stores/activityStore'
+import { useSponsorStore } from '@/views/stores/sponsorStore'
 import { useToast } from '@/composables/useToast'
 
 import BaseModal from '../common/BaseModal.vue'
+import ImageUploader from '@/components/admin/ImageUploader.vue'
 
 const modalStore = useGlobalModalStore()
-const activityStore = useActivityStore()
+const sponsorStore = useSponsorStore()
 const { notify, confirm } = useToast()
 
 const submitting = ref(false)
-const isEdit = computed(() => !!modalStore.editingPlan)
+const isEdit = computed(() => !!modalStore.editingSponsor)
 
 const form = reactive({
-  content: '',
-  status: 'todo',
+  name: '',
+  avatar: '',
+  url: '',
+  message: '',
+  date: '',
 })
 
 watch(
-  () => modalStore.editingPlan,
+  () => modalStore.editingSponsor,
   (newVal) => {
     if (newVal) {
-      form.content = newVal.content
-      form.status = newVal.status
+      form.name = newVal.name
+      form.avatar = newVal.avatar || ''
+      form.url = newVal.url || ''
+      form.message = newVal.message || ''
+      form.date = newVal.date || ''
     } else {
-      form.content = ''
-      form.status = 'todo'
+      // 获取当前日期的 YYYY-MM-DD 格式作为默认值
+      const today = new Date().toISOString().split('T')[0]
+      form.name = ''
+      form.avatar = ''
+      form.url = ''
+      form.message = ''
+      form.date = today
     }
   },
   { immediate: true },
 )
 
 const handleCancel = async () => {
-  const isConfirmed = await confirm('未保存的计划内容将会丢失哦！', '确定要放弃编辑吗 owo？')
+  const isConfirmed = await confirm('未保存的投喂信息将会丢失哦！', '真的要放弃编辑吗 owo？')
   if (isConfirmed) {
-    modalStore.closePlanModal()
+    modalStore.closeSponsorModal()
   }
 }
 
 const handleSubmit = async () => {
   submitting.value = true
   try {
-    if (isEdit.value && modalStore.editingPlan) {
-      await activityStore.updatePlan(modalStore.editingPlan.id, form)
+    if (isEdit.value && modalStore.editingSponsor) {
+      await sponsorStore.updateSponsor(modalStore.editingSponsor.id, form)
     } else {
-      await activityStore.addPlan(form)
+      await sponsorStore.addSponsor(form)
     }
 
-    await activityStore.fetchPlans()
-    modalStore.closePlanModal()
+    await sponsorStore.fetchSponsors()
+    modalStore.closeSponsorModal()
 
     notify({
       type: 'success',
-      message: '计划保存成功啦！冲鸭！(≧∇≦)ﾉ',
+      message: '投喂记录保存成功啦！感谢大佬！(≧∇≦)ﾉ',
     })
   } catch (e) {
     notify({
@@ -115,6 +134,7 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
+/* 布局容器：撑满 BaseModal 的高度 */
 .modal-layout {
   display: flex;
   flex-direction: column;
@@ -127,7 +147,6 @@ const handleSubmit = async () => {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
 }
-
 .modal-header h3 {
   margin: 0;
   color: var(--accent-color);
@@ -172,11 +191,5 @@ const handleSubmit = async () => {
   gap: 1rem;
   background: rgba(255, 255, 255, 0.5);
   flex-shrink: 0;
-}
-
-textarea.modal-input {
-  resize: vertical;
-  min-height: 80px;
-  font-family: inherit;
 }
 </style>

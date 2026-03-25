@@ -1,4 +1,4 @@
-<!-- src\views\admin\DashboardView.vue -->
+<!-- src/views/admin/DashboardView.vue -->
 <template>
   <div class="dashboard-container">
     <h2 class="page-title-art">Dashboard</h2>
@@ -131,7 +131,7 @@
         <FilterBar v-model:searchText="planSearchText" placeholder="搜索计划内容..." />
         <div class="list-wrapper">
           <div v-if="activityStore.isLoadingPlans" class="loading">加载中...</div>
-          <table v-else class="data-table">
+          <table v-else class="data-table plan-table">
             <thead>
               <tr>
                 <th class="col-status">状态</th>
@@ -175,6 +175,47 @@
         </div>
         <PaginationControls :pagination="planPagination" />
       </div>
+
+      <!-- 5. 投喂列表 -->
+      <div v-else-if="currentTab === 'sponsors'" class="tab-content">
+        <FilterBar v-model:searchText="sponsorSearchText" placeholder="搜索投喂大佬昵称或留言..." />
+        <div class="list-wrapper">
+          <div v-if="sponsorStore.loading" class="loading">加载中...</div>
+          <table v-else class="data-table">
+            <thead>
+              <tr>
+                <th class="col-name">大佬信息</th>
+                <th class="col-content">留言寄语</th>
+                <th class="col-date">日期</th>
+                <th class="col-action">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="sponsor in paginatedSponsors" :key="sponsor.id">
+                <td class="col-name">
+                  <div class="flex-center">
+                    <img :src="sponsor.avatar || '/favicon.png'" class="mini-avatar" />
+                    <span class="text-truncate" :title="sponsor.name">{{ sponsor.name }}</span>
+                  </div>
+                </td>
+                <td class="col-content" :title="sponsor.message">
+                  <span class="text-truncate">{{ sponsor.message || '（留下一抹星光...）' }}</span>
+                </td>
+                <td class="col-date">{{ sponsor.date }}</td>
+                <td class="action-cell col-action">
+                  <button @click="modalStore.openSponsorModal(sponsor)" class="icon-btn edit">
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button @click="deleteSponsor(sponsor.id)" class="icon-btn del">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <PaginationControls :pagination="sponsorPagination" />
+      </div>
     </div>
   </div>
 </template>
@@ -187,6 +228,7 @@ import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useArticleContent } from '@/composables/useArticleContent'
 import { PlanItem, useActivityStore } from '@/views/stores/activityStore'
+import { useSponsorStore } from '@/views/stores/sponsorStore'
 import { useToast } from '@/composables/useToast'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -210,12 +252,14 @@ const artworkStore = useArtworkStore()
 const modalStore = useGlobalModalStore()
 const settingsStore = useSettingsStore()
 const activityStore = useActivityStore()
+const sponsorStore = useSponsorStore()
 
 // Tabs 配置
 const tabs = [
   { key: 'articles', label: '文章管理' },
-  { key: 'friends', label: '友链管理' },
   { key: 'gallery', label: '画廊管理' },
+  { key: 'friends', label: '友链管理' },
+  { key: 'sponsors', label: '投喂管理' },
   { key: 'plans', label: '计划管理' },
 ] as const
 const currentTab = ref<(typeof tabs)[number]['key']>('articles')
@@ -230,6 +274,7 @@ const refreshAllData = () => {
   friendStore.fetchFriends()
   artworkStore.fetchArtworks()
   activityStore.fetchPlans()
+  sponsorStore.fetchSponsors()
 }
 
 // --- 顶部按钮逻辑 ---
@@ -241,13 +286,17 @@ const createButtonText = computed(() => {
       return '传新作品'
     case 'plans':
       return '定新计划'
+    case 'sponsors':
+      return '感谢投喂'
     default:
       return '写新文章'
   }
 })
+
 const createButtonIcon = computed(() => {
   if (currentTab.value === 'gallery') return 'fa-image'
   if (currentTab.value === 'plans') return 'fa-list-check'
+  if (currentTab.value === 'sponsors') return 'fa-gift'
   return 'fa-pencil-alt'
 })
 
@@ -258,6 +307,8 @@ const handleCreate = () => {
     modalStore.openFriendModal(null)
   } else if (currentTab.value === 'plans') {
     modalStore.openPlanModal(null)
+  } else if (currentTab.value === 'sponsors') {
+    modalStore.openSponsorModal(null)
   } else {
     modalStore.openArtworkModal(null)
   }
@@ -414,6 +465,40 @@ watch([planSearchText, planPageSize], () => {
   planPage.value = 1
 })
 
+// --- 5. 投喂搜索与分页 ---
+const sponsorSearchText = ref('')
+const sponsorPage = ref(1)
+// 使用后台专属配置
+const sponsorPageSize = computed(() => settingsStore.pagination.adminSponsors || 10)
+
+const filteredSponsors = computed(() => {
+  const text = sponsorSearchText.value.toLowerCase()
+  if (!text) return sponsorStore.sponsors
+  return sponsorStore.sponsors.filter(
+    (sp) =>
+      sp.name.toLowerCase().includes(text) ||
+      (sp.message && sp.message.toLowerCase().includes(text)),
+  )
+})
+const paginatedSponsors = computed(() => {
+  const start = (sponsorPage.value - 1) * sponsorPageSize.value
+  const end = start + sponsorPageSize.value
+  return filteredSponsors.value.slice(start, end)
+})
+const sponsorPagination = computed(() => ({
+  currentPage: sponsorPage.value,
+  totalPages: Math.ceil(filteredSponsors.value.length / sponsorPageSize.value) || 1,
+  prevPage: () => {
+    if (sponsorPage.value > 1) sponsorPage.value--
+  },
+  nextPage: () => {
+    if (sponsorPage.value < sponsorPagination.value.totalPages) sponsorPage.value++
+  },
+}))
+watch([sponsorSearchText, sponsorPageSize], () => {
+  sponsorPage.value = 1
+})
+
 // =========================================
 // CRUD 操作逻辑
 // =========================================
@@ -528,12 +613,22 @@ const deletePlan = async (id: number) => {
     notifyDeleteSuccess()
   }
 }
+
+// --- 投喂操作 ---
+const deleteSponsor = async (id: number) => {
+  const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定要删除这条投喂记录吗OAO？')
+  if (isConfirmed) {
+    await sponsorStore.deleteSponsor(id)
+    await sponsorStore.fetchSponsors()
+    notifyDeleteSuccess()
+  }
+}
 </script>
 
 <style scoped>
 /* =========================================
-   1. 基础布局容器
-   ========================================= */
+ 1. 基础布局容器
+ ========================================= */
 .dashboard-container {
   width: 100%;
   min-height: inherit;
@@ -547,8 +642,8 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   2. 顶部操作区
-   ========================================= */
+ 2. 顶部操作区
+ ========================================= */
 
 .action-area {
   display: flex;
@@ -590,8 +685,8 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   3. 标签页切换
-   ========================================= */
+ 3. 标签页切换
+ ========================================= */
 .tabs-header {
   display: flex;
   align-items: stretch;
@@ -673,8 +768,8 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   4. 列表容器
-   ========================================= */
+ 4. 列表容器
+ ========================================= */
 .list-wrapper {
   margin: 0;
   padding: 1rem;
@@ -691,14 +786,14 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   5. 表格样式
-   ========================================= */
+ 5. 表格样式
+ ========================================= */
 .data-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
   color: inherit;
-  table-layout: fixed; /* 强制列宽控制，便于省略号显示 */
+  table-layout: fixed;
 }
 
 .data-table th,
@@ -706,7 +801,6 @@ const deletePlan = async (id: number) => {
   padding: 1rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   vertical-align: middle;
-  /* 默认不换行，溢出隐藏，显示省略号 */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -742,8 +836,8 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   6. 列宽控制与文本截断
-   ========================================= */
+ 6. 列宽控制与文本截断
+ ========================================= */
 
 /* 计划管理 */
 .col-status {
@@ -766,7 +860,7 @@ const deletePlan = async (id: number) => {
 /* 计划内容 */
 .col-content {
   width: auto;
-  white-space: normal; /* 允许内容较多时换行，或者保持 ellipsis */
+  white-space: normal;
   word-break: break-all;
 }
 
@@ -833,7 +927,7 @@ const deletePlan = async (id: number) => {
   object-fit: cover;
   border: 2px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0; /* 防止头像被挤压 */
+  flex-shrink: 0;
 }
 
 .url-col {
@@ -847,8 +941,8 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   7. 操作按钮
-   ========================================= */
+ 7. 操作按钮
+ ========================================= */
 .action-cell {
   display: flex;
   gap: 6px;
@@ -920,8 +1014,8 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   8. 画廊网格
-   ========================================= */
+ 8. 画廊网格
+ ========================================= */
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -1014,8 +1108,8 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   9. 加载状态
-   ========================================= */
+ 9. 加载状态
+ ========================================= */
 .loading {
   text-align: center;
   padding: 2rem;
@@ -1024,8 +1118,8 @@ const deletePlan = async (id: number) => {
 }
 
 /* =========================================
-   10. 响应式适配 (移动端核心优化)
-   ========================================= */
+ 10. 响应式适配
+ ========================================= */
 @media (max-width: 768px) {
   .dashboard-content {
     padding: 0.5rem;

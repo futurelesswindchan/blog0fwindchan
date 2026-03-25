@@ -210,7 +210,49 @@ class Friend(db.Model):
             "avatar": self.avatar,
             "tags": self.tags,
         }
+    
+class Sponsor(db.Model):
+    """感谢投喂 (Sponsor) 模型，用于前端展示投喂大佬的列表。
 
+    Attributes:
+        id: 自增主键。
+        name: 投喂大佬的名称。
+        avatar: 大佬的头像统一资源定位符。
+        url: 大佬的个人主页或相关链接。
+        message: 大佬的留言或寄语。
+        date: 投喂发生的日期，格式为 'YYYY-MM-DD'。
+    """
+
+    # 依然是为了防止报类型错误，我们需要一个 __init__ 方法
+    # 虽然 SQLAlchemy 会自动生成构造函数，但显式定义有助于类型检查和代码可读性
+    def __init__(self, name: str, avatar: Optional[str] = None, url: Optional[str] = None, message: Optional[str] = None, date: Optional[str] = None):
+        self.name = name
+        self.avatar = avatar
+        self.url = url
+        self.message = message
+        self.date = date or datetime.now().strftime("%Y-%m-%d")
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    avatar: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    url: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    message: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    date: Mapped[Optional[str]] = mapped_column(String(20), nullable=False)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """将投喂记录模型实例转换为字典格式。
+
+        Returns:
+            包含投喂记录各项属性的字典。
+        """
+        return {
+            "id": self.id,
+            "name": self.name,
+            "avatar": self.avatar,
+            "url": self.url,
+            "message": self.message,
+            "date": self.date
+        }
 
 class Artwork(db.Model):
     """
@@ -470,6 +512,16 @@ def get_friends() -> Response:
     friends = db.session.execute(db.select(Friend)).scalars().all()
     return jsonify({"friends": [f.to_dict() for f in friends]})
 
+@app.route("/api/sponsors")
+def get_sponsors() -> Response:
+    """获取所有投喂感谢列表。
+
+    Returns:
+        Response: 包含所有投喂记录列表的 JSON 响应对象。
+        
+    """
+    sponsors = db.session.execute(db.select(Sponsor)).scalars().all()
+    return jsonify({"sponsors": [s.to_dict() for s in sponsors]})
 
 @app.route("/api/artworks")
 def get_artworks() -> Response:
@@ -977,6 +1029,84 @@ def reorder_plans() -> Response:
     return jsonify({"message": "Reorder successful"})
 
 # endregion
+
+
+# ==========================================
+# region 💖投喂感谢管理接口
+# ==========================================
+@app.route("/api/sponsors", methods=["POST"])
+@jwt_required()
+def add_sponsor():
+    """添加一条投喂感谢记录。
+
+    Returns:
+        成功创建的投喂记录字典。
+
+    """
+    data = request.json or {}
+    if not data.get("name"):
+        return jsonify({"message": "Name is Required"}), 400
+    
+    new_responsors = Sponsor(
+        name=data["name"],
+        avatar=data.get("avatar"),
+        url=data.get("url"),
+        message=data.get("message"),
+        date=data.get("date")
+    )
+
+    db.session.add(new_responsors)
+    db.session.commit()
+    return jsonify({"message": "Sponsor added", "sponsor": new_responsors.to_dict()})
+
+@app.route("/api/sponsors/<int:id>", methods=["PUT"])
+@jwt_required()
+def update_sponsor(id: int):
+    """更新指定的投喂感谢记录。
+
+    Args:
+        id: 投喂记录的数据库 ID。
+
+    Returns:
+        更新后的投喂记录字典。
+
+    """
+    data = request.json or {}
+    sponsor = db.session.get(Sponsor, id)
+    if not sponsor:
+        return jsonify({"message": "Sponsor not found"}), 404
+    sponsor.name = data.get("name", sponsor.name)
+    sponsor.avatar = data.get("avatar", sponsor.avatar)
+    sponsor.url = data.get("url", sponsor.url)
+    sponsor.message = data.get("message", sponsor.message)
+    sponsor.date = data.get("date", sponsor.date)
+
+    db.session.commit()
+    return jsonify({"message": "Sponsor updated", "sponsor": sponsor.to_dict()})
+
+@app.route("/api/sponsors/<int:id>", methods=["DELETE"])
+@jwt_required()
+def delete_sponsor(id: int):
+    """删除指定的投喂感谢记录。
+
+    Args:
+        id: 投喂记录的数据库 ID。
+
+    Returns:
+        操作成功的提示信息。
+
+    """
+    sponsor = db.session.get(Sponsor, id)
+    if not sponsor:
+        return jsonify({"message": "Sponsor not found"}), 404
+    
+    db.session.delete(sponsor)
+    db.session.commit()
+    return jsonify({"message": "Sponsor deleted"})
+
+
+# endregion
+
 
 # ==========================================
 # region 🏁 启动逻辑与数据初始化

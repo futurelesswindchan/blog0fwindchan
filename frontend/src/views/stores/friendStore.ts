@@ -3,6 +3,9 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/api' // 引入封装好的 axios 实例
 
+/**
+ * 友链数据接口
+ */
 export interface Friend {
   id: string
   name: string
