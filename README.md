@@ -178,6 +178,6 @@ npm run dev
 
 ---
 
-> **Copyright © 2025 没有未来的小风酱 (futurelesswindchan)**
+> **Copyright © 2026 没有未来的小风酱 (futurelesswindchan)**
 >
 > Made with ♡ and lots of —⊂ZZZ⊃.
