@@ -73,36 +73,112 @@
     }
   }
 }
-/* =========================================
-   文章内部元素样式修正 (Markdown 渲染后)
-   ========================================= */
 
-/* 1. 图片样式优化 */
-.markdown-content img {
+/* =========================================
+ 图片排版类
+ ========================================= */
+
+/* 全宽显示 */
+.markdown-content img.img-full {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 原图自适应（默认 Markdown 图片） */
+.markdown-content img.img-auto,
+.markdown-content img:not([class]) {
+  width: auto;
   max-width: 100%;
   height: auto;
   display: block;
   margin: 1.5rem auto;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
 }
 
-.markdown-content img:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+/* 行内显示 */
+.markdown-content img.img-inline {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  display: inline-block;
+  margin: 0 0.5rem;
+  border-radius: 4px;
+  vertical-align: middle;
 }
 
-/* 2. 暗色模式适配 */
-.dark-theme .markdown-content img {
-  /* 在暗色模式下稍微降低图片亮度，防止刺眼 */
+/* 左浮动 */
+.markdown-content img.img-left {
+  float: left;
+  width: auto;
+  max-width: 40%;
+  height: auto;
+  margin: 0 1.5rem 1rem 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 右浮动 */
+.markdown-content img.img-right {
+  float: right;
+  width: auto;
+  max-width: 40%;
+  height: auto;
+  margin: 0 0 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 浮动清除 */
+.markdown-content p:after,
+.markdown-content h1:after,
+.markdown-content h2:after,
+.markdown-content h3:after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+/* 暗色主题适配 */
+.dark-theme .markdown-content img.img-full,
+.dark-theme .markdown-content img.img-auto,
+.dark-theme .markdown-content img:not([class]),
+.dark-theme .markdown-content img.img-inline,
+.dark-theme .markdown-content img.img-left,
+.dark-theme .markdown-content img.img-right {
   filter: brightness(0.85);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.dark-theme .markdown-content img:hover {
+.dark-theme .markdown-content img.img-full:hover,
+.dark-theme .markdown-content img.img-auto:hover,
+.dark-theme .markdown-content img:not([class]):hover,
+.dark-theme .markdown-content img.img-inline:hover,
+.dark-theme .markdown-content img.img-left:hover,
+.dark-theme .markdown-content img.img-right:hover {
   filter: brightness(1);
 }
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .markdown-content img.img-left,
+  .markdown-content img.img-right {
+    float: none;
+    width: auto;
+    max-width: 100%;
+    margin: 1.5rem auto;
+    display: block;
+  }
+}
+
+/* =========================================
+   文章内部元素样式修正 (Markdown 渲染后)
+   ========================================= */
 
 .markdown-content p {
   margin-bottom: 1.2em;

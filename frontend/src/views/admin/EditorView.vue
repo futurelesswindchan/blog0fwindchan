@@ -219,6 +219,7 @@ import { useCodeHighlight } from '@/composables/useCodeHighlight'
 import { useArticleInfo } from '@/composables/useArticleInfo'
 import { useArticleStore } from '@/views/stores/articleStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useImageLayoutStore } from '@/views/stores/imageLayoutStore'
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { useRouter, useRoute } from 'vue-router'
@@ -237,6 +238,7 @@ const router = useRouter()
 const route = useRoute()
 const articleStore = useArticleStore()
 const modalStore = useGlobalModalStore()
+const layoutStore = useImageLayoutStore()
 const { confirm, notify } = useToast()
 
 const { isDarkTheme, formatDate, markdownOptions: baseMarkdownOptions } = useArticleContent()
@@ -322,66 +324,138 @@ onMounted(async () => {
 
 // --- 编辑逻辑 ---
 
+/**
+ * 保存当前光标位置
+ * @returns 光标位置对象 { start, end }
+ */
+const saveCursorPosition = () => {
+  const textarea = textareaRef.value
+  if (!textarea) return { start: 0, end: 0 }
+  return {
+    start: textarea.selectionStart,
+    end: textarea.selectionEnd,
+  }
+}
+
+/**
+ * 恢复光标位置
+ * @param position - 光标位置对象
+ */
+const restoreCursorPosition = (position: { start: number; end: number }) => {
+  const textarea = textareaRef.value
+  if (!textarea) return
+
+  textarea.focus()
+  textarea.selectionStart = position.start
+  textarea.selectionEnd = position.end
+}
+
+/**
+ * 通用格式应用函数
+ * 在指定位置插入前缀和后缀，保持光标位置
+ * @param prefix - 前缀文本
+ * @param suffix - 后缀文本
+ */
 const applyFormat = (prefix: string, suffix: string) => {
   const textarea = textareaRef.value
   if (!textarea) return
-  const start = textarea.selectionStart
-  const end = textarea.selectionEnd
+
+  const cursorPos = saveCursorPosition()
+  const start = cursorPos.start
+  const end = cursorPos.end
   const selectedText = form.content.substring(start, end)
-  const originalContent = form.content
   const textToInsert = selectedText || '文本'
+
   const newContent =
-    originalContent.substring(0, start) +
-    prefix +
-    textToInsert +
-    suffix +
-    originalContent.substring(end)
+    form.content.substring(0, start) + prefix + textToInsert + suffix + form.content.substring(end)
   form.content = newContent
-  nextTick(() => {
-    textarea.focus()
-    if (selectedText) {
-      textarea.selectionStart = start + prefix.length
-      textarea.selectionEnd = end + prefix.length
-    } else {
-      textarea.selectionStart = start + prefix.length
-      textarea.selectionEnd = start + prefix.length + textToInsert.length
-    }
-  })
+
+  const newCursorPos = selectedText
+    ? start + prefix.length
+    : start + prefix.length + textToInsert.length
+
+  restoreCursorPosition({ start: newCursorPos, end: newCursorPos })
 }
 
+/**
+ * 处理链接插入逻辑
+ * 在选中文本或光标位置插入链接，保持光标位置
+ */
 const insertLink = () => {
   const textarea = textareaRef.value
   if (!textarea) return
-  const start = textarea.selectionStart
-  const end = textarea.selectionEnd
+
+  const cursorPos = saveCursorPosition()
+  const start = cursorPos.start
+  const end = cursorPos.end
   const selectedText = form.content.substring(start, end)
   const url = prompt('请输入链接地址:', 'https://')
   if (!url) return
+
   const text = selectedText || '在这里填写链接描述'
   const insert = `[${text}](${url})`
+
   form.content = form.content.substring(0, start) + insert + form.content.substring(end)
-  nextTick(() => {
-    textarea.focus()
-    textarea.selectionStart = textarea.selectionEnd = start + insert.length
-  })
+
+  restoreCursorPosition({ start: start + insert.length, end: start + insert.length })
 }
 
+/**
+ * 应用魔法效果
+ * 在选中文本周围包裹样式标签，保持光标位置
+ * @param className - CSS 类名
+ */
 const applyMagic = (className: string) => {
   applyFormat(`<span class="${className}">`, `</span>`)
   showMagicMenu.value = false
 }
 
-// 处理图片插入 (作为回调函数传给 Store)
+// 添加一个 ref 来保存光标位置
+const savedCursorPos = ref({ start: 0, end: 0 })
+
+/**
+ * 处理图片插入逻辑
+ * 打开布局选择模态框前保存光标位置
+ * @param url - 图片 URL
+ */
 const handleInsertImage = (url: string) => {
-  const textarea = textareaRef.value
-  if (!textarea) return
-  const start = textarea.selectionStart
-  const end = textarea.selectionEnd
-  const textToInsert = `\n![在这里填写图片描述](${url})\n`
-  form.content = form.content.substring(0, start) + textToInsert + form.content.substring(end)
+  // 在打开模态框前保存光标位置
+  savedCursorPos.value = saveCursorPosition()
+  layoutStore.openModal(url, handleImageLayoutConfirm)
+}
+
+/**
+ * 处理图片排版选择确认
+ * 根据选择的排版方式和用户自定义尺寸插入对应的 HTML 标记，保持光标位置
+ * @param layoutId - 选择的排版方式 ID
+ * @param size - 用户设定的图片尺寸（单位：rem）
+ */
+const handleImageLayoutConfirm = (layoutId: string, size: number) => {
+  const url = layoutStore.pendingImageUrl
+  if (!url) return
+  const start = savedCursorPos.value.start
+  const end = savedCursorPos.value.end
+  let imageMarkup = ''
+  switch (layoutId) {
+    case 'auto':
+      imageMarkup = `\n<img class="img-auto" src="${url}" style="max-width: ${size}rem;" />\n`
+      break
+    case 'full':
+      imageMarkup = `\n<img class="img-full" src="${url}" />\n`
+      break
+    case 'inline':
+      imageMarkup = `<img class="img-inline" src="${url}" style="max-width: ${size}rem;" />`
+      break
+    case 'left':
+      imageMarkup = `\n<img class="img-left" src="${url}" style="max-width: ${size}rem;" />\n`
+      break
+    case 'right':
+      imageMarkup = `\n<img class="img-right" src="${url}" style="max-width: ${size}rem;" />\n`
+      break
+  }
+  form.content = form.content.substring(0, start) + imageMarkup + form.content.substring(end)
   nextTick(() => {
-    textarea.focus()
-    textarea.selectionStart = textarea.selectionEnd = start + textToInsert.length
+    restoreCursorPosition({ start: start + imageMarkup.length, end: start + imageMarkup.length })
   })
 }
 
