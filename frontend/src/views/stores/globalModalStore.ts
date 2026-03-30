@@ -89,9 +89,8 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
   // --- 7. 画廊预览 (Gallery Preview) ---
   const showGalleryPreview = ref(false)
   const previewArtwork = ref<Artwork | null>(null)
-  const previewList = ref<Artwork[]>([]) // 存储当前列表，用于导航
+  const previewList = ref<Artwork[]>([])
 
-  // 打开预览，同时传入当前图片和上下文列表
   const openGalleryPreview = (artwork: Artwork, list: Artwork[] = []) => {
     previewArtwork.value = artwork
     previewList.value = list.length > 0 ? list : [artwork]
@@ -104,7 +103,6 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     previewList.value = []
   }
 
-  // 导航逻辑移入 Store
   const currentPreviewIndex = computed(() => {
     if (!previewArtwork.value) return -1
     return previewList.value.findIndex((item) => item.id === previewArtwork.value?.id)

@@ -13,12 +13,13 @@
     <SettingsModal />
     <GalleryPreviewModal />
 
-    <!-- 业务弹窗 -->
+    <!-- 业务、工具弹窗 -->
     <!-- 即使不显示，组件也挂载着，但 BaseModal 会隐藏内容 -->
     <!-- 传入 props 依然有效，因为 store 状态是响应式的 -->
     <FriendModal />
     <ArtworkModal />
     <AssetLibraryModal />
+    <ImageLayoutModal />
     <PlanModal />
     <SponsorModal />
 
@@ -38,6 +39,7 @@ import PlanModal from '@/components/admin/PlanModal.vue'
 import SponsorModal from '@/components/admin/SponsorModal.vue'
 import AssetLibraryModal from '@/components/admin/AssetLibraryModal.vue'
 import GalleryPreviewModal from '@/components/common/GalleryPreviewModal.vue'
+import ImageLayoutModal from '@/components/admin/ImageLayoutModal.vue'
 import ToastManager from '@/components/common/ToastManager.vue'
 
 const { isDarkTheme } = useArticleContent()
