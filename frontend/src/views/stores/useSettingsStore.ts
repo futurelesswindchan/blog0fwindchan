@@ -1,13 +1,14 @@
+// frontend/src/views/stores/useSettingsStore.ts
 import { defineStore } from 'pinia'
 
 // --- 1. 类型定义 ---
 
 // 打字机效果设置
 export interface TypeWriterSettings {
-  speed: number
-  initialDelay: number
-  chunkSize: number
-  enabled: boolean
+  speed: number // 帧间隔 (ms)，越小越快
+  initialDelay: number // 页面加载后开始打字的延迟 (ms)
+  chunkSize: number // 每次塞入的字符数 (个)
+  enabled: boolean // 是否开启打字机效果
 }
 
 // 粒子效果设置接口
@@ -39,9 +40,9 @@ export interface PaginationSettings {
 
 // 默认打字机效果设置
 const defaultTypeWriterSettings: TypeWriterSettings = {
-  speed: 20,
-  initialDelay: 400,
-  chunkSize: 3,
+  speed: 15,
+  initialDelay: 600,
+  chunkSize: 1,
   enabled: true,
 }
 
@@ -54,7 +55,7 @@ const defaultParticleSettings: ParticleSettings = {
 
 // 默认吐司弹窗设置
 const defaultToastSettings: ToastSettings = {
-  position: 'bottom-left',
+  position: 'bottom-right',
   duration: 4000,
 }
 

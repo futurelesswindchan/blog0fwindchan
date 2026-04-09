@@ -230,3 +230,79 @@
 .dark-theme .markdown-content hr {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* =========================================
+   删除线 (Strikethrough) 美化
+   ========================================= */
+.markdown-content del,
+.markdown-content s {
+  /* 定义一个局部变量控制涂鸦颜色，方便明暗主题统一修改 */
+  --strike-color: var(--accent-color, #0077ff);
+
+  text-decoration: none;
+  position: relative;
+  color: inherit;
+  opacity: 0.75;
+  transition: all 0.3s ease;
+  padding: 0 2px;
+}
+
+/* 1. 主长斜杠：贯穿全文的基础划线 */
+.markdown-content del::after,
+.markdown-content s::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: var(--strike-color);
+  transform: translateY(-50%) rotate(-1.5deg);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+}
+
+/* 2. 反向断斜杠：模拟多画了几笔的涂鸦划痕 */
+.markdown-content del::before,
+.markdown-content s::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 50%;
+  height: 14px;
+  /* 使用重复线性渐变画出反向的小短线 */
+  background: repeating-linear-gradient(
+    60deg,
+    transparent,
+    transparent 8px,
+    var(--strike-color) 8px,
+    var(--strike-color) 9px
+  );
+  opacity: 0.6;
+  transform: translateY(-50%);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+}
+
+/* --- 交互特效：鼠标悬浮时 --- */
+.markdown-content del:hover,
+.markdown-content s:hover {
+  /* 悬浮时，所有划线的颜色变成警示红 */
+  --strike-color: #ff4757;
+  opacity: 1;
+}
+
+.markdown-content del:hover::after,
+.markdown-content s:hover::after {
+  /* 主线变平、加粗 */
+  transform: translateY(-50%) rotate(0deg) scaleY(1.5);
+}
+
+.markdown-content del:hover::before,
+.markdown-content s:hover::before {
+  /* 涂鸦辅线在悬浮时优雅地消失，留下干净的主红线 */
+  opacity: 0;
+  transform: translateY(-50%) scaleY(0.5);
+}

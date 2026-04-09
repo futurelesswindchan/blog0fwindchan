@@ -1,3 +1,4 @@
+// frontend\src\composables\useThrottledScrollHandler.ts
 import { type Ref } from 'vue'
 
 // 这里的节流滚动处理函数用于在用户滚动时更新 isScrolling 状态

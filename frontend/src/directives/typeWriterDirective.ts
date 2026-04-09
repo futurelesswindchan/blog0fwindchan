@@ -38,7 +38,7 @@ export const vTypeWriter: Directive<HTMLElement, TypeWriterOptions> = {
         if (!title.querySelector('.typing-cursor')) {
           const cursor = document.createElement('span')
           cursor.className = 'typing-cursor'
-          cursor.textContent = '>>'
+          cursor.textContent = '<<'
           title.appendChild(cursor)
         }
       }

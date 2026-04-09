@@ -51,6 +51,11 @@
             />
           </span>
         </div>
+
+        <!-- 新增：桌面端全局二合一进度条 -->
+        <div v-if="showProgress" class="header-progress-bar" :class="{ 'is-typing': isTypingMode }">
+          <div class="progress-fill" :style="{ width: `${globalProgress}%` }"></div>
+        </div>
       </header>
 
       <!-- b.侧边栏+内容区 -->
@@ -108,6 +113,11 @@
         <button class="nav-toggle" @click="showMobileNav = true">
           <i class="fas fa-bars"></i>
         </button>
+
+        <!-- 新增：桌面端全局二合一进度条 -->
+        <div v-if="showProgress" class="header-progress-bar" :class="{ 'is-typing': isTypingMode }">
+          <div class="progress-fill" :style="{ width: `${globalProgress}%` }"></div>
+        </div>
       </header>
 
       <!-- b.移动端侧边栏 -->
@@ -150,6 +160,7 @@
 
 <script setup lang="ts">
 import { useThrottledScrollHandler } from '@/composables/useThrottledScrollHandler'
+import { useReadingProgress } from '@/composables/useReadingProgress'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { useRoute } from 'vue-router'
@@ -164,6 +175,7 @@ import NavPanel from './NavPanel.vue'
 const logo = '/favicon.png'
 const lightWallpaper = '/assets/images/wallpaper.webp'
 const darkWallpaper = '/assets/images/dark-theme-wallpaper.webp'
+const { globalProgress, isTypingMode, showProgress } = useReadingProgress()
 
 const navExpanded = ref(false)
 
@@ -817,5 +829,52 @@ const afterEnter = () => {
 .view-transitioning {
   overflow: hidden;
   filter: var(--page-transition-blur);
+}
+
+/* ==========================================
+   全局二合一进度条 (阅读 & 打印)
+   ========================================== */
+.header-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 0 6px rgba(79, 172, 254, 0.4);
+  transition:
+    width 0.15s ease-out,
+    background 0.8s ease,
+    box-shadow 0.8s ease;
+}
+
+.header-progress-bar.is-typing .progress-fill {
+  background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+  box-shadow: 0 0 8px rgba(255, 154, 158, 0.5);
+  transition: width 1s linear;
+}
+
+/* 暗色主题 (Dark Theme) 进度条适配 */
+.dark-theme .header-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .progress-fill {
+  background: linear-gradient(90deg, #00cdac 0%, #8ddad5 100%);
+  box-shadow: 0 0 10px rgba(0, 205, 172, 0.6);
+}
+
+.dark-theme .header-progress-bar.is-typing .progress-fill {
+  background: linear-gradient(90deg, #b122e5 0%, #ff63de 100%);
+  box-shadow: 0 0 15px rgba(255, 99, 222, 0.8);
 }
 </style>
