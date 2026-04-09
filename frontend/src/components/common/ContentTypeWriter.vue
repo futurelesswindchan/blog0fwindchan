@@ -1,21 +1,44 @@
 <!-- frontend\src\components\common\ContentTypeWriter.vue -->
 <template>
-  <div class="content-type-writer" :class="{ 'is-typing': isTyping }">
-    <div class="content-wrapper">
+  <!--
+    打字机根容器：
+    1. is-typing: 控制打字期间的特殊样式（如光标闪烁）。
+    2. is-ready: 用于控制初始透明度，防止 VueMarkdown 瞬间渲染造成的视觉闪烁。
+    3. minHeight: 动态锁定真实高度，彻底杜绝页面回流抖动。
+  -->
+  <div
+    class="content-type-writer"
+    ref="containerRef"
+    :class="{ 'is-typing': isTyping, 'is-ready': isReady }"
+    :style="{ minHeight: lockedHeight ? `${lockedHeight}px` : 'auto' }"
+  >
+    <div class="content-wrapper" ref="contentRef">
+      <!-- 核心理念：始终全量渲染 Markdown，绝不中途截断 HTML 字符串，保证 DOM 节点完整，使其可被原生选中并支持超链接点击 -->
       <VueMarkdown
-        :source="finalContent"
+        :source="content"
         :options="markdownOptions || defaultMarkdownOptions"
         :dark-theme="isDarkTheme"
       />
-      <span v-if="isTyping && enabled" class="typing-cursor" :class="{ blink: !isTyping }">>></span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
 import { VueMarkdown, type MarkdownOptions } from '@/composables/useArticleContent'
+import { useReadingProgress } from '@/composables/useReadingProgress'
+import { ref, watch, nextTick, onUnmounted } from 'vue'
+import { prepare, layout } from '@chenglou/pretext'
 
+/**
+ * 组件属性定义 (Props)
+ * @property {string} content - 需要渲染和执行打字特效的 Markdown 原始内容。
+ * @property {MarkdownOptions} markdownOptions - 传递给底层 markdown-it 解析器的配置选项。
+ * @property {boolean} isDarkTheme - 当前是否处于暗黑模式。
+ * @property {boolean} enabled - 是否启用打字机动画。若设为 false，则瞬间渲染全量文本。
+ * @property {number} speed - 打字机帧间隔时间 (ms)，数值越小速度越快。
+ * @property {number} initialDelay - 页面加载后等待多久开始执行打字动画 (ms)。
+ * @property {number} chunkSize - 每一帧吐出的字符数量，控制打字颗粒度。
+ */
 interface Props {
   content: string
   markdownOptions?: MarkdownOptions
@@ -26,115 +49,355 @@ interface Props {
   chunkSize?: number
 }
 
-// 默认 Markdown 配置
 const defaultMarkdownOptions: MarkdownOptions = {
   linkify: true,
   typographer: true,
   html: true,
 }
 
-// 使用带默认值的 props
 const props = withDefaults(defineProps<Props>(), {
   enabled: true,
   speed: 30,
   initialDelay: 800,
-  chunkSize: 15,
+  chunkSize: 2,
   isDarkTheme: false,
 })
 
-const currentIndex = ref(0)
-const isTyping = ref(false)
-const showCursor = ref(true)
+/**
+ * 自定义事件
+ * @event update:lineCount - 当 Pretext 计算出精准排版行数时触发，向外暴露排版规模。
+ */
+const emit = defineEmits(['update:lineCount'])
 
-// 计算当前显示的内容
-const displayContent = computed(() => {
-  return props.content.slice(0, currentIndex.value)
-})
+// --- DOM 引用 (Refs) ---
+const containerRef = ref<HTMLElement | null>(null)
+const contentRef = ref<HTMLElement | null>(null)
 
-// 新增：最终渲染内容，关闭打字机时直接显示全部
-const finalContent = computed(() => {
-  return props.enabled ? displayContent.value : props.content
-})
+// --- 内部状态管理 (State) ---
+const isReady = ref(false) // 控制整体透明度显影
+const isTyping = ref(false) // 标识当前是否正在进行打字输出
+const lockedHeight = ref<number>(0) // 锁定的容器高度，防止高度坍塌
 
-// 开始打字机动画
-const startTyping = () => {
-  currentIndex.value = 0
+// 引入全局进度条状态池
+const { globalProgress, isTypingMode, showProgress } = useReadingProgress()
+
+// --- 动画与 DOM 控制器 ---
+let animationFrameId: number | null = null
+let timeoutId: number | null = null
+let cursorElement: HTMLSpanElement | null = null
+let parentElement: HTMLElement | null = null // 用于操控外层玻璃背景板的 clip-path
+
+/**
+ * 动作队列条目类型
+ * 记录 TreeWalker 收集到的每一个需逐步释放的 DOM 节点。
+ * - `reveal`: 块级/元素节点（需通过 CSS 动画移除隐身斗篷）。
+ * - `text`: 纯文本节点（需逐字注入内容）。
+ */
+type ActionItem = { type: 'reveal'; node: HTMLElement } | { type: 'text'; node: Text; text: string }
+
+let actions: ActionItem[] = []
+let actionIndex = 0 // 当前执行到的动作索引
+let charIndex = 0 // 当前文本节点已输出的字符索引
+
+/**
+ * 资源清理函数
+ * @description 取消所有挂起的动画帧、定时器，移除动态光标，并重置外层容器的裁剪路径。
+ */
+const cleanup = () => {
+  if (animationFrameId) cancelAnimationFrame(animationFrameId)
+  if (timeoutId) clearTimeout(timeoutId)
+  if (cursorElement && cursorElement.parentNode) {
+    cursorElement.parentNode.removeChild(cursorElement)
+  }
+  cursorElement = null
+
+  // 清理外层背景板的裁剪魔法，恢复原状
+  if (parentElement) {
+    parentElement.style.clipPath = 'none'
+    parentElement.style.transition = ''
+  }
+}
+
+/**
+ * 极速纯文本排版预估测算
+ * @description 利用 pretext 引擎，脱离 DOM 在后台静默计算文本在当前视口宽度下折叠的精确行数。
+ */
+const estimateLayoutWithPretext = () => {
+  if (!containerRef.value || !props.content) return
+
+  // 粗略去除 Markdown 控制符，提取纯文本用于测算
+  const plainText = props.content
+    .replace(/!\[.*?\]\(.*?\)/g, '')
+    .replace(/\[.*?\]\(.*?\)/g, '')
+    .replace(/[#*`>]/g, '')
+    .trim()
+
+  const containerWidth = containerRef.value.clientWidth || 800
+
+  try {
+    const prepared = prepare(plainText, '16px system-ui, sans-serif')
+    const result = layout(prepared, containerWidth, 28)
+    emit('update:lineCount', result.lineCount)
+  } catch (error) {
+    console.warn('Pretext measurement failed:', error)
+  }
+}
+
+/**
+ * 强制结束并全量展示打字内容
+ * @description 在用户主动关闭打字机或打字自然结束时调用。瞬间解锁所有未完结的元素与文本。
+ */
+const finishTyping = () => {
+  // 必须先掐断所有正在运行的循环，防止其继续异步执行覆盖 DOM
+  if (animationFrameId) cancelAnimationFrame(animationFrameId)
+  if (timeoutId) clearTimeout(timeoutId)
+
+  // 延迟退出打字模式（为了让赛博进度条颜色有从容的 CSS 过渡时间）
+  setTimeout(() => {
+    isTypingMode.value = false
+  }, 600)
+
+  globalProgress.value = 100
+  lockedHeight.value = 0
+  isTyping.value = false
+
+  if (cursorElement && cursorElement.parentNode) {
+    cursorElement.parentNode.removeChild(cursorElement)
+  }
+
+  // 瞬间解锁剩余所有队列中的元素和文字
+  while (actionIndex < actions.length) {
+    const action = actions[actionIndex]
+    if (action.type === 'reveal') {
+      action.node.classList.remove('typing-hidden-block')
+      action.node.classList.add('typing-reveal-block')
+    } else if (action.type === 'text') {
+      action.node.nodeValue = action.text
+    }
+    actionIndex++
+  }
+
+  // 完全展开外层玻璃背景板
+  if (parentElement) {
+    parentElement.style.clipPath = 'none'
+    setTimeout(() => {
+      if (parentElement) parentElement.style.transition = ''
+    }, 300)
+  }
+}
+
+/**
+ * 启动打字机核心逻辑
+ * @description 控制全量渲染 -> 锁定高度 -> TreeWalker 抽空内容 -> 逐帧回填 的完整生命周期。
+ */
+const startTyping = async () => {
+  cleanup()
+  showProgress.value = true
+  isTypingMode.value = true
+  globalProgress.value = 0
+  isReady.value = false
   isTyping.value = true
-  showCursor.value = true
+  lockedHeight.value = 0
+  actions = []
+  actionIndex = 0
+  charIndex = 0
 
-  // 递归函数实现打字效果
-  const type = () => {
-    if (currentIndex.value < props.content.length) {
-      currentIndex.value = Math.min(currentIndex.value + props.chunkSize, props.content.length)
-      if (currentIndex.value < props.content.length) {
-        setTimeout(type, props.speed)
-      } else {
-        setTimeout(() => {
-          isTyping.value = false
-          showCursor.value = false
-        }, 500)
+  // 等待 VueMarkdown 将完整的 DOM 树挂载到页面上
+  await nextTick()
+  if (!contentRef.value || !containerRef.value) return
+
+  // 1. 高度防抖：锁定包含图片、代码块等元素的真实总高度，彻底消灭页面抖动
+  lockedHeight.value = containerRef.value.clientHeight
+  estimateLayoutWithPretext()
+
+  // 2. 背景生长魔法：抓取外层背景板 (.article-content) 并施加 clip-path 初始化裁剪
+  parentElement = containerRef.value.closest('.article-content') as HTMLElement
+  if (parentElement) {
+    parentElement.style.transition = 'clip-path 0.15s ease-out'
+    // 初始状态：仅露出顶部一小截背景 (200px)
+    parentElement.style.clipPath = `inset(0 0 calc(100% - 200px) 0 round 8px)`
+  }
+
+  // 3. 剥离魔法：使用 TreeWalker 收集所有 元素节点(ELEMENT) 和 文本节点(TEXT)
+  const walker = document.createTreeWalker(
+    contentRef.value,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+    null,
+  )
+
+  let currentNode = walker.nextNode()
+  while (currentNode) {
+    if (currentNode.nodeType === Node.ELEMENT_NODE) {
+      const el = currentNode as HTMLElement
+      // 为元素穿上隐身衣，加入显影队列
+      el.classList.add('typing-hidden-block')
+      actions.push({ type: 'reveal', node: el })
+    } else if (currentNode.nodeType === Node.TEXT_NODE) {
+      const text = currentNode.nodeValue || ''
+      // 过滤无意义的纯空白节点，将实心文本抽空加入打字队列
+      if (text.trim().length > 0) {
+        actions.push({ type: 'text', node: currentNode as Text, text })
+        currentNode.nodeValue = ''
       }
+    }
+    currentNode = walker.nextNode()
+  }
+
+  // 4. 创建实体光标指示器
+  cursorElement = document.createElement('span')
+  cursorElement.className = 'typing-cursor'
+  cursorElement.textContent = '<<<'
+
+  // 此时 DOM 结构已安全成型且占好坑位，解除全局透明隐藏
+  isReady.value = true
+
+  // 若用户禁用了打字机特效，直接全量渲染
+  if (!props.enabled) {
+    finishTyping()
+    return
+  }
+
+  let lastTime = performance.now()
+
+  /**
+   * 逐帧打字循环 (requestAnimationFrame 驱动)
+   * @param {number} time - 高精度时间戳
+   */
+  const typeLoop = (time: number) => {
+    // 帧间限流控制
+    if (time - lastTime < props.speed) {
+      animationFrameId = requestAnimationFrame(typeLoop)
+      return
+    }
+    lastTime = time
+
+    // 阶段一：瞬间执行所有的 reveal 动作，直到碰到文本节点（实现代码块、引用块等背景平滑浮现）
+    while (actionIndex < actions.length && actions[actionIndex].type === 'reveal') {
+      const action = actions[actionIndex] as { type: 'reveal'; node: HTMLElement }
+      action.node.classList.remove('typing-hidden-block')
+      action.node.classList.add('typing-reveal-block')
+      actionIndex++
+    }
+
+    // 阶段二：执行纯文本逐字输出逻辑
+    if (actionIndex < actions.length) {
+      const action = actions[actionIndex] as { type: 'text'; node: Text; text: string }
+      const { node, text } = action
+
+      charIndex += props.chunkSize
+      // 实时计算并更新全局进度条 (0-100)
+      globalProgress.value = (actionIndex / actions.length) * 100
+
+      if (charIndex >= text.length) {
+        node.nodeValue = text
+        actionIndex++
+        charIndex = 0
+      } else {
+        node.nodeValue = text.slice(0, charIndex)
+      }
+
+      // 实时将光标元素动态跟随至当前文本节点的末尾
+      if (node.parentNode && cursorElement) {
+        if (node.nextSibling !== cursorElement) {
+          node.parentNode.insertBefore(cursorElement, node.nextSibling)
+        }
+      }
+
+      // 阶段三：视觉追踪逻辑 - 让外层玻璃背景板追踪光标的 Y 坐标向下“生长”
+      if (parentElement && cursorElement) {
+        const parentRect = parentElement.getBoundingClientRect()
+        const cursorRect = cursorElement.getBoundingClientRect()
+        // 计算光标距离背景板顶部的距离，并追加 120px 的底部留白缓冲
+        const revealHeight = cursorRect.bottom - parentRect.top + 120
+        parentElement.style.clipPath = `inset(0 0 calc(100% - ${revealHeight}px) 0 round 8px)`
+      }
+
+      animationFrameId = requestAnimationFrame(typeLoop)
+    } else {
+      // 队列执行完毕，结束动画
+      finishTyping()
     }
   }
 
-  // 启动打字机动画
-  setTimeout(type, props.initialDelay)
+  // 根据组件配置的初始化延迟启动打字机
+  timeoutId = window.setTimeout(() => {
+    animationFrameId = requestAnimationFrame(typeLoop)
+  }, props.initialDelay)
 }
 
-// 监听 content 变化，重新开始打字机动画
+// 监听内容变化，重置并重启打字机
+watch(() => props.content, startTyping, { immediate: true })
+
+// 核心极致优化体验：监听 enabled 状态，如果用户在中途突然关闭特效设置，瞬间完成所有输出！
 watch(
-  () => props.content,
-  () => {
-    if (props.enabled) {
-      startTyping()
-    } else {
-      currentIndex.value = props.content.length
-      isTyping.value = false
-      showCursor.value = false
+  () => props.enabled,
+  (newVal) => {
+    if (!newVal && isTyping.value) {
+      finishTyping()
     }
   },
-  { immediate: true },
 )
+
+// 组件销毁前清理所有副作用
+onUnmounted(cleanup)
 </script>
 
 <style scoped>
+/*
+  ==========================================
+  组件级基础隐身处理
+  ==========================================
+*/
 .content-type-writer {
   position: relative;
-  min-height: 100px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.content-type-writer.is-ready {
+  opacity: 1;
 }
 
 .content-wrapper {
   position: relative;
-  display: inline;
 }
 
-.typing-cursor {
+/*
+  ==========================================
+  渐进式节点显影 (Progressive Reveal) CSS 魔法
+  ==========================================
+*/
+/* 隐身斗篷：默认完全透明且轻微下沉，阻断一切鼠标交互 */
+:deep(.typing-hidden-block) {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+/* 显影魔法：恢复透明度与原本位置，带有符合直觉的弹性贝塞尔曲线过渡 */
+:deep(.typing-reveal-block) {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition:
+    opacity 0.3s ease,
+    transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/*
+  ==========================================
+  打字机闪烁光标样式控制
+  ==========================================
+*/
+:deep(.typing-cursor) {
   display: inline-block;
-  width: 2px;
-  margin-left: 2px;
+  width: auto;
+  margin-left: 4px;
   color: var(--accent-color);
   font-weight: bold;
   animation: blink 1s infinite;
-  vertical-align: baseline; /* 添加垂直对齐 */
-}
-
-/* 调整markdown内容的样式以配合光标 */
-:deep(.markdown-body) {
-  display: inline;
-}
-
-:deep(.markdown-body > *) {
-  display: block;
-  margin: 1em 0;
-}
-
-:deep(.markdown-body > *:first-child) {
-  margin-top: 0;
-}
-
-:deep(.markdown-body > *:last-child) {
-  margin-bottom: 0;
-  display: inline; /* 让最后一个元素内联显示，这样光标位置正确 */
+  vertical-align: baseline;
+  pointer-events: none; /* 确保光标不会成为鼠标遮挡物，影响文字选中 */
 }
 
 @keyframes blink {
@@ -144,20 +407,6 @@ watch(
   }
   50% {
     opacity: 0;
-  }
-}
-
-/* 优化动画效果 */
-:deep(.markdown-body > *:not(:empty)) {
-  animation: slideIn 0.3s ease-out forwards;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(5px);
-  }
-  to {
-    transform: translateY(0);
   }
 }
 </style>
