@@ -243,7 +243,19 @@ const startTyping = async () => {
   const walker = document.createTreeWalker(
     contentRef.value,
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-    null,
+    {
+      acceptNode: (node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement
+          // 遇到代码块的头部 UI 控件时，直接拒收其本身及所有子节点
+          // 避免了打字机去敲击“Copy”等非正文内容，以及光标钻进绝对定位/溢出隐藏容器引发的“裁剪高度回跳” Bug awa
+          if (el.classList.contains('code-header')) {
+            return NodeFilter.FILTER_REJECT
+          }
+        }
+        return NodeFilter.FILTER_ACCEPT
+      },
+    },
   )
 
   let currentNode = walker.nextNode()
