@@ -39,7 +39,7 @@
       </div>
 
       <!-- 核心内容渲染区：挂载高性能打字机组件 -->
-      <div v-if="article" class="article-content markdown-content">
+      <div v-if="article" class="article-content markdown-content" @click="handleContentClick">
         <!-- 监听 update:lineCount 事件，接收底部引擎抛出的精准行数 -->
         <ContentTypeWriter
           :content="article.content || ''"
@@ -83,6 +83,7 @@ import { useCodeHighlight } from '@/composables/useCodeHighlight'
 import { useArticleStore } from '@/views/stores/articleStore'
 import { useArticleInfo } from '@/composables/useArticleInfo'
 import { computed, watch, onMounted, onUnmounted } from 'vue'
+import { useToast } from '@/composables/useToast'
 import { useRoute } from 'vue-router'
 
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
@@ -99,7 +100,9 @@ const settingsStore = useSettingsStore()
 const route = useRoute()
 const articleStore = useArticleStore()
 
-// --- 组合式函数 (Composables) 状态解构 ---
+const { notify } = useToast()
+
+// --- 组合式函数状态解构 ---
 
 // 1. 文章内容基础渲染工具
 const { isDarkTheme, formatDate, markdownOptions: baseMarkdownOptions } = useArticleContent()
@@ -169,6 +172,42 @@ const handleReadingScroll = () => {
   } else {
     // 边界处理：文章内容过短，未产生滚动条时，视作已读完
     globalProgress.value = 100
+  }
+}
+
+/**
+ * 文章内容区域的事件代理 (Event Delegation)
+ * @description 拦截并处理 Markdown 动态渲染内容中的所有交互事件。
+ * 依靠 CSS 驱动状态动画，JS 仅负责调用 API 与切换类名。
+ */
+const handleContentClick = async (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  const copyBtn = target.closest('.code-copy-btn') as HTMLButtonElement
+  if (!copyBtn) return
+
+  const rawCode = decodeURIComponent(copyBtn.dataset.code || '')
+
+  try {
+    await navigator.clipboard.writeText(rawCode)
+
+    // 注入类名！
+    copyBtn.classList.add('copied')
+
+    // 2秒后撤销类名，恢复原状
+    setTimeout(() => {
+      copyBtn.classList.remove('copied')
+    }, 2000)
+
+    notify({
+      type: 'success',
+      message: '复制成功Ovo！',
+    })
+  } catch (err) {
+    notify({
+      type: 'error',
+      title: '复制失败！QAQ',
+      message: `${err}`,
+    })
   }
 }
 
