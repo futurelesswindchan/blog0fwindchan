@@ -15,6 +15,25 @@ export interface TocItem {
 }
 
 /**
+ * 极简的锚点生成器 (Slugify)
+ * @description 模拟 markdown-it-anchor 的默认行为：转小写、移除标点符号、空格转连字符。
+ * @param {string} text - 原始标题文本
+ * @returns {string} 安全的 HTML id
+ */
+const slugify = (text: string): string => {
+  return (
+    text
+      .toLowerCase()
+      // 移除所有非字母、非数字、非中文字符以及非空格的特殊标点符号
+      .replace(/[^\w\s\u4e00-\u9fa5-]/g, '')
+      // 将连续空格替换为单个连字符
+      .replace(/\s+/g, '-')
+      // 移除首尾连字符
+      .replace(/^-+|-+$/g, '')
+  )
+}
+
+/**
  * 文章元数据提取组合式函数 (Composable)
  * @description 负责从原始 Markdown 文本中实时解析出字数、阅读时间、排版行数以及目录结构。
  * @param {Ref<string> | ComputedRef<string>} content - 响应式的 Markdown 文本内容源
@@ -37,10 +56,10 @@ export function useArticleInfo(content: Ref<string> | ComputedRef<string>) {
     const contentText = content.value
     if (!contentText) return 0
 
-    // 预处理：利用正则表达式剥离无阅读意义的 Markdown 控制符
+    // 预处理：利用正则表达式剥离无阅读意义的 Markdown 控制符，但保留超链接文本
     const text = contentText
       .replace(/!\[.*?\]\(.*?\)/g, '') // 剥离图片标记 ![alt](url)
-      .replace(/\[.*?\]\(.*?\)/g, '') // 剥离链接标记 [text](url)
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // 提取链接文本，丢弃 URL: [text](url) -> text
       .replace(/[*`>]/g, '') // 剥离强调(*)、代码(`)、引用(>)标记
       .replace(/#+\s/g, '') // 剥离标题锚号 (#)
       .replace(/\n/g, '') // 剥离换行符，打平文本
@@ -71,24 +90,40 @@ export function useArticleInfo(content: Ref<string> | ComputedRef<string>) {
   /**
    * @type {ComputedRef<TocItem[]>} articleToc
    * @description 自动提取 Markdown 标题以生成侧边栏目录树 (TOC)。
-   * 通过全局多行正则匹配 `#` 语法的标题结构。
+   * 跳过代码块内部的注释 (#)，并生成符合规范的唯一锚点 ID。
    */
   const articleToc = computed<TocItem[]>(() => {
     const contentText = content.value
     if (!contentText) return []
 
     const headings: TocItem[] = []
+    const slugCounts = new Map<string, number>()
+
+    // 临时挖空所有代码块 (```...```)，防止内部的 `#` 注释被误认为标题
+    const cleanText = contentText.replace(/```[\s\S]*?```/g, '')
 
     // 正则解析：匹配行首的 1-6 个 '#'，随后匹配至少一个空格，最后捕获剩余的标题文本
     const regex = /^(#{1,6})\s+(.+)$/gm
     let match
 
-    while ((match = regex.exec(contentText)) !== null) {
+    while ((match = regex.exec(cleanText)) !== null) {
       const level = match[1].length
       const text = match[2].trim()
 
-      // 锚点降级处理：将标题转换为小写并将空格替换为连字符，以兼容大多数 Markdown 渲染器的默认 id 生成策略
-      const id = text.toLowerCase().replace(/\s+/g, '-')
+      // 防弹装甲 2 & 3：使用 slugify 剔除标点生成基础 ID，并处理同名标题冲突
+      let baseSlug = slugify(text)
+
+      // 兜底：如果标题全是标点被清空了，给个默认的前缀
+      if (!baseSlug) baseSlug = `heading-${level}`
+
+      let id = baseSlug
+      const count = slugCounts.get(baseSlug) || 0
+
+      // 如果发现同名 ID，追加 -1, -2 的后缀保证唯一性
+      if (count > 0) {
+        id = `${baseSlug}-${count}`
+      }
+      slugCounts.set(baseSlug, count + 1)
 
       headings.push({ level, text, id })
     }

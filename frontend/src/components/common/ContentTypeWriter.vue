@@ -395,7 +395,7 @@ onUnmounted(cleanup)
   pointer-events: none;
 }
 
-/* 显影 恢复透明度与原本位置，带有符合直觉的弹性贝塞尔曲线过渡 */
+/* 恢复透明度与原本位置，带有符合直觉的弹性贝塞尔曲线过渡 */
 :deep(.typing-reveal-block) {
   opacity: 1;
   transform: translateY(0);
