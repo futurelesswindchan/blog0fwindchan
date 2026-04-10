@@ -120,23 +120,44 @@ const cleanup = () => {
 
 /**
  * 极速纯文本排版预估测算
- * @description 利用 pretext 引擎，脱离 DOM 在后台静默计算文本在当前视口宽度下折叠的精确行数。
+ * @description
+ * 利用 pretext 引擎，脱离 DOM 在后台静默计算文本在当前视口宽度下折叠的精确行数。
+ *
+ * 1. 用挂载后的原生 `innerText`，完美保留段落(`p`)、标题(`h1-h6`)及代码块(`pre`)的换行符(\n)。
+ * 2. 动态提取容器的真实 CSS 字体(font)与行高(line-height)，消除硬编码带来的误差。
+ * 3. 向 pretext 引擎传递 `{ whiteSpace: 'pre-wrap' }` 配置，使其遵循换行符进行断行测算。
  */
 const estimateLayoutWithPretext = () => {
-  if (!containerRef.value || !props.content) return
-
-  // 粗略去除 Markdown 控制符，提取纯文本用于测算
-  const plainText = props.content
-    .replace(/!\[.*?\]\(.*?\)/g, '')
-    .replace(/\[.*?\]\(.*?\)/g, '')
-    .replace(/[#*`>]/g, '')
-    .trim()
-
-  const containerWidth = containerRef.value.clientWidth || 800
+  // 确保外层容器和内部包裹层已就绪 (通常在 await nextTick 之后调用)
+  if (!containerRef.value || !contentRef.value) return
 
   try {
-    const prepared = prepare(plainText, '16px system-ui, sans-serif')
-    const result = layout(prepared, containerWidth, 28)
+    // 1. 提取带真实物理换行符的纯文本
+    // innerText 会根据 CSS 将块级元素转换为合适的换行符，完美适配 Markdown 渲染后的 DOM 结构
+    const plainText = contentRef.value.innerText || ''
+    if (!plainText.trim()) return
+
+    // 2. 动态捕捉当前文章环境的排版样式
+    const computedStyle = window.getComputedStyle(contentRef.value)
+    const fontSize = computedStyle.fontSize || '16px'
+    const fontFamily = computedStyle.fontFamily || 'system-ui, sans-serif'
+    // 组合为 Canvas 兼容的 font 字符串格式，如 "16px system-ui, sans-serif"
+    const fontString = `${fontSize} ${fontFamily}`
+
+    // 提取行高：若浏览器返回 'normal'，则按 1.6 的通用排版比例进行降级估算
+    let lineHeight = parseFloat(computedStyle.lineHeight)
+    if (isNaN(lineHeight)) {
+      lineHeight = parseFloat(fontSize) * 1.6
+    }
+
+    const containerWidth = containerRef.value.clientWidth || 800
+
+    // 3. 核心计算魔法
+    // 关键参数：{ whiteSpace: 'pre-wrap' } 告知 pretext 引擎尊重 plainText 中的 \n 换行符
+    const prepared = prepare(plainText, fontString, { whiteSpace: 'pre-wrap' })
+    const result = layout(prepared, containerWidth, lineHeight)
+
+    // 4. 对外抛出精准的排版行数
     emit('update:lineCount', result.lineCount)
   } catch (error) {
     console.warn('Pretext measurement failed:', error)
@@ -328,7 +349,7 @@ const startTyping = async () => {
 // 监听内容变化，重置并重启打字机
 watch(() => props.content, startTyping, { immediate: true })
 
-// 核心极致优化体验：监听 enabled 状态，如果用户在中途突然关闭特效设置，瞬间完成所有输出！
+// 监听 enabled 状态，如果用户在中途突然关闭特效设置，瞬间完成所有输出！
 watch(
   () => props.enabled,
   (newVal) => {
@@ -364,17 +385,17 @@ onUnmounted(cleanup)
 
 /*
   ==========================================
-  渐进式节点显影 (Progressive Reveal) CSS 魔法
+  渐进式节点显影
   ==========================================
 */
-/* 隐身斗篷：默认完全透明且轻微下沉，阻断一切鼠标交互 */
+/* 隐身 默认完全透明且轻微下沉，阻断一切鼠标交互 */
 :deep(.typing-hidden-block) {
   opacity: 0;
   transform: translateY(6px);
   pointer-events: none;
 }
 
-/* 显影魔法：恢复透明度与原本位置，带有符合直觉的弹性贝塞尔曲线过渡 */
+/* 显影 恢复透明度与原本位置，带有符合直觉的弹性贝塞尔曲线过渡 */
 :deep(.typing-reveal-block) {
   opacity: 1;
   transform: translateY(0);
