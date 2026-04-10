@@ -57,6 +57,8 @@ export const useToastStore = defineStore('toast', () => {
       onCancel: options.onCancel,
     }
     toasts.value.push(item)
+
+    return id
   }
 
   const remove = (id: number) => {
