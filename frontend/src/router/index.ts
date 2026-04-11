@@ -157,6 +157,13 @@ const TRANSITION_DURATION = 400
 let activeLoadingToastId: number | null = null
 
 /**
+ * @variable loadingStartTime
+ * @description 记录“加载中” Toast 弹出的高精度时间戳 (毫秒)。
+ * 用于在加载完成后计算用户等待的时间。如果加载极快，则抑制成功提示的弹出，避免视觉打扰。
+ */
+let loadingStartTime: number = 0
+
+/**
  * 全局前置守卫 (Global Before Guard)
  * @description
  * 1. 动态修改文档标题。
@@ -208,10 +215,13 @@ router.beforeEach(async (to, from, next) => {
     ].includes(to.name as string)
 
     if (isDataHeavyRoute) {
+      // 记录开始加载的时间戳
+      loadingStartTime = performance.now()
+
       // 呼出无限期存在的 Loading Toast，安抚用户等待情绪
       activeLoadingToastId = toastStore.add({
         title: '次元跃迁准备中...',
-        message: `正在为您搬运 ${to.meta.title} 的数据，请稍候~`,
+        message: `正在为您搬运${to.meta.title}的数据，请稍候~`,
         type: 'info',
         duration: 0, // 设置为 0 使其常驻，直到我们在 afterEach 中手动移除
       })
@@ -255,24 +265,31 @@ router.beforeEach(async (to, from, next) => {
  * 全局后置钩子 (Global After Hook)
  * @description
  * 1. 负责清理过期的 Loading Toast。
- * 2. 延迟移除页面的过渡动画类名。
+ * 2. 仅当用户等待时间超过阈值 (如 300ms) 时，才弹出“跃迁成功”提示，避免页面秒开时的弹窗轰炸。
+ * 3. 延迟移除页面的过渡动画类名。
  */
-router.afterEach(() => {
+router.afterEach((to) => {
   // 1. 若存在活跃的加载提示框，将其销毁，标志着数据加载与页面切换正式完成
   if (activeLoadingToastId) {
     const toastStore = useToastStore()
     toastStore.remove(activeLoadingToastId)
     activeLoadingToastId = null
 
-    // 给予微小的成功反馈体验
-    toastStore.add({
-      message: '跃迁成功！欢迎来到新页面~',
-      type: 'success',
-      duration: 1500,
-    })
+    // 计算用户实际等待的时间 (毫秒)
+    const waitTime = performance.now() - loadingStartTime
+
+    // 2. 智能化反馈拦截：如果耗时超过 300ms，说明用户确实感知到了等待，此时给予成功反馈。
+    // 如果耗时极短 (网络极佳或命中缓存)，则静默跳转，不打扰用户。
+    if (waitTime > 300) {
+      toastStore.add({
+        message: `跃迁成功！欢迎来到${to.meta.title}~`,
+        type: 'success',
+        duration: 1500,
+      })
+    }
   }
 
-  // 2. 依据设定的动画持续时间，清理过渡类名以恢复正常 DOM 交互
+  // 3. 依据设定的动画持续时间，清理过渡类名以恢复正常 DOM 交互
   setTimeout(() => {
     document.documentElement.classList.remove('page-transitioning')
   }, TRANSITION_DURATION)
