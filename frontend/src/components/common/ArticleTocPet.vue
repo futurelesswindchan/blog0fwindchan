@@ -7,7 +7,11 @@
         class="toc-pet-wrapper"
         :class="[currentMood, { 'is-expanded': isExpanded }]"
         v-show="true"
-        :style="{ bottom: `${20 + dodgeOffset}px` }"
+        :style="{
+          /* 如果处于受惊乱跑状态，就用随机坐标；否则乖乖待在右下角躲避 Toast */
+          bottom: shockPosition ? `${shockPosition.bottom}px` : `${20 + dodgeOffset}px`,
+          right: shockPosition ? `${shockPosition.right}px` : '20px',
+        }"
       >
         <!-- 1. 宠物头部（常态展示区） -->
         <div
@@ -17,7 +21,7 @@
           @mouseleave="isHovered = false"
         >
           <!-- 动态图标 -->
-          <div class="pet-icon" :class="{ 'shake-animation': currentMood === 'shocked' }">
+          <div class="pet-icon">
             <i class="fas" :class="currentIcon"></i>
           </div>
 
@@ -109,6 +113,7 @@ const {
   isHovered,
   currentIcon,
   displayMessage,
+  shockPosition,
   triggerShock,
   toggleExpand,
 } = useTocPet()
@@ -164,7 +169,7 @@ const dodgeOffset = computed(() => {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 340px;
+  width: 400px;
   z-index: 9990;
   display: flex;
   flex-direction: column;
@@ -178,6 +183,11 @@ const dodgeOffset = computed(() => {
 
   /* 统一使用 Toast 的缓动曲线 */
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* transition:
+    bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    background-color 0.4s,
+    box-shadow 0.4s; */
 }
 
 /* --- 头部常态区 --- */
@@ -266,22 +276,23 @@ const dodgeOffset = computed(() => {
 .toc-pet-wrapper.shocked .pet-icon {
   color: #ef4444;
 }
-.toc-pet-wrapper.shocked .pet-message-wrapper {
-  color: #ef4444;
-  font-weight: bold;
+.toc-pet-wrapper.shocked {
+  animation: panic-shake 0.35s ease-in-out infinite;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
 }
-
-/* 震惊抖动动画 */
-@keyframes shake {
+@keyframes panic-shake {
   0%,
   100% {
-    transform: translateX(0);
+    transform: translateX(0) translateY(0) rotate(0);
   }
   25% {
-    transform: translateX(-4px) rotate(-5deg);
+    transform: translateX(-6px) translateY(3px) rotate(-3deg);
+  }
+  50% {
+    transform: translateX(6px) translateY(-3px) rotate(3deg);
   }
   75% {
-    transform: translateX(4px) rotate(5deg);
+    transform: translateX(-4px) translateY(-4px) rotate(-2deg);
   }
 }
 .shake-animation {

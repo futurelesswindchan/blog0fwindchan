@@ -42,7 +42,7 @@ export interface PaginationSettings {
 const defaultTypeWriterSettings: TypeWriterSettings = {
   speed: 15,
   initialDelay: 600,
-  chunkSize: 1,
+  chunkSize: 3,
   enabled: true,
 }
 
