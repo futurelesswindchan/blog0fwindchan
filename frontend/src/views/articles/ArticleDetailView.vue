@@ -64,6 +64,7 @@
       :back-route-name="type === 'frontend' ? 'FrontEnd' : type === 'topics' ? 'Topics' : 'Novels'"
       :current-category="type"
     />
+    <ArticleTocPet :toc-items="articleToc" />
   </div>
 </template>
 
@@ -76,18 +77,19 @@
  */
 
 import { useArticleNavigation } from '@/composables/useArticleNavigation'
+import { computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import { useReadingProgress } from '@/composables/useReadingProgress'
 import { useArticleContent } from '@/composables/useArticleContent'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useCodeHighlight } from '@/composables/useCodeHighlight'
 import { useArticleStore } from '@/views/stores/articleStore'
 import { useArticleInfo } from '@/composables/useArticleInfo'
-import { computed, watch, onMounted, onUnmounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { useRoute } from 'vue-router'
 
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
 import ArticleNavigation from '@/components/ArticleNavigation.vue'
+import ArticleTocPet from '@/components/common/ArticleTocPet.vue'
 
 import '@/styles/correctContentMargin.css'
 import '@/styles/articleContent.css'
@@ -139,7 +141,7 @@ const articleContent = computed(() => article.value?.content || '')
 
 // --- 文章元数据提取 ---
 // 解构出字数、精确行数、阅读时间以及更新行数的回调函数
-const { estimateWords, exactLineCount, readingTime, updateLineCount } =
+const { estimateWords, exactLineCount, readingTime, articleToc, updateLineCount } =
   useArticleInfo(articleContent)
 
 // --- 文章底部导航计算 ---
@@ -259,5 +261,33 @@ watch(
     }
   },
   { immediate: false },
+)
+
+/**
+ * 魔法 DOM 注入：给标题打上 ID 烙印
+ * @description 因为底层的 markdown-it 默认不生成 id，所以我们依靠提取出的 articleToc，
+ * 按顺序为真实 DOM 中的 h1-h6 元素挂载对应的 id 属性，从而激活TOC的锚点跳转能力
+ */
+watch(
+  articleToc,
+  async (newToc) => {
+    // 等待 Vue 把 Markdown 渲染到真实 DOM 上
+    await nextTick()
+
+    // 找到文章渲染的核心区域
+    const contentDom = document.querySelector('.markdown-content')
+    if (!contentDom) return
+
+    // 抓取里面所有的标题元素
+    const headings = contentDom.querySelectorAll('h1, h2, h3, h4, h5, h6')
+
+    // 按顺序一一对应，打上 ID！
+    headings.forEach((heading, index) => {
+      if (newToc[index]) {
+        heading.id = newToc[index].id
+      }
+    })
+  },
+  { immediate: true, deep: true },
 )
 </script>

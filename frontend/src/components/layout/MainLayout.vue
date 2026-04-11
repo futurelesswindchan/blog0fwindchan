@@ -51,11 +51,6 @@
             />
           </span>
         </div>
-
-        <!-- 新增：桌面端全局二合一进度条 -->
-        <div v-if="showProgress" class="header-progress-bar" :class="{ 'is-typing': isTypingMode }">
-          <div class="progress-fill" :style="{ width: `${globalProgress}%` }"></div>
-        </div>
       </header>
 
       <!-- b.侧边栏+内容区 -->
@@ -113,11 +108,6 @@
         <button class="nav-toggle" @click="showMobileNav = true">
           <i class="fas fa-bars"></i>
         </button>
-
-        <!-- 新增：桌面端全局二合一进度条 -->
-        <div v-if="showProgress" class="header-progress-bar" :class="{ 'is-typing': isTypingMode }">
-          <div class="progress-fill" :style="{ width: `${globalProgress}%` }"></div>
-        </div>
       </header>
 
       <!-- b.移动端侧边栏 -->
@@ -160,7 +150,6 @@
 
 <script setup lang="ts">
 import { useThrottledScrollHandler } from '@/composables/useThrottledScrollHandler'
-import { useReadingProgress } from '@/composables/useReadingProgress'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { useRoute } from 'vue-router'
@@ -175,7 +164,6 @@ import NavPanel from './NavPanel.vue'
 const logo = '/favicon.png'
 const lightWallpaper = '/assets/images/wallpaper.webp'
 const darkWallpaper = '/assets/images/dark-theme-wallpaper.webp'
-const { globalProgress, isTypingMode, showProgress } = useReadingProgress()
 
 const navExpanded = ref(false)
 
