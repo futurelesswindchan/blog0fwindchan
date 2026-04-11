@@ -77,6 +77,7 @@ const contentRef = ref<HTMLElement | null>(null)
 const isReady = ref(false) // 控制整体透明度显影
 const isTyping = ref(false) // 标识当前是否正在进行打字输出
 const lockedHeight = ref<number>(0) // 锁定的容器高度，防止高度坍塌
+let currentSessionId = 0 // 打字机会话令牌，专治异步冲突awa
 
 // 引入全局进度条状态池
 const { globalProgress, isTypingMode, showProgress, unlockHeading, resetUnlockedHeadings } =
@@ -213,6 +214,8 @@ const finishTyping = () => {
  * @description 控制全量渲染 -> 锁定高度 -> TreeWalker 抽空内容 -> 逐帧回填 的完整生命周期。
  */
 const startTyping = async () => {
+  const sessionId = ++currentSessionId // 生成新的会话令牌，专治异步冲突
+
   cleanup()
   showProgress.value = true
   isTypingMode.value = true
@@ -223,12 +226,20 @@ const startTyping = async () => {
 
   resetUnlockedHeadings()
 
+  // 重置外部共享状态
   actions = []
   actionIndex = 0
   charIndex = 0
 
   // 等待 VueMarkdown 将完整的 DOM 树挂载到页面上
   await nextTick()
+
+  // 如果发现号码牌过期了（说明有新的更新覆盖了），直接遗憾立场
+  if (sessionId !== currentSessionId) {
+    return
+  }
+
+  // 如果 DOM 彻底丢了，也退出
   if (!contentRef.value || !containerRef.value) return
 
   // 1. 高度防抖：锁定包含图片、代码块等元素的真实总高度，彻底消灭页面抖动
