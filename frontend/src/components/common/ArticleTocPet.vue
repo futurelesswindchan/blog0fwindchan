@@ -61,6 +61,7 @@
               v-for="item in visibleTocItems"
               :key="item.id"
               class="toc-item"
+              :class="{ 'is-active': activeHeadingId === item.id }"
               :style="{ paddingLeft: `${(item.level - 1) * 12}px` }"
               @click="scrollToAnchor(item.id)"
             >
@@ -85,9 +86,10 @@
 <script setup lang="ts">
 import { useReadingProgress } from '@/composables/useReadingProgress'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { computed, nextTick, watch, onUnmounted, ref } from 'vue'
 import { useToastStore } from '@/views/stores/toastStore'
+import { useToast } from '@/composables/useToast'
 import { useTocPet } from '@/composables/useTocPet'
-import { computed } from 'vue'
 
 import type { TocItem } from '@/composables/useArticleInfo'
 
@@ -105,6 +107,7 @@ const props = defineProps<Props>()
 // --- Store 与全局状态 ---
 const toastStore = useToastStore()
 const settingsStore = useSettingsStore()
+const { notify } = useToast()
 
 // 引入宠物状态机与全局进度条状态
 const {
@@ -160,6 +163,65 @@ const dodgeOffset = computed(() => {
 
   // 每个吐司平均高度 + gap 约 76px，再额外加 12px 作为和小精灵的呼吸间距
   return toastCount * 76 + 12
+})
+
+// 当前高亮的章节 ID
+const activeHeadingId = ref<string>('')
+let observer: IntersectionObserver | null = null
+
+/**
+ * 设置交叉观察器
+ * @description 监听标题是否进入了屏幕的黄金阅读区
+ */
+const setupObserver = () => {
+  // 每次重新设置前，先断开旧的观察
+  if (observer) {
+    observer.disconnect()
+  }
+  // 配置观察器：在屏幕顶部往下 80px 到屏幕中间 70% 的位置划定一个“判定区”
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        // 如果这个标题进入了判定区，就把它的 ID 设为当前激活状态
+        if (entry.isIntersecting) {
+          activeHeadingId.value = entry.target.id
+        }
+      })
+    },
+    {
+      // -80px 是避开顶部导航栏，-70% 是忽略屏幕下半部分的内容
+      rootMargin: '-80px 0px -70% 0px',
+    },
+  )
+  // 遍历当前可见的 TOC 项，去真实 DOM 里抓取对应的标题元素并观察它！
+  visibleTocItems.value.forEach((item: TocItem) => {
+    const el = document.getElementById(item.id)
+    if (observer instanceof IntersectionObserver && el) {
+      observer.observe(el)
+    } else {
+      // 如果没有找到对应的 DOM 元素，可能是因为打字机动画还没解锁到它，或者文章结构异常了
+      notify({
+        type: 'warning',
+        message: `TOC Pet: 无法找到 ID 为 ${item.id} 的标题元素，无法观察其可见性。`,
+      })
+    }
+  })
+}
+// 监听可见目录的变化
+// 无论是打字机逐个解锁标题，还是页面瞬间加载完毕，只要目录变了，就重新装备观察器
+watch(
+  visibleTocItems,
+  async () => {
+    // 等待下一帧，确保父组件 (ArticleDetailView) 把真实 DOM 的 ID 给绑定好了
+    await nextTick()
+    // 稍微延迟 100ms，确保打字机动画没有引起 DOM 的剧烈抖动
+    setTimeout(setupObserver, 100)
+  },
+  { immediate: true, deep: true },
+)
+// 页面销毁时，别忘了把观察器也带走哦awa~
+onUnmounted(() => {
+  if (observer) observer.disconnect()
 })
 </script>
 
@@ -316,11 +378,12 @@ const dodgeOffset = computed(() => {
 
 .toc-list {
   list-style: none;
-  padding: 0;
+  padding: 0 8px;
   margin: 0;
 }
 
 .toc-item {
+  position: relative;
   padding: 6px 16px;
   font-size: 0.85rem;
   color: var(--light-text);
@@ -332,8 +395,28 @@ const dodgeOffset = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* 高亮状态样式 */
+.toc-item.is-active {
+  color: #4facfe;
+  background: rgba(79, 172, 254, 0.1);
+  font-weight: bold;
+}
+/* 高亮状态左侧的光剑特效 */
+.toc-item.is-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 0 8px rgba(79, 172, 254, 0.6);
+  border-radius: 0 2px 2px 0;
+}
+
 .toc-item:hover {
-  background: rgba(128, 128, 128, 0.15); /* 适配深色底的悬浮态 */
+  background: rgba(128, 128, 128, 0.15);
   color: var(--accent-color, #3b82f6);
 }
 
@@ -349,7 +432,7 @@ const dodgeOffset = computed(() => {
 .pet-progress-bar {
   width: 100%;
   height: 3px;
-  background: rgba(128, 128, 128, 0.2); /* 换成适配 Toast 底色的轨道颜色 */
+  background: rgba(128, 128, 128, 0.2);
   margin-top: auto;
 }
 .progress-fill {
@@ -383,7 +466,7 @@ const dodgeOffset = computed(() => {
 
 /* --- TOC 迷雾开图滑入动画 --- */
 .toc-slide-enter-active {
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* 统一曲线 */
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 .toc-slide-enter-from {
   opacity: 0;
