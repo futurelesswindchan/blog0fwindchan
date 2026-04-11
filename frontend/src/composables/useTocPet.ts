@@ -30,7 +30,7 @@ export function useTocPet() {
     typing: 'fa-keyboard',
     reading: 'fa-book-reader',
     sleepy: 'fa-bed',
-    dizzy: 'fa-dizzy',
+    dizzy: 'fa-bolt',
     shocked: 'fa-ban',
   }
 
@@ -52,7 +52,7 @@ export function useTocPet() {
       '这段文字写得真不错呢，你觉得呢？-w-',
       '要不要喝杯茶歇一下？小心眼睛疲劳哦~',
       '进度条在稳步前进，你超棒的！',
-      '风风酱在默默守护着你的阅读时光~',
+      '风酱在默默守护着你的阅读时光~',
       '盯—— (正在全神贯注陪你阅读)',
       '文章好长呀，但是有我陪你，就不会无聊啦！',
       '发现了一个有趣的知识点！快记下来！',
@@ -101,11 +101,8 @@ export function useTocPet() {
   // 计算当前应该显示的图标
   const currentIcon = computed(() => moodIconMap[currentMood.value])
 
-  // --- 消息处理逻辑 ---
+  // region 消息处理逻辑
   let messageTimer: number | null = null
-
-  // --- 跑酷定时器 ---
-  let shockInterval: number | null = null
 
   /**
    * 从当前情绪的消息库中随机抽取一条消息
@@ -146,6 +143,45 @@ export function useTocPet() {
   })
 
   // --- 交互动作 ---
+
+  // region 睡觉摸鱼逻辑
+  let idleTimer: number | null = null // （预留）闲置状态的定时器 ID
+  const IDLE_TIMEOUT = 30000 // 设定 30 秒无操作就打瞌睡
+
+  /**
+   * 退出打瞌睡状态，恢复正常阅读/打字状态
+   * @description 当用户与 TOC 宠物互动时，如果它正在睡觉，就把它摇醒！
+   */
+  const wakeUpPet = () => {
+    // 如果它正在睡觉，我们就把它摇醒！
+    if (currentMood.value === 'sleepy') {
+      currentMood.value = isTypingMode.value ? 'typing' : 'reading'
+      customMessage.value = getRandomMessage()
+    }
+  }
+
+  /**
+   * 重置闲置计时器
+   * @description 每当用户与宠物互动时调用，重置计时器以防止它进入睡觉状态。
+   * 30 秒后如果没有任何互动，就会自动切换到 sleepy 情绪。
+   */
+  const resetIdleTimer = () => {
+    // 只要用户动了，就立刻唤醒它
+    wakeUpPet()
+    // 清除上一个倒计时，重新开始计时
+    if (idleTimer) window.clearTimeout(idleTimer)
+    idleTimer = window.setTimeout(() => {
+      // 只有在普通阅读状态下才会无聊睡着！
+      // 如果正在打字(typing)、受惊(shocked)、或者晕车(dizzy)，千万不能睡OAO！
+      if (currentMood.value === 'reading') {
+        currentMood.value = 'sleepy'
+        customMessage.value = getRandomMessage()
+      }
+    }, IDLE_TIMEOUT)
+  }
+
+  // region 受惊逃跑逻辑
+  let shockInterval: number | null = null // 受惊乱跑的瞬移定时器 ID
 
   /**
    * 触发“假关闭”受惊状态
@@ -193,8 +229,62 @@ export function useTocPet() {
     isExpanded.value = !isExpanded.value
   }
 
-  // --- 状态监听 ---
+  // region 超速晕车逻辑
+  let lastScrollTop = 0 //
+  let lastScrollTime = 0 //
+  let dizzyRecoveryTimer: number | null = null // 晕车状态恢复的定时器 ID
+  const DIZZY_SPEED_THRESHOLD = 12 // 测速限值(像素/毫秒)。数值越小越容易晕车
 
+  /**
+   * 触发晕车状态
+   * @description 当检测到用户滚动速度过快时，切换到 dizzy 情绪，并在 2 秒后恢复。
+   */
+  const triggerDizzy = () => {
+    // 保护机制：如果正在受惊(shocked)，那是最高优先级，不能被打断！
+    if (currentMood.value === 'shocked') return
+    // 如果还没晕，就切成晕车状态并说一句晕车台词
+    if (currentMood.value !== 'dizzy') {
+      currentMood.value = 'dizzy'
+      customMessage.value = getRandomMessage()
+    }
+    // 每次触发晕车，都刷新“康复倒计时”
+    if (dizzyRecoveryTimer) window.clearTimeout(dizzyRecoveryTimer)
+
+    // 2秒后如果没再超速，就恢复正常
+    dizzyRecoveryTimer = window.setTimeout(() => {
+      if (currentMood.value === 'dizzy') {
+        currentMood.value = isTypingMode.value ? 'typing' : 'reading'
+        customMessage.value = getRandomMessage()
+      }
+    }, 2000)
+  }
+
+  /**
+   * 检测滚动速度并触发晕车状态
+   * @description 通过比较当前滚动位置与上一次的滚动位置和时间，计算滚动速度。
+   * 如果速度超过设定的阈值，就触发 triggerDizzy()。
+   * 为了性能考虑，增加了一个最小时间间隔（比如 50ms）来限制测速频率，避免短时间内高频触发导致性能问题或误判。
+   */
+  const checkScrollSpeed = () => {
+    const currentScrollTop = window.scrollY || document.documentElement.scrollTop
+    const currentTime = performance.now()
+
+    const timeDiff = currentTime - lastScrollTime
+
+    // 每隔小段时间(比如 50ms)采样一次，避免短时间高频触发导致计算爆表或为无穷大
+    if (timeDiff > 50) {
+      const distance = Math.abs(currentScrollTop - lastScrollTop)
+      const speed = distance / timeDiff // 速度公式：v = s / t
+      if (speed > DIZZY_SPEED_THRESHOLD) {
+        triggerDizzy() // 超速啦！快晕！
+      }
+      // 更新上一次的坐标和时间，留给下一次测速用
+      lastScrollTop = currentScrollTop
+      lastScrollTime = currentTime
+    }
+  }
+
+  //region 打字模式逻辑
   // 监听打字机模式：自动切换为 typing 情绪
   watch(
     isTypingMode,
@@ -202,17 +292,47 @@ export function useTocPet() {
       if (currentMood.value === 'shocked') return
       currentMood.value = isTyping ? 'typing' : 'reading'
       customMessage.value = getRandomMessage()
+
+      resetIdleTimer() // 切换模式也算一次互动，重置闲置计时器
     },
     { immediate: true },
   )
 
-  // 初始化启动轮播
+  //  --- 状态监听 ---
+  const activityEvents = ['mousemove', 'keydown', 'scroll', 'touchstart', 'click']
+  const initGlobalListeners = () => {
+    // 挂机检测
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, resetIdleTimer, { passive: true })
+    })
+    resetIdleTimer()
+
+    // 挂载测速仪
+    lastScrollTime = performance.now()
+    window.addEventListener('scroll', checkScrollSpeed, { passive: true })
+  }
+
+  const destroyGlobalListeners = () => {
+    if (idleTimer) window.clearTimeout(idleTimer)
+    if (dizzyRecoveryTimer) window.clearTimeout(dizzyRecoveryTimer) // 清理晕车定时器
+
+    activityEvents.forEach((event) => {
+      window.removeEventListener(event, resetIdleTimer)
+    })
+
+    // 卸载测速仪
+    window.removeEventListener('scroll', checkScrollSpeed)
+  }
+
+  // 初始化启动轮播和挂机检测
   startMessageLoop()
+  initGlobalListeners()
 
   // 生命周期清理
   onUnmounted(() => {
     if (messageTimer) clearInterval(messageTimer)
     if (shockInterval) clearInterval(shockInterval)
+    destroyGlobalListeners()
   })
 
   return {
