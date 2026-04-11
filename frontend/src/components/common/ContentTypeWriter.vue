@@ -233,14 +233,10 @@ const startTyping = async () => {
 
   // 等待 VueMarkdown 将完整的 DOM 树挂载到页面上
   await nextTick()
+  await new Promise((resolve) => setTimeout(resolve, 50))
 
-  // 如果发现号码牌过期了（说明有新的更新覆盖了），直接遗憾立场
-  if (sessionId !== currentSessionId) {
-    return
-  }
-
-  // 如果 DOM 彻底丢了，也退出
-  if (!contentRef.value || !containerRef.value) return
+  if (sessionId !== currentSessionId) return // 如果发现号码牌过期了（说明有新的更新覆盖了），直接遗憾立场
+  if (!contentRef.value || !containerRef.value) return // 如果 DOM 彻底丢了，也退出
 
   // 1. 高度防抖：锁定包含图片、代码块等元素的真实总高度，彻底消灭页面抖动
   lockedHeight.value = containerRef.value.clientHeight
