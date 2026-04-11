@@ -79,7 +79,8 @@ const isTyping = ref(false) // 标识当前是否正在进行打字输出
 const lockedHeight = ref<number>(0) // 锁定的容器高度，防止高度坍塌
 
 // 引入全局进度条状态池
-const { globalProgress, isTypingMode, showProgress } = useReadingProgress()
+const { globalProgress, isTypingMode, showProgress, unlockHeading, resetUnlockedHeadings } =
+  useReadingProgress()
 
 // --- 动画与 DOM 控制器 ---
 let animationFrameId: number | null = null
@@ -219,6 +220,9 @@ const startTyping = async () => {
   isReady.value = false
   isTyping.value = true
   lockedHeight.value = 0
+
+  resetUnlockedHeadings()
+
   actions = []
   actionIndex = 0
   charIndex = 0
@@ -309,6 +313,14 @@ const startTyping = async () => {
       const action = actions[actionIndex] as { type: 'reveal'; node: HTMLElement }
       action.node.classList.remove('typing-hidden-block')
       action.node.classList.add('typing-reveal-block')
+
+      // --- 如果是标题，通知全局解锁 ---
+      // 因为 TreeWalker 保存了真实的 DOM 引用，即使 ID 是外部稍后注入的，
+      // 等到 requestAnimationFrame 跑到这里时，DOM 上肯定已经有 ID 了
+      if (/^H[1-6]$/i.test(action.node.tagName) && action.node.id) {
+        unlockHeading(action.node.id)
+      }
+
       actionIndex++
     }
 
