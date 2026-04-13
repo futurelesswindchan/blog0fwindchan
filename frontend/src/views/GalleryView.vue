@@ -44,11 +44,11 @@
 </template>
 
 <script setup lang="ts">
+import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
-import { computed, onMounted } from 'vue'
 import { useArtworkStore } from '@/views/stores/artworkStore'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { computed, onMounted } from 'vue'
 
 import type { Artwork } from '@/views/stores/artworkStore'
 

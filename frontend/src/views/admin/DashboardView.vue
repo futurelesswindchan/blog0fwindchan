@@ -222,15 +222,16 @@
 
 <script setup lang="ts">
 import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
+import { PlanItem, useActivityStore } from '@/views/stores/activityStore'
+import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useArticleContent } from '@/composables/useArticleContent'
+import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useSearchAndSort } from '@/composables/useSearchAndSort'
+import { useSponsorStore } from '@/views/stores/sponsorStore'
 import { useArtworkStore } from '@/views/stores/artworkStore'
 import { useFriendStore } from '@/views/stores/friendStore'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
-import { useArticleContent } from '@/composables/useArticleContent'
-import { PlanItem, useActivityStore } from '@/views/stores/activityStore'
-import { useSponsorStore } from '@/views/stores/sponsorStore'
 import { useToast } from '@/composables/useToast'
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
@@ -319,190 +320,81 @@ const handleCreate = () => {
 // =========================================
 
 // --- 1. 文章搜索与分页 ---
-const articleSearchText = ref('')
-const articlePage = ref(1)
-// 使用后台专属配置
-const articlePageSize = computed(() => settingsStore.pagination.adminArticles)
-
 const allArticles = computed<ArticleWithCategory[]>(() => {
   return Object.entries(articleStore.articles).flatMap(([category, articles]) =>
     articles.map((article) => ({ ...article, category })),
   )
 })
 
-const filteredArticles = computed(() => {
-  const text = articleSearchText.value.toLowerCase()
-  if (!text) return allArticles.value
-  return allArticles.value.filter(
-    (article) =>
-      article.title.toLowerCase().includes(text) || article.category.toLowerCase().includes(text),
-  )
-})
-
-const paginatedArticles = computed(() => {
-  const start = (articlePage.value - 1) * articlePageSize.value
-  const end = start + articlePageSize.value
-  return filteredArticles.value.slice(start, end)
-})
-
-const articlePagination = computed(() => ({
-  currentPage: articlePage.value,
-  totalPages: Math.ceil(filteredArticles.value.length / articlePageSize.value) || 1,
-  prevPage: () => {
-    if (articlePage.value > 1) articlePage.value--
-  },
-  nextPage: () => {
-    if (articlePage.value < articlePagination.value.totalPages) articlePage.value++
-  },
-}))
-
-// 监听搜索或分页大小变化，重置页码
-watch([articleSearchText, articlePageSize], () => {
-  articlePage.value = 1
+const {
+  searchText: articleSearchText,
+  filteredItems: paginatedArticles,
+  pagination: articlePagination,
+} = useSearchAndSort({
+  items: allArticles,
+  searchFields: (article) => [article.title, article.category],
+  sortType: 'date',
+  sortBy: (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime(),
+  itemsPerPage: computed(() => settingsStore.pagination.adminArticles),
 })
 
 // --- 2. 友链搜索与分页 ---
-const friendSearchText = ref('')
-const friendPage = ref(1)
-// 使用后台专属配置
-const friendPageSize = computed(() => settingsStore.pagination.adminFriends)
-
-const filteredFriends = computed(() => {
-  const text = friendSearchText.value.toLowerCase()
-  if (!text) return friendStore.friends
-  return friendStore.friends.filter(
-    (friend) =>
-      friend.name.toLowerCase().includes(text) ||
-      friend.url?.toLowerCase().includes(text) ||
-      friend.desc?.toLowerCase().includes(text),
-  )
-})
-
-const paginatedFriends = computed(() => {
-  const start = (friendPage.value - 1) * friendPageSize.value
-  const end = start + friendPageSize.value
-  return filteredFriends.value.slice(start, end)
-})
-
-const friendPagination = computed(() => ({
-  currentPage: friendPage.value,
-  totalPages: Math.ceil(filteredFriends.value.length / friendPageSize.value) || 1,
-  prevPage: () => {
-    if (friendPage.value > 1) friendPage.value--
-  },
-  nextPage: () => {
-    if (friendPage.value < friendPagination.value.totalPages) friendPage.value++
-  },
-}))
-
-watch([friendSearchText, friendPageSize], () => {
-  friendPage.value = 1
+const {
+  searchText: friendSearchText,
+  filteredItems: paginatedFriends,
+  pagination: friendPagination,
+} = useSearchAndSort({
+  items: computed(() => friendStore.friends),
+  searchFields: (friend) => [friend.name, friend.url || '', friend.desc || ''],
+  sortType: 'alpha',
+  sortBy: (a, b) => a.name.localeCompare(b.name),
+  itemsPerPage: computed(() => settingsStore.pagination.adminFriends),
 })
 
 // --- 3. 画廊搜索与分页 ---
-const gallerySearchText = ref('')
-const galleryPage = ref(1)
-// 使用后台专属配置
-const galleryPageSize = computed(() => settingsStore.pagination.adminGallery)
-
-const filteredGallery = computed(() => {
-  const text = gallerySearchText.value.toLowerCase()
-  if (!text) return artworkStore.artworks
-  return artworkStore.artworks.filter(
-    (work) =>
-      work.title?.toLowerCase().includes(text) || work.description?.toLowerCase().includes(text),
-  )
-})
-
-const paginatedGallery = computed(() => {
-  const start = (galleryPage.value - 1) * galleryPageSize.value
-  const end = start + galleryPageSize.value
-  return filteredGallery.value.slice(start, end)
-})
-
-const galleryPagination = computed(() => ({
-  currentPage: galleryPage.value,
-  totalPages: Math.ceil(filteredGallery.value.length / galleryPageSize.value) || 1,
-  prevPage: () => {
-    if (galleryPage.value > 1) galleryPage.value--
-  },
-  nextPage: () => {
-    if (galleryPage.value < galleryPagination.value.totalPages) galleryPage.value++
-  },
-}))
-
-watch([gallerySearchText, galleryPageSize], () => {
-  galleryPage.value = 1
+const {
+  searchText: gallerySearchText,
+  filteredItems: paginatedGallery,
+  pagination: galleryPagination,
+} = useSearchAndSort({
+  items: computed(() => artworkStore.artworks),
+  searchFields: (work) => [work.title || '', work.description || ''],
+  sortType: 'date',
+  sortBy: (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime(),
+  itemsPerPage: computed(() => settingsStore.pagination.adminGallery),
 })
 
 // --- 4. 计划搜索与分页 ---
-const planSearchText = ref('')
-const planPage = ref(1)
-// 使用后台专属配置
-const planPageSize = computed(() => settingsStore.pagination.adminPlans)
-
-const filteredPlans = computed(() => {
-  const text = planSearchText.value.toLowerCase()
-  if (!text) return activityStore.plans
-  return activityStore.plans.filter((plan) => plan.content.toLowerCase().includes(text))
-})
-const paginatedPlans = computed(() => {
-  const start = (planPage.value - 1) * planPageSize.value
-  const end = start + planPageSize.value
-  return filteredPlans.value.slice(start, end)
-})
-const planPagination = computed(() => ({
-  currentPage: planPage.value,
-  totalPages: Math.ceil(filteredPlans.value.length / planPageSize.value) || 1,
-  prevPage: () => {
-    if (planPage.value > 1) planPage.value--
-  },
-  nextPage: () => {
-    if (planPage.value < planPagination.value.totalPages) planPage.value++
-  },
-}))
-watch([planSearchText, planPageSize], () => {
-  planPage.value = 1
+const {
+  searchText: planSearchText,
+  filteredItems: paginatedPlans,
+  pagination: planPagination,
+} = useSearchAndSort({
+  items: computed(() => activityStore.plans),
+  searchFields: (plan) => [plan.content],
+  sortType: 'date',
+  sortBy: (a, b) => b.sort_order - a.sort_order, // 这里是根据 sort_order 字段排序，数值越小越靠前
+  itemsPerPage: computed(() => settingsStore.pagination.adminPlans),
 })
 
 // --- 5. 投喂搜索与分页 ---
-const sponsorSearchText = ref('')
-const sponsorPage = ref(1)
-// 使用后台专属配置
-const sponsorPageSize = computed(() => settingsStore.pagination.adminSponsors || 10)
-
-const filteredSponsors = computed(() => {
-  const text = sponsorSearchText.value.toLowerCase()
-  if (!text) return sponsorStore.sponsors
-  return sponsorStore.sponsors.filter(
-    (sp) =>
-      sp.name.toLowerCase().includes(text) ||
-      (sp.message && sp.message.toLowerCase().includes(text)),
-  )
-})
-const paginatedSponsors = computed(() => {
-  const start = (sponsorPage.value - 1) * sponsorPageSize.value
-  const end = start + sponsorPageSize.value
-  return filteredSponsors.value.slice(start, end)
-})
-const sponsorPagination = computed(() => ({
-  currentPage: sponsorPage.value,
-  totalPages: Math.ceil(filteredSponsors.value.length / sponsorPageSize.value) || 1,
-  prevPage: () => {
-    if (sponsorPage.value > 1) sponsorPage.value--
-  },
-  nextPage: () => {
-    if (sponsorPage.value < sponsorPagination.value.totalPages) sponsorPage.value++
-  },
-}))
-watch([sponsorSearchText, sponsorPageSize], () => {
-  sponsorPage.value = 1
+const {
+  searchText: sponsorSearchText,
+  filteredItems: paginatedSponsors,
+  pagination: sponsorPagination,
+} = useSearchAndSort({
+  items: computed(() => sponsorStore.sponsors),
+  searchFields: (sp) => [sp.name, sp.message || ''],
+  sortType: 'date',
+  sortBy: (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime(),
+  itemsPerPage: computed(() => settingsStore.pagination.adminSponsors || 10),
 })
 
 // =========================================
 // CRUD 操作逻辑
 // =========================================
 
+// 提前准备好一个删除成功的提示函数，避免重复代码
 const notifyDeleteSuccess = () => {
   notify({
     type: 'success',

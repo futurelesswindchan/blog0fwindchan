@@ -1,140 +1,138 @@
-# Vol.4 画廊与模态框：从能用就行到全局管理
+# Vol.4 核心引擎：沉浸式阅读与 Markdown 的魔法炼金术
 
-> **摘要**：曾经...代码里到处都是 `<Dialog :visible="show">`，Props 传得满天飞。为了解决这场混乱，小风酱引入了 Pinia 全局状态管理。同时，本文将深入画廊组件，讲解它是如何处理大量图片的加载与预览的。
-
----
-
-## 1. 告别 Props 地狱：全局模态框体系
-
-在早期的 Vue 开发中，小风酱习惯把弹窗组件写在父组件里。但当登录框需要在首页、文章页、甚至 404 页面都能唤起时，就会发现自己陷入了 Props 和 Emit 的泥潭QAQ。
-
-**革命性的架构：**
-
-1.  **中央集权**：所有弹窗的开关状态、传入数据，全部由 `globalModalStore` 管理。
-2.  **全局挂载**：所有弹窗组件直接挂载在 `App.vue` 的根节点下。它们永远存在，只是通过 Store 控制显示与否。
-
-### 指挥部：globalModalStore.ts
-
-这个 Store 是整个系统的核心。它不仅管理简单的 `true/false`，还管理弹窗的**上下文数据**。
-
-以画廊预览为例，不仅要打开预览框，还要告诉它：“当前看的是哪张图？这张图属于哪个列表？”
-
-```typescript
-// globalModalStore.ts
-const openGalleryPreview = (artwork: Artwork, list: Artwork[] = []) => {
-  previewArtwork.value = artwork
-  // 关键：把当前筛选后的列表也传进去，这样预览框才知道上一张和下一张是谁
-  previewList.value = list.length > 0 ? list : [artwork]
-  showGalleryPreview.value = true
-}
-```
-
-### 通用外壳：BaseModal.vue
-
-为了保持 UI 的一致性，小风酱封装了一个 `BaseModal`。它负责处理所有弹窗共有的逻辑：
-
-- **背景模糊**：`backdrop-filter: blur(8px)`，让弹窗下的内容若隐若现。
-- **滚动锁定**：当弹窗打开时，`document.body.style.overflow = 'hidden'`，防止背景页面滚动。
-- **进出动画**：统一的 `modal-fade` 过渡效果。
-- **关闭机制**：点击背景或按 `×` 键关闭弹窗。
-
-```typescript
-// BaseModal.vue
-watch(
-  () => props.show,
-  (val) => {
-    // 弹窗打开时，禁止背景滚动；关闭时恢复
-    document.body.style.overflow = val ? 'hidden' : ''
-  },
-)
-```
+> **摘要**：一个博客如果连文章都看不爽，那和咸鱼有什么区别？！在这一篇中，我们将深入风风博客的核心引擎—— `ArticleDetailView`。  
+> 看看小风酱是如何驯服 Markdown 渲染、手搓极客风代码块、设计涂鸦式删除线，以及构建那个“绝不让你篡改”的全局阅读进度条的！
 
 ---
 
-## 2. 视觉盛宴：响应式画廊
+## 1. 统一的容器，不同的灵魂
 
-在 `GalleryView.vue` 中，并没有使用复杂的瀑布流插件，而是利用 CSS Grid 的强大能力实现了一个自适应网格。
+打开博客，你会发现文章被分成了“技术手札”、“幻想物语”和“奇怪杂谈”三个板块。但在代码层面，小风酱才懒得写三个详情页呢！(￣▽￣)
 
-```css
-.gallery-container {
-  display: grid;
-  /* 魔法代码：自动填充，最小宽度 250px，剩余空间平分 */
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 2rem;
-}
-```
-
-### 性能救星：LazyImage.vue
-
-如果画廊里有 100 张高清大图，一次性加载会让浏览器直接卡死。`LazyImage` 组件利用 `IntersectionObserver` 实现了懒加载：
-
-1.  **占位**：默认显示一个转圈圈的 `loading-spinner`。
-2.  **监听**：当图片进入视口（viewport）时，才把真实的 URL 赋给 `img.src`。
-3.  **容错**：如果加载失败（比如图床挂了），会自动重试 3 次，如果还不行，就显示一个可爱的`加载中喵`。
-
-~~喵喵喵喵喵ฅ(＞ω＜ )ฅ ~~
+在 `frontend/src/views/articles/ArticleDetailView.vue` 中，所有的文章详情都共用这一个视图。它是怎么知道你在看什么的？靠的是**路由监听与动态推断**：
 
 ```typescript
-// LazyImage.vue
-observer = new IntersectionObserver((entries) => {
-  if (entries[0].isIntersecting) {
-    // 只有看到了，才开始加载
-    const img = new Image()
-    img.src = props.src // 预加载
-    img.onload = () => {
-      currentSrc.value = props.src
-    } // 替换显示
-    observer.disconnect() // 任务完成，撤退
-  }
+// 动态推断文章所属的分类板块，省去了传 props 的麻烦~
+const type = computed(() => {
+  if (route.path.includes('/articles/topics/')) return 'topics'
+  if (route.path.includes('/articles/novels/')) return 'novels'
+  return 'frontend'
 })
 ```
 
+配合 Vue Router 的 `watch(() => route.params.id)`，无论你是从列表点进来，还是在文章底部点击了“下一篇”，页面都会自动拉取新数据，并极其丝滑地 `window.scrollTo({ top: 0, behavior: 'smooth' })` 滚回顶部，给你一个清爽的阅读起点。
+
 ---
 
-## 3. 沉浸体验：GalleryPreviewModal
+## 2. 极客代码块：高亮与一键复制
 
-这是整个画廊最复杂的部分。它不仅要展示大图，还要处理导航逻辑。
+既然不是 Mac 风格，那我们的代码块长什么样？  
+答案是： **实用至上的极客风！**
 
-得益于 `globalModalStore` 传入了 `previewList`，在模态框内部就可以直接计算出上一张和下一张的索引，而不需要父组件介入。
+在 `useCodeHighlight.ts` 中，小风酱直接拦截了 `highlight.js` 的渲染结果，给每一段代码套上了一个精美的 `<div class="code-block-wrapper">` 战甲。
+
+而最亮眼的骚操作，莫过于一键复制功能：  
+为了防止复制出带有各种 HTML 标签的富文本，小风酱在渲染时，直接把**原汁原味的纯文本代码**用 `encodeURIComponent` 挂载到了按钮的 `data-code` 属性上！
 
 ```typescript
-// globalModalStore.ts 中的导航逻辑
-const navigateGallery = (direction: 1 | -1) => {
-  const newIndex = currentPreviewIndex.value + direction
-  if (newIndex >= 0 && newIndex < previewList.value.length) {
-    // 直接修改 store 里的当前图片，界面自动更新
-    previewArtwork.value = previewList.value[newIndex]
-  }
+// useCodeHighlight.ts 中的魔法拼接
+return `
+  <div class="code-block-wrapper">
+    <div class="code-header">
+      <span class="code-lang">${displayLang}</span>
+      <button class="code-copy-btn" data-code="${encodeURIComponent(code)}" title="复制代码">
+        <span class="btn-content default-content"><i class="fas fa-copy"></i> Copy</span>
+        <span class="btn-content success-content"><i class="fas fa-check"></i> Copied!</span>
+      </button>
+    </div>
+    <pre class="code-block"><code class="${lang}">${highlighted}</code></pre>
+  </div>
+`
+```
+
+然后在 `ArticleDetailView.vue` 中，利用**事件代理 (Event Delegation)** 统一监听点击事件。当你点击复制时，按钮会被注入 `.copied` 类名，瞬间变成绿色的 `Copied!`，两秒后又变回原样。这种纯 CSS 驱动的状态切换，性能好到爆炸！💥
+
+---
+
+## 3. 细节狂魔：CSS 涂鸦删除线
+
+如果说代码块是基建，那 CSS 样式就是灵魂。在 `articleContent.css` 里，藏着一个极其抓人眼球的小彩蛋—— **涂鸦删除线**。
+
+普通的 `<del>` 标签只是一条死板的横线，但小风酱利用伪元素 `::before` 和 CSS 的 `repeating-linear-gradient`，画出了一条仿佛是用笔“反复涂抹”的划痕！
+
+```css
+/* 模拟多画了几笔的涂鸦划痕 */
+.markdown-content del::before,
+.markdown-content s::before {
+  background: repeating-linear-gradient(
+    60deg,
+    transparent,
+    transparent 8px,
+    var(--strike-color) 8px,
+    var(--strike-color) 9px
+  );
+  transform: translateY(-50%);
 }
 ```
 
-在 UI 上，`GalleryPreviewModal` 采用了经典的三段式布局：
-
-- **Header**：显示标题，半透明背景。
-- **Middle**：图片主体，包含左右两个巨大的透明导航按钮（`.nav-strip`）。为了防止遮挡图片，这两个按钮平时是透明的，只有鼠标悬停时才会显示图标。
-- **Footer**：显示描述和日期。
-
-这种设计最大化了图片的展示面积，同时保留了必要的信息展示。
+**交互高能预警**：当你把鼠标悬停在删除线上时，那些杂乱的涂鸦会优雅地消失，原本的划线会变成一条笔直的、加粗的警示红线！这种细节，简直让人忍不住在文章里疯狂划线awa！
 
 ---
 
-## 4. 细节微调
+## 4. 读心术：TOC 生成与字数估算
 
-为了让体验更上一层楼，小风酱还做了一些微小的优化：
+一篇文章有多少字？要读多久？目录在哪？
+为了不引入沉重的 AST (抽象语法树) 解析库，小风酱在 `useArticleInfo.ts` 里手摇了一套轻量级的正则解析器。
 
-- **点击穿透处理**：在 `GalleryView` 中，点击卡片调用 `openPreview` 时，传入的是 `filteredItems`（过滤后的列表）。这意味着如果有人搜索了游戏，在预览时点击下一张，它只会切换到下一张游戏相关的图，而不会跳到其他分类去。
-- **移动端适配**：在手机上，预览框的 Header 和 Footer 会自动缩小，导航按钮也会变窄，把宝贵的屏幕空间留给图片。
+**中英混合字数估算**：
+它会先把 Markdown 的图片、链接等“视觉噪音”剥离，然后精准萃取中文字符，再把英文按单词切割，最后采用 `1个英文单词 ≈ 0.5个中文字符` 的视觉占位算法，算出最符合人类直觉的阅读时间。
+
+**TOC 目录提取器**：
+这简直是防弹级的设计！为了防止代码块里写的 `# 注释` 被当成标题，它会先临时把所有围栏代码块（```）里的内容替换成占位符，等提取完目录后再还原回来。这样，无论你在代码里写多少标题样式的注释，都不会干扰到目录的生成哦awa
+
+````typescript
+// 临时挖空所有代码块，防止内部的 `#` 被误认为标题
+const cleanText = contentText.replace(/```[\s\S]*?```/g, '')
+
+// 匹配行首的 1-6 个 '#'，生成目录树
+const regex = /^(#{1,6})\s+(.+)$/gm
+````
+
+---
+
+## 5. “双轨制”全局阅读进度条
+
+在页面的最下方（或者某个神秘的小精灵脚下），有一道会发光的彩虹进度条。它的背后，是 `useReadingProgress.ts` 管理的全局状态。
+
+为什么叫“双轨制”？  
+因为一篇文章有两种形态： **打字机模式** 和 **正常阅读模式**。
+
+在 `ArticleDetailView` 的滚动监听中，藏着一个极其霸道的防御机制：
+
+```typescript
+const handleReadingScroll = () => {
+  // 防御机制：如果还在打字模式，滚动条不允许篡改进度awa！
+  if (isTypingMode.value) return
+
+  // ... 计算滚动比例 (scrollTop / docHeight)
+}
+```
+
+当文章正在像打字机一样逐字生成时，进度条的控制权完全交给打字引擎；  
+只有当打字结束，用户开始自由滚动页面时，滚动条才能接管进度。这种权责分明的设计，确保了进度的计算永远不会在两种模式间打架！
 
 ---
 
 ## 下集预告
 
-画廊和弹窗都搞定了，现在博客已经非常漂亮了。但是，作为一个追求效率的博主，小风酱可不想每次发文章都要手动改数据库。
+文章渲染好了，进度条也动起来了，但这还不够赛博！  
+还记得我们刚才提到的“神秘小精灵”和“打字机模式”吗？
 
-下一篇 **Vol.5 拒绝重复劳动：封装复用的哲学**，将深入探讨 `useSearchAndSort` 这个万能 Hook，看它是如何用一套代码搞定文章、友链、画廊三种数据的搜索、排序和分页的。
+下一篇 **Vol.5 赛博陪伴：打字引擎与 TOC 小桌宠**，我们将揭秘那个会因为你滑得太快而“晕车”、会因为你关掉它而“受惊乱跑”的目录宠物 `ArticleTocPet`！
 
-偷懒，才是第一生产力！(ov0)b
+请备好你的血包，小心被萌到血条见底哦！(>w<)
 
 ---
 
-> 没有未来的小风酱 著
+> ~~试图在此处展示删除线效果的小风酱 著~~  
+> 本文采用[知识共享署名-非商业性使用 4.0 国际许可协议](https://creativecommons.org/licenses/by-nc/4.0/)进行许可
