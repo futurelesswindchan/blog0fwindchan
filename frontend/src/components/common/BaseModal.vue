@@ -1,7 +1,7 @@
 <!-- src/components/common/BaseModal.vue -->
 <template>
   <transition name="modal-fade">
-    <div v-if="show" class="modal-backdrop" @click.self="handleBackdropClick">
+    <div v-if="show" class="modal-backdrop" @click.self="$emit('close')">
       <div class="modal-window" :style="{ width, height }">
         <!-- 关闭按钮 -->
         <button class="close-btn" @click="$emit('close')">
@@ -23,12 +23,6 @@ const props = defineProps<{
   width?: string
   height?: string
 }>()
-
-const emit = defineEmits(['close'])
-
-const handleBackdropClick = () => {
-  emit('close')
-}
 
 // --- 滚动锁定逻辑 ---
 const toggleBodyScroll = (isLocked: boolean) => {

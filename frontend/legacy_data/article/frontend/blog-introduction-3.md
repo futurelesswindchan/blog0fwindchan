@@ -1,171 +1,176 @@
-# Vol.3 沉浸式阅读：Markdown 渲染与代码高亮
+# Vol.3 路由的魔法：无缝跃迁与加载的艺术
 
-> **摘要**：作为一个技术博客，代码块如果长得像记事本一样丑，那简直是对代码的侮辱。本文将揭秘 `ArticleDetailView` 的渲染逻辑，重点讲解如何通过 `useCodeHighlight` 封装 Highlight.js 实现 Mac 风格的代码窗口，以及如何用 CSS 打造舒适的排版体验。
-
----
-
-## 1. 排版哲学：呼吸感与细节
-
-在 `frontend/src/views/articles/ArticleDetailView.vue` 中，文章的容器被包裹在一个 `.article-view-container` 里。
-
-小风酱深知，阅读体验的好坏往往取决于那些不起眼的细节。于是在 `articleContent.css` 中，对 Markdown 渲染出的原生标签进行了大刀阔斧的魔改：
-
-### 图片的悬浮感
-
-为了让图片看起来不像是死板地贴在屏幕上，小风酱给所有 `img` 标签加了阴影和悬浮动画：
-
-```css
-/* articleContent.css */
-.markdown-content img {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 基础阴影 */
-  transition: transform 0.3s ease;
-}
-
-.markdown-content img:hover {
-  transform: translateY(-2px); /* 悬停时微微上浮 */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); /* 阴影加深，模拟高度增加 */
-}
-```
-
-### 两端对齐
-
-对于长段落，`text-align: justify` 是必须的。它能消除行末参差不齐的锯齿感，让文章块看起来方方正正，极其舒适。
+> **摘要**：在传统的网页中，点击链接意味着漫长的白屏和等待。但在现代的单页应用 (SPA) 里，我们可以把每一次点击变成一次丝滑的空间跃迁。  
+> 本文将深入风风博客的中枢神经——`vue-router`，揭秘全局路由守卫中的“300ms 阈值加载逻辑”，以及那个被全站广泛使用的全局 Toast通知系统。
 
 ---
 
-## 2. 代码高亮：给代码穿上 IDE 的衣服
+## 1. 拒绝假死：路由守卫的视觉护航
 
-这是本篇的重头戏。默认的 Highlight.js 渲染出来的代码块只是一个黑乎乎的框，既没有语言标识，也没有美感。
+当你点击菜单里的“绘画长廊”时，如果画廊里的图片数据还没从后端拉取完，页面就会面临两个尴尬的选择：
 
-小风酱想要的效果是：**每一个代码块都像是一个迷你的 VS Code 窗口。**
+1. 立刻跳转，然后给用户看一个空荡荡的骨架屏（很丑qwq）。
+2. 在后台默默拉取数据，这期间页面毫无反应，让用户以为自己没点上，于是开始疯狂连点（更可怕QAQ）。
 
-### 核心逻辑：useCodeHighlight.ts
+小风酱选择了第三条路：**前置拦截 + 视觉安抚**。
 
-为了实现这个效果，不能直接用 highlight.js 的默认输出，必须要拦截它的渲染过程，手动注入 HTML 结构。
-
-在 `frontend/src/composables/useCodeHighlight.ts` 中：
+在 `frontend/src/router/index.ts` 中，利用全局前置守卫 `beforeEach`，拦截了所有需要重度数据依赖的页面（比如文章列表、画廊、友链等）。
 
 ```typescript
-const highlightCode = (code: string, lang: string) => {
-  // 1. 获取高亮后的 HTML 字符串
-  const highlighted = hljs.highlight(code, { language: lang }).value
+// 在路由模块外部定义的全局变量，用于跨钩子共享状态
+let activeLoadingToastId: number | null = null // 用于在路由成功放行后，精准销毁该提示框，避免内存泄漏与视觉残留。
+let loadingStartTime: number = 0 // 用于在加载完成后计算用户等待的时间。如果加载极快，则抑制成功提示的弹出，避免视觉打扰。
 
-  // 2. 获取语言名称（比如把 'ts' 显示为 'TypeScript'）
-  const displayLang = languageNames[lang] || lang.toUpperCase()
+// 路由前置守卫：侦测并拦截
+router.beforeEach(async (to, from, next) => {
+  const isDataHeavyRoute = ['Friends', 'Gallery', 'Articles'].includes(to.name as string)
 
-  // 3. 关键步骤：手动拼接 HTML 结构
-  // 在 code 标签外面包了一层 .code-block
-  // 并在顶部塞了一个 .code-lang 标签作为窗口标题栏
-  return `<pre class="code-block">
-            <div class="code-lang">${displayLang}</div>
-            <code class="${lang}">${highlighted}</code>
-          </pre>`
-}
+  if (isDataHeavyRoute) {
+    // 1. 记录开始时间
+    loadingStartTime = performance.now()
+
+    // 2. 呼出一个无限期存在的 Loading Toast，安抚用户情绪
+    activeLoadingToastId = toastStore.add({
+      title: '次元跃迁准备中...',
+      message: `正在为您搬运${to.meta.title}的数据，请稍候~`,
+      type: 'info',
+      duration: 0, // 设置为 0，让它一直存在，直到我们手动销毁
+    })
+
+    // 3. 异步拉取数据 (以画廊为例)
+    if (to.name === 'Gallery') {
+      const artworkStore = useArtworkStore()
+      if (!artworkStore.artworks.length) await artworkStore.fetchArtworks()
+    }
+  }
+
+  next() // 数据拉取完毕，放行！
+})
 ```
 
-### 样式定制：codeBlock.css
-
-有了上面的结构，就可以在 CSS 里为所欲为了。
-
-**窗口标题栏**：
-`.code-lang` 被设计成了顶部的一条蓝条，用来显示语言类型。
-
-```css
-.code-block .code-lang {
-  width: 100%;
-  padding: 0.8rem 1.4rem;
-  background: rgba(0, 119, 255, 0.4); /* 标志性的蓝色半透明背景 */
-  color: var(--accent-color);
-  border-bottom: 1px solid rgba(0, 119, 255, 0.08);
-  position: absolute; /* 绝对定位在顶部 */
-  top: 0;
-}
-```
-
-什么？！没有复制按钮？当然是因为~~没有写啦~~手抄代码才更能记忆深刻...是这样是这样！（逃）
-
-**代码内容区**：
-为了不让代码被标题栏挡住，`code` 标签设置了巨大的顶部内边距：
-
-```css
-.code-block code {
-  padding: 4rem 1rem 1rem 1rem; /* 上方留出 4rem 给标题栏 */
-}
-```
-
-**配色方案**：
-小风酱没有使用 Highlight.js 自带的 CSS 文件，而是手动在 `codeBlock.css` 里定义了每一类语法的高亮颜色。
-例如，Vue 的标签颜色被定义为红色，属性为橙色，字符串为绿色。这不仅统一了亮/暗模式的体验，还让配色更符合小风酱的个人审美 (ov0)。
-
-```css
-/* 自定义 Vue 语法高亮 */
-.markdown-content .language-vue .hljs-tag {
-  color: #f56c6c;
-}
-.markdown-content .language-vue .hljs-attr {
-  color: #d19a66;
-}
-```
+这一套组合拳打下来，用户点击链接的瞬间就会看到可爱的提示框，等后台数据准备就绪，页面才会进行跳转渲染，彻底告别了白屏和假死。
 
 ---
 
-## 3. 底部导航：玻璃质感的指路牌
+## 2. 细节的巅峰：300ms 阈值机制
 
-文章看完了，总得有地方去。`ArticleNavigation.vue` 负责在文章底部展示上一篇和下一篇。
+数据拉完了，页面跳过去了，那个 `Loading Toast` 怎么办？总不能一直留在屏幕上吧？
+当然是在 `afterEach` (后置钩子) 里把它干掉。
 
-这里的样式设计延续了 Aero 风格，使用了大量的**渐变**和**光效**。
+但是这里有一个极其细微的用户体验问题：
+如果用户的网络极其顺畅，或者数据已经命中了缓存，加载只花了 **50ms**。此时如果还要弹出一个“加载中...”，然后瞬间又弹出一个“加载成功！”，用户的眼睛就会被吵到qwq。
 
-### 按钮的光效
+为了解决这个问题，小风酱设计了一个精妙的 **300ms 阈值感知系统**：
 
-注意看 `.nav-btn::before`，这是一个完全透明的层，但它有一个从左到右滑动的渐变背景。
+```typescript
+// 路由后置钩子：清理与反馈
+router.afterEach((to) => {
+  if (activeLoadingToastId) {
+    // 1. 先把刚才的 Loading Toast 销毁掉
+    toastStore.remove(activeLoadingToastId)
+
+    // 2. 计算用户实际等待的时间
+    const waitTime = performance.now() - loadingStartTime
+
+    // 3. 智能化反馈拦截！
+    // 只有当加载耗时超过 300ms，说明用户确实“感觉到了等待”，此时才给予成功反馈。
+    // 如果是秒开，则静默跳转，绝不打扰用户。
+    if (waitTime > 300) {
+      toastStore.add({
+        message: `跃迁成功！欢迎来到${to.meta.title}~`,
+        type: 'success',
+        duration: 1500,
+      })
+    }
+  }
+})
+```
+
+这段代码看似简单，但它体现了前端开发中最宝贵的品质—— **克制**。不为了弹窗而弹窗，只在用户需要情绪价值的时候提供反馈。
+
+---
+
+## 3. 全局 Toast 系统：从 UI 到架构
+
+既然上面提到了 `toastStore.add(...)`，那就不得不聊聊这个被全站无数次调用的 Toast（吐司）通知系统了。
+
+市面上有很多现成的 Toast 插件（比如 Element Plus 或 Vuetify 自带的），但为了契合风风博客的美学，小风酱决定基于 Pinia 手搓一套。
+
+这套系统采用了经典的 **状态 (Store) - 挂载点 (Manager) - 视图 (Item)** 三层架构。
+
+### 3.1 状态层：toastStore.ts
+
+Store 的职责极其纯粹：维护一个数组，提供 `add` 和 `remove` 方法。
+它甚至支持通过传入 `showConfirm` 参数，把一个普通的提示框瞬间变成一个**确认弹窗**！
+
+### 3.2 挂载点：ToastManager.vue 与 Teleport 的魔法
+
+`ToastManager` 就像是一个幽灵组件。为了防止它被页面中乱七八糟的 `overflow: hidden` 或 `z-index` 遮挡，它使用了 Vue 3 的神级内置组件 `<Teleport>`。
+
+```html
+<!-- ToastManager.vue -->
+<template>
+  <Teleport to="body">
+    <!-- 无论这个组件写在代码的什么位置，它最终都会被传送并挂载到 <body> 标签的最末尾 -->
+    <div class="toast-container" :class="settingsStore.toast.position">
+      <TransitionGroup name="toast-slide">
+        <ToastItem v-for="toast in store.toasts" :key="toast.id" v-bind="toast" />
+      </TransitionGroup>
+    </div>
+  </Teleport>
+</template>
+```
+
+利用 `<TransitionGroup>`，当有新的 Toast 加入数组时，它会自动触发 `toast-slide` 动画，像果冻一样挤进屏幕；旧的 Toast 则会被平滑地推开。通过读取 `settingsStore`，这个弹窗群甚至可以自由地在屏幕的四个角落（左上、左下、右上、右下）之间切换！
+
+### 3.3 视图层：ToastItem.vue 的细节把控
+
+这是一个集成了**生命周期管理**和**CSS 动画**的集大成者。
+
+**动态进度条**：
+底部的进度条并不是用 JS 的 `setInterval` 每毫秒去扣减宽度（那样太耗性能了），而是纯靠 CSS Keyframes 驱动：
 
 ```css
-/* 导航按钮光效 */
-.nav-btn::before {
-  content: '';
-  position: absolute;
-  left: -100%; /* 初始位置在按钮左侧外面 */
-  width: 100%;
-  height: 100%;
-  /* 一道白色的流光 */
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: 0.5s;
+.progress-bar {
+  transform-origin: left;
+  animation: progress-shrink linear forwards;
 }
-
-.nav-btn:hover::before {
-  left: 100%; /* 鼠标悬停时，光从左滑到右 */
+@keyframes progress-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
 }
 ```
 
-### 移动端适配
+然后在 JS 中，只需要把 `duration` 直接绑定给 `animation-duration` 样式即可！
 
-在手机上，屏幕宽度寸土寸金。`ArticleNavigation.vue` 做了一个非常激进的响应式处理：
+**鼠标悬停暂停 (Pause on Hover)** ：
+如果你正在读一条很长的报错信息，进度条却马上要走完了，怎么办？
+`ToastItem` 监听了 `@mouseenter` 和 `@mouseleave` 事件：
 
-在宽屏模式下，按钮显示图标 + 上一篇文字 + 文章标题。
-在窄屏模式下（`< 768px`），CSS 直接把文字隐藏，只保留巨大的箭头图标，并且让按钮高度固定为 48px（符合拇指点击区域标准）。
-
-```css
-@media (max-width: 768px) {
-  .nav-btn-content {
-    display: none; /* 简单粗暴，隐藏文字 */
-  }
-  .nav-btn i {
-    font-size: 1.4rem; /* 放大图标 */
-  }
-}
+```html
+<div @mouseenter="pauseTimer" @mouseleave="resumeTimer"></div>
 ```
 
-这样既保证了桌面端的信息量，又保证了移动端的操作便捷性。
+当鼠标移入时，JS 会清除倒计时定时器，并且利用 CSS 去暂停动画：
+`:style="{ animationPlayState: isPaused ? 'paused' : 'running' }"`。
+这样，只要你的鼠标停在 Toast 上，它就永远不会消失！
 
 ---
 
 ## 下集预告
 
-阅读体验优化得差不多了，但作为一个全栈博客，怎么能少得了**图片画廊**呢？
+经过了这番折腾，博客的路由切换已经像科幻电影里的空间跳跃一样丝滑了。
 
-下一篇 **Vol.4 画廊与模态框**，将探讨如何管理全局的弹窗状态（告别 Props 地狱），以及如何实现一个支持键盘导航、全屏预览的沉浸式画廊。
+但别忘了，这里是一个**阅读平台**。
+下一篇 **Vol.4 核心引擎：沉浸式的文章阅读体系**，我们将进入整个项目的核心——文章详情页。看看 Markdown 是如何被渲染的，以及那个会自动计算阅读进度的彩虹进度条是怎么实现的！
+
+继续探索吧！(>w<)
 
 ---
 
-> 没有未来的小风酱 著
+> 觉得 300ms 阈值简直是天才发明的小风酱 著  
+> 本文采用[知识共享署名-非商业性使用 4.0 国际许可协议](https://creativecommons.org/licenses/by-nc/4.0/)进行许可

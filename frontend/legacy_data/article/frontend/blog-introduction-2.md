@@ -1,150 +1,181 @@
-# Vol.2 动效的艺术：让文字像水一样流淌~
+# Vol.2 极客主页：小风酱的赛博自留地
 
-> **摘要**：静态的网页是没有灵魂的。为了让博客看起来像是一个正在实时输出的终端，或者是正在书写的故事，小风酱在打字效果上下足了功夫。本文将揭秘三种不同场景下的打字机实现方案：`ContentTypeWriter`、`TypeWriter` 以及高性能的 `v-typewriter` 指令。
-
----
-
-## 1. 拒绝生硬：为什么要搞打字机？
-
-在这个快节奏的时代，大家看网页都是一目十行。但小风酱觉得，文字是需要品的。
-
-当文字一个接一个地蹦出来时，读者的视线会被强制锁定在光标的位置，这种**强制性的线性阅读体验**，能让读者更沉浸在内容中（当然，为了防止被打，也提供了立即跳过的功能 qwq）。
-
-为了实现这个效果，风风博客里藏着三套不同的引擎。
+> **摘要**：一个优秀的极客博客，它的主页绝不能只是干瘪的文章列表。在风风博客中，首页被设计成了一个全能的仪表盘。  
+> 本文将带你拆解这个拥有双面头像、动态能量条、以及硬核的 GitHub 风格贡献热力图的赛博空间是如何拼建而成的。
 
 ---
 
-## 2. 正文渲染引擎：ContentTypeWriter
+## 1. 布局哲学：Bento Grid 便当盒网格
 
-**场景**：文章详情页，渲染长篇 Markdown 内容。  
-**文件**：`frontend/src/components/common/ContentTypeWriter.vue`
+打开 `frontend/src/views/HomeView.vue`，你会发现整个主页的布局非常有秩序。小风酱放弃了传统的上下瀑布流，转而采用了现代网页设计中最流行的 **便当盒网格** 布局。
 
-这是最重的一个组件。它的难点在于：**输入的不是纯文本，而是 Markdown 源码。**
+整个主页被划分为四个功能明确的街区：
 
-如果先把 Markdown 转成 HTML 再打字，那么 HTML 标签（如 `<div>`）就会被切断，导致页面布局崩坏。  
-如果先打字再转 HTML，那么每次打一个字都要重新编译整个 Markdown，性能会爆炸吗？
+- **A 区 (Hero)**：个人名片与 Slogan，主打第一印象。
+- **B 区 (Dynamic Stream)**：最新动态，展示最新文章和画作。
+- **C 区 (Portals)**：快捷传送门，直达各个分类模块。
+- **D 区 (Stats & Plans)**：轨迹与未来，包含热力图和计划板。
 
-~~好像还真不会！得益于现代浏览器的高效 DOM 操作和 Vue 的响应式更新，重新渲染其实并不昂贵。~~
-
-小风酱选择了一个野路子：**增量喂食**。
-
-### 核心逻辑
-
-```typescript
-// ContentTypeWriter.vue 片段
-
-// 1. 维护一个指针
-const currentIndex = ref(0)
-
-// 2. 计算当前要喂给 Markdown 渲染器的内容
-const displayContent = computed(() => {
-  return props.content.slice(0, currentIndex.value)
-})
-
-// 3. 递归切片
-const type = () => {
-  if (currentIndex.value < props.content.length) {
-    // 每次多切 chunkSize 个字符（比如 15 个），避免太慢
-    currentIndex.value += props.chunkSize
-    setTimeout(type, props.speed)
-  }
-}
-```
-
-### 视觉效果
-
-这种做法有一个很有趣的副作用：当打字机打到 `**加粗**` 这种语法时，用户会先看到星号 `**`，等后面的星号打出来闭合后，文字会瞬间变成粗体。
-
-这看起来就像是**真的有人在现场写 Markdown** 一样！配合那个 `>>` 样式的光标，极客感拉满 (-v-)。
+这种布局利用了 CSS `grid` 和 `flex` 的强大能力，让每个卡片像便当盒里的格子一样，整齐划一，且在移动端能完美折叠。
 
 ---
 
-## 3. 轻量级 UI 引擎：TypeWriter
+## 2. 第一印象：Hero 区与双面魔术
 
-**场景**：顶部导航栏的当前位置、首页的欢迎语。
-**文件**：`frontend/src/components/common/TypeWriter.vue`
+在 A 区，小风酱放了一个看起来很正常的头像。但是！当你的鼠标悬停或者点击它时，它会像卡牌一样在 3D 空间中翻转，露出背面的二维码！
 
-对于只有一行字的纯文本，不需要 Markdown 编译，所需的是**精准**和**懒加载**。
-
-这个组件引入了 `IntersectionObserver`。只有当组件进入屏幕可视区域时，打字机才会启动。这避免了用户还没滚到底部，底部的文字就已经打完了的尴尬情况。
-
-```typescript
-// TypeWriter.vue 片段
-import { useIntersectionObserver } from '@vueuse/core'
-
-if (props.autoStart) {
-  const { stop } = useIntersectionObserver(
-    contentRef,
-    ([{ isIntersecting }]) => {
-      if (isIntersecting && !hasStarted.value) {
-        startTyping() // 看到了才开始打！
-        stop() // 打过一次就不用再盯着了
-      }
-    },
-    { threshold: 0.5 },
-  )
-}
-```
-
-光标样式也回归了传统的竖线 `|`，更符合 UI 元素的定位。
-
----
-
-## 4. 高性能列表引擎：v-typewriter 指令
-
-**场景**：文章列表页，十几个卡片同时出现。
-**文件**：`frontend/src/directives/typeWriterDirective.ts`
-
-这是技术含量最高的一个方案。
-
-如果在列表页用 `v-for` 渲染 10 个 `TypeWriter` 组件，意味着浏览器要同时跑 10 个 `setTimeout` 定时器，JS 线程会瞬间繁忙，导致页面掉帧。
-
-为了解决这个问题，小风酱采用了 **JS 计算 + CSS 驱动** 的混合模式。
-
-### 原理揭秘
-
-1.  **JS 负责数学题**：指令挂载时，计算出每个卡片应该延迟多久开始动画。
-2.  **CSS 变量负责传话**：将计算好的延迟时间写入 DOM 的 `style` 属性中。
-3.  **CSS 动画负责干活**：实际的位移和透明度变化完全由 CSS Animation 完成。
-
-```typescript
-// typeWriterDirective.ts 片段
-
-const cards = el.getElementsByClassName('chapter-item')
-
-cards.forEach((card, index) => {
-  // 第一个卡片延迟 150ms，第二个 350ms，以此类推...
-  const itemDelay = delay + index * elementDelay
-
-  // 把算好的时间塞给 CSS 变量
-  card.style.setProperty('--item-delay', `${itemDelay}ms`)
-
-  // 甚至连标题文字的长度都算好，传给 CSS 做步进动画
-  const title = card.querySelector('h3')
-  title.style.setProperty('--text-length', textLength.toString())
-})
-```
-
-而在 CSS 中，动画是这样写的：
+这种纯 CSS 驱动的 3D 翻转魔术，是极客们最爱的小把戏：
 
 ```css
-.chapter-item {
-  /* 读取 JS 传来的变量 */
-  animation: slideIn 0.5s ease forwards;
-  animation-delay: var(--item-delay); /* 关键！ */
+/* HomeView.vue 头像翻转特效 */
+.avatar-wrapper {
+  perspective: 1000px; /* 开启 3D 空间透视 */
+}
+
+.avatar-inner {
+  transition: transform 0.8s;
+  transform-style: preserve-3d; /* 保持子元素的 3D 层级 */
+}
+
+/* 翻转的触发条件 */
+.avatar-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.avatar-front,
+.avatar-back {
+  backface-visibility: hidden; /* 关键：元素背对屏幕时隐藏 */
+}
+
+.avatar-back {
+  transform: rotateY(180deg); /* 背面初始就翻转 180 度藏在后面 */
 }
 ```
 
-这样一来，JS 只需要在初始化时运行一次，剩下的渲染任务全部交给浏览器的合成线程。哪怕列表有 100 个卡片，动画依然丝般顺滑 (ov0)b。
+配合旁边那句用 `TypeWriter` 组件一个字一个字敲出来的 Slogan，以及那个呼吸闪烁的绿点 `<span class="status-dot"></span>`，可以说是非常有B格啦！(>w<)
+
+---
+
+## 3. 视觉微交互：能量条与扫光动画
+
+在 B 区的动态卡片和 C 区的传送门卡片中，小风酱分别植入了两种不同的 CSS 视觉反馈。
+
+**动态卡片的注水能量条：**
+鼠标悬停时，卡片底部会有一道蓝色的能量条渐渐充满。这是通过伪元素 `::after` 的 `width` 动画实现的：
+
+```css
+.dynamic-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -5px;
+  width: 0%;
+  height: 10px;
+  background: rgba(0, 119, 255, 0.75);
+  transition: width 0.3s ease-in-out;
+}
+.dynamic-card:hover::after {
+  width: 120%; /* 鼠标放上去，能量充满！ */
+}
+```
+
+**传送门卡片的斜向扫光：**
+利用一个倾斜的渐变层，在鼠标经过时从左到右滑过卡片，营造出一种反光质感：
+
+```css
+.portal-card::before {
+  /* ...定义渐变光束... */
+  transform: skewX(-25deg); /* 把光束倾斜 */
+  left: -150%;
+}
+.portal-card:hover::before {
+  left: 150%; /* 光束从左扫到右 */
+  transition: left 0.6s ease-in-out;
+}
+```
+
+---
+
+## 4. 极客的勋章：ContributionHeatmap 热力图
+
+如果说前面的效果只是好看，那 D 区的 `ContributionHeatmap` 就是实打实的硬核咧！
+
+每个极客都对 GitHub 主页上那片绿色的格子有着难以言喻的执念。小风酱决定： **我要在自己的博客里种一片格子！**
+
+### 4.1 数据转换的魔法
+
+后端传来的数据 `contributions` 只是简单的 `[{ date: 'xxx', count: 2 }]`。但热力图需要的是一个 **横向 53 周，纵向 7 天** 的二维网格！
+
+在 `ContributionHeatmap.vue` 中，小风酱写了一段精妙的日期推算逻辑：
+
+```typescript
+const heatmapData = computed(() => {
+  // 1. 算出 365 天前的日期，并对齐到那个星期的周日
+  const startDate = new Date(today.getTime() - 364 * 24 * 60 * 60 * 1000)
+  startDate.setDate(startDate.getDate() - startDate.getDay())
+
+  // 2. 将扁平数据转为 Map 字典，将查询复杂度从 O(n) 降到 O(1)
+  const dataMap = new Map(activityStore.contributions.map((i) => [i.date, i.count]))
+
+  // 3. 生成 53x7 的二维矩阵
+  const grid = []
+  for (let w = 0; w < 53; w++) {
+    const week: ContributionDay[] = []
+    for (let d = 0; d < 7; d++) {
+      const dateStr = currentDate.toISOString().split('T')[0]
+      week.push({
+        date: dateStr,
+        count: dataMap.get(dateStr) || 0,
+      })
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+    grid.push(week)
+  }
+  return grid
+})
+```
+
+### 4.2 自动推镜的滚动条
+
+由于 53 周的格子在移动端或者窄屏下绝对会撑爆屏幕，所以在 CSS 中，网格区被设置了 `overflow-x: auto`。
+但是，我们最关心的永远是“今天”的数据。所以小风酱在 `onMounted` 里加了一个贴心的小动作：等 DOM 渲染完，自动把滚动条推到最右侧！
+
+```typescript
+nextTick(() => {
+  if (scrollWrapper.value) {
+    scrollWrapper.value.scrollLeft = scrollWrapper.value.scrollWidth // 瞬间滑到最新的一天
+  }
+})
+```
+
+### 4.3 智能色阶与暗色适配
+
+这片草地在亮色模式下是温暖的橘黄色（秋天草地），而在暗色模式下会自动切换成清冷的蓝色（赛博霓虹）。这一切仅仅依靠 `.dark-theme` 类的 CSS 覆盖就实现了。
+
+---
+
+## 5. 待办的艺术：PlanBoard 计划板
+
+在热力图旁边，是充满生活气息的 `PlanBoard.vue`。  
+它通过 `activityStore` 从后端拉取近期的计划，并根据 `status` 渲染不同的状态：
+
+- `done` (已完成)：打上绿钩，并划上删除线。
+- `doing` (在进行)：橘色的箭头，表示正在努力。
+- `todo` (待办中)：图钉图标。
+
+虽然页面上只是简单的列表展示，但配合 `transition` 和呼吸灯动画，整个板块显得非常灵动。  
+而且（剧透警告awa），在后台管理系统中，小风酱甚至为它写了一个支持**拖拽排序 (Drag & Drop)** 的超级看板！
 
 ---
 
 ## 下集预告
 
-动效有了，文字也能动了，但作为一个技术博客，核心还得是**阅读体验**。
+主页的框架搭建完毕，各项数据已经开始流转。但是，在这个无缝衔接的单页应用 (SPA) 中，页面的切换怎么能是干巴巴的刷新呢？
 
-下一篇 **Vol.3 沉浸式阅读**，将深入探讨 `ArticleDetailView.vue`，看看如何把后端传来的 Markdown 字符串变成漂亮的 HTML，以及如何实现那个带有 Mac 风格窗口头的**代码高亮块**。
+下一篇 **Vol.3 路由的魔法：无缝跃迁与加载的艺术**，我们将深入风风博客的中枢神经—— `vue-router`。看看小风酱是如何利用路由守卫实现拦截，又是怎么设计出那个“跃迁成功”吐司弹窗的！
+别走开，我们要准备超光速跃迁了！(>w<)
 
 ---
 
-> 没有未来的小风酱 著
+> 看着热力图越来越满就极其满足的小风酱 著  
+> 本文采用[知识共享署名-非商业性使用 4.0 国际许可协议](https://creativecommons.org/licenses/by-nc/4.0/)进行许可
