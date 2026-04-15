@@ -49,8 +49,14 @@ const routes: RouteRecordRaw[] = [
           {
             path: 'frontend',
             name: 'FrontEnd',
-            component: () => import('@/views/articles/FrontEndView.vue'),
-            meta: { title: '技术文章' },
+            component: () => import('@/views/articles/CategoryListView.vue'),
+            meta: {
+              title: '技术文章',
+              categoryKey: 'frontend',
+              pageTitle: '网站开发笔记',
+              detailRouteName: 'FrontEndArticle',
+              themeClass: 'theme-frontend',
+            },
           },
           {
             path: 'frontend/:id',
@@ -61,8 +67,14 @@ const routes: RouteRecordRaw[] = [
           {
             path: 'topics',
             name: 'Topics',
-            component: () => import('@/views/articles/TopicsView.vue'),
-            meta: { title: '杂谈闲聊' },
+            component: () => import('@/views/articles/CategoryListView.vue'),
+            meta: {
+              title: '杂谈闲聊',
+              categoryKey: 'topics',
+              pageTitle: '奇怪杂谈',
+              detailRouteName: 'TopicsArticle',
+              themeClass: 'theme-topics',
+            },
           },
           {
             path: 'topics/:id',
@@ -73,8 +85,14 @@ const routes: RouteRecordRaw[] = [
           {
             path: 'novels',
             name: 'Novels',
-            component: () => import('@/views/articles/NovelsView.vue'),
-            meta: { title: '小说故事' },
+            component: () => import('@/views/articles/CategoryListView.vue'),
+            meta: {
+              title: '小说故事',
+              categoryKey: 'novels',
+              pageTitle: '幻想物语',
+              detailRouteName: 'NovelsArticle',
+              themeClass: 'theme-novels',
+            },
           },
           {
             path: 'novels/:id',
