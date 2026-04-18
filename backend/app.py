@@ -552,6 +552,8 @@ def get_article_content(category_slug: str, article_slug: str) -> Response:
             "title": article.title,
             "date": article.date,
             "content": article.content,
+            "collection_id": article.collection_id, 
+            "uid": article.uid
         }
     )
 
