@@ -22,6 +22,7 @@
     <ImageLayoutModal />
     <PlanModal />
     <SponsorModal />
+    <CollectionModal />
 
     <!-- Toast Manager -->
     <ToastManager />
@@ -39,6 +40,7 @@ import PlanModal from '@/components/admin/PlanModal.vue'
 import SponsorModal from '@/components/admin/SponsorModal.vue'
 import AssetLibraryModal from '@/components/admin/AssetLibraryModal.vue'
 import GalleryPreviewModal from '@/components/common/GalleryPreviewModal.vue'
+import CollectionModal from '@/components/admin/CollectionModal.vue'
 import ImageLayoutModal from '@/components/admin/ImageLayoutModal.vue'
 import ToastManager from '@/components/common/ToastManager.vue'
 

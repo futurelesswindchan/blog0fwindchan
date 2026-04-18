@@ -39,11 +39,22 @@
             </thead>
             <tbody>
               <tr v-for="article in paginatedArticles" :key="article.id">
-                <td class="col-title" :title="article.title">{{ article.title }}</td>
+                <td class="col-title" :title="article.title">
+                  <span
+                    v-if="article.collection_id"
+                    style="color: var(--accent-color); margin-right: 4px"
+                    title="属于连载合集"
+                  >
+                    <i class="fas fa-layer-group"></i> </span
+                  >{{ article.title }}
+                </td>
+
                 <td class="col-category">
                   <span class="badge">{{ article.category }}</span>
                 </td>
+
                 <td class="col-date">{{ formatDate(article.date) }}</td>
+
                 <td class="action-cell col-action">
                   <button @click="editArticle(article)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
@@ -216,11 +227,56 @@
         </div>
         <PaginationControls :pagination="sponsorPagination" />
       </div>
+
+      <!-- 6. 合集列表 -->
+      <div v-else-if="currentTab === 'collections'" class="tab-content">
+        <FilterBar v-model:searchText="collectionSearchText" placeholder="搜索合集名称..." />
+        <div class="list-wrapper">
+          <div v-if="articleStore.isLoading" class="loading">加载中...</div>
+          <table v-else class="data-table">
+            <thead>
+              <tr>
+                <th class="col-title">合集名称</th>
+                <th class="col-category">归属分类</th>
+                <th class="col-date">包含文章数</th>
+                <th class="col-action">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="col in paginatedCollections" :key="col.id">
+                <td class="col-title">📁 {{ col.name }}</td>
+                <td class="col-category">
+                  <span class="badge">{{ col.category }}</span>
+                </td>
+                <td class="col-date">{{ col.article_count }} 篇</td>
+                <td class="action-cell col-action">
+                  <button
+                    @click="modalStore.openCollectionModal(col)"
+                    class="icon-btn edit"
+                    title="编辑合集"
+                  >
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button @click="deleteCollection(col.id)" class="icon-btn del" title="解散合集">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <PaginationControls :pagination="collectionPagination" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+/**
+ * @file DashboardView.vue
+ * @description 后台管理核心主控台逻辑。包含文章、合集、画廊、友链、投喂、计划的增删改查与分页搜索。
+ */
+
 import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
 import { PlanItem, useActivityStore } from '@/views/stores/activityStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
@@ -240,13 +296,19 @@ import api from '@/api'
 
 import '@/styles/pageTitleArt.css'
 
+/**
+ * @typedef {ArticleSummary & { category: string }} ArticleWithCategory
+ * @description 带有分类信息的文章摘要类型
+ */
 type ArticleWithCategory = ArticleSummary & { category: string }
 
 const router = useRouter()
 const { formatDate } = useArticleContent()
 const { notify, confirm } = useToast()
 
-// Stores
+// =========================================
+// 📦 状态库 (Stores) 实例化
+// =========================================
 const articleStore = useArticleStore()
 const friendStore = useFriendStore()
 const artworkStore = useArtworkStore()
@@ -255,36 +317,107 @@ const settingsStore = useSettingsStore()
 const activityStore = useActivityStore()
 const sponsorStore = useSponsorStore()
 
-// Tabs 配置
+// =========================================
+// 🗂️ 标签页 (Tabs) 配置
+// =========================================
+
+/**
+ * @type {Array<Readonly<{key: string, label: string}>>}
+ * @description 后台管理的全局标签页配置
+ */
 const tabs = [
   { key: 'articles', label: '文章管理' },
+  { key: 'collections', label: '合集管理' },
   { key: 'gallery', label: '画廊管理' },
   { key: 'friends', label: '友链管理' },
   { key: 'sponsors', label: '投喂管理' },
   { key: 'plans', label: '计划管理' },
 ] as const
+
+/**
+ * @description 当前选中的标签页
+ */
 const currentTab = ref<(typeof tabs)[number]['key']>('articles')
 
-// --- 数据加载 ---
-onMounted(() => {
-  refreshAllData()
-})
+// =========================================
+// 📚 数据拉取逻辑 (Fetching Logic)
+// =========================================
 
+/**
+ * @description 专门用来存储从各个合集里“拆包”出来的连载文章
+ * @type {import('vue').Ref<ArticleWithCategory[]>}
+ */
+const collectionArticles = ref<ArticleWithCategory[]>([])
+
+/**
+ * 拉取全局文章数据（包含散篇与合集内的连载文章）
+ * @async
+ * @returns {Promise<void>}
+ */
+const refreshArticles = async () => {
+  // 1. 先拉取全局索引（拿到散篇和合集名单）
+  await articleStore.fetchArticleIndex()
+
+  // 2. 把所有合集名单整理成一维数组，方便后续遍历
+  const allCols = Object.entries(articleStore.collections).flatMap(([category, cols]) =>
+    cols.map((col) => ({ slug: col.id, category })),
+  )
+
+  // 3. 并发拉取所有合集的详情！后台管理嘛，暴力一点没关系 -w-
+  try {
+    const results = await Promise.all(
+      allCols.map(async (col) => {
+        const response = await api.get(`/collection/${col.slug}`)
+        if (response.data && response.data.articles) {
+          // 把合集里的文章拿出来，强制打上 category 和 collection_id 钢印
+          return response.data.articles.map((a: ArticleSummary) => ({
+            ...a,
+            category: col.category,
+            collection_id: col.slug,
+          }))
+        }
+        return []
+      }),
+    )
+    // 4. 拍平数组，存入响应式变量
+    collectionArticles.value = results.flat()
+  } catch (error) {
+    console.error('后台拉取合集文章失败啦 QAQ:', error)
+  }
+}
+
+/**
+ * 刷新所有模块的数据
+ * @returns {void}
+ */
 const refreshAllData = () => {
-  articleStore.fetchArticleIndex()
+  refreshArticles() // 替换掉原来的 fetchArticleIndex，确保合集文章也能加载
   friendStore.fetchFriends()
   artworkStore.fetchArtworks()
   activityStore.fetchPlans()
   sponsorStore.fetchSponsors()
 }
 
-// --- 顶部按钮逻辑 ---
+onMounted(() => {
+  refreshAllData()
+})
+
+// =========================================
+// 🔘 顶部操作栏逻辑 (Top Bar Actions)
+// =========================================
+
+/**
+ * @description 计算当前标签页对应的新建按钮文本
+ * @returns {string} 按钮显示的文本
+ */
 const createButtonText = computed(() => {
   switch (currentTab.value) {
     case 'friends':
       return '有新朋友'
     case 'gallery':
       return '传新作品'
+    case 'collections':
+      return '建新合集'
     case 'plans':
       return '定新计划'
     case 'sponsors':
@@ -294,13 +427,22 @@ const createButtonText = computed(() => {
   }
 })
 
+/**
+ * @description 计算当前标签页对应的新建按钮图标
+ * @returns {string} FontAwesome 图标类名
+ */
 const createButtonIcon = computed(() => {
   if (currentTab.value === 'gallery') return 'fa-image'
+  if (currentTab.value === 'collections') return 'fa-folder-plus'
   if (currentTab.value === 'plans') return 'fa-list-check'
   if (currentTab.value === 'sponsors') return 'fa-gift'
   return 'fa-pencil-alt'
 })
 
+/**
+ * @description 处理新建按钮点击事件，根据当前标签页打开对应的模态框或跳转页面
+ * @returns {void}
+ */
 const handleCreate = () => {
   if (currentTab.value === 'articles') {
     router.push({ name: 'EditorCreate' })
@@ -308,6 +450,8 @@ const handleCreate = () => {
     modalStore.openFriendModal(null)
   } else if (currentTab.value === 'plans') {
     modalStore.openPlanModal(null)
+  } else if (currentTab.value === 'collections') {
+    modalStore.openCollectionModal(null)
   } else if (currentTab.value === 'sponsors') {
     modalStore.openSponsorModal(null)
   } else {
@@ -316,16 +460,20 @@ const handleCreate = () => {
 }
 
 // =========================================
-// 搜索与分页逻辑
+// 🔍 搜索与分页逻辑 (Search & Pagination)
 // =========================================
 
-// --- 1. 文章搜索与分页 ---
+/**
+ * @description 获取所有文章（散篇 + 合集拆包文章合并）
+ */
 const allArticles = computed<ArticleWithCategory[]>(() => {
-  return Object.entries(articleStore.articles).flatMap(([category, articles]) =>
+  const looseArticles = Object.entries(articleStore.articles).flatMap(([category, articles]) =>
     articles.map((article) => ({ ...article, category })),
   )
+  return [...looseArticles, ...collectionArticles.value]
 })
 
+// --- 1. 文章搜索与分页 ---
 const {
   searchText: articleSearchText,
   filteredItems: paginatedArticles,
@@ -373,7 +521,7 @@ const {
   items: computed(() => activityStore.plans),
   searchFields: (plan) => [plan.content],
   sortType: 'date',
-  sortBy: (a, b) => b.sort_order - a.sort_order, // 这里是根据 sort_order 字段排序，数值越小越靠前
+  sortBy: (a, b) => b.sort_order - a.sort_order, // 依据排序字段
   itemsPerPage: computed(() => settingsStore.pagination.adminPlans),
 })
 
@@ -390,11 +538,36 @@ const {
   itemsPerPage: computed(() => settingsStore.pagination.adminSponsors || 10),
 })
 
+// --- 6. 合集搜索与分页 ---
+/**
+ * @description 获取所有扁平化后的合集列表
+ */
+const allCollections = computed(() => {
+  return Object.entries(articleStore.collections).flatMap(([category, cols]) =>
+    cols.map((col) => ({ ...col, category })),
+  )
+})
+
+const {
+  searchText: collectionSearchText,
+  filteredItems: paginatedCollections,
+  pagination: collectionPagination,
+} = useSearchAndSort({
+  items: allCollections,
+  searchFields: (col) => [col.name, col.category, col.description || ''],
+  sortType: 'date',
+  sortBy: (a, b) => b.article_count - a.article_count, // 按文章数量排序
+  itemsPerPage: computed(() => settingsStore.pagination.adminArticles || 10),
+})
+
 // =========================================
-// CRUD 操作逻辑
+// 🛠️ 增删改查操作逻辑 (CRUD Operations)
 // =========================================
 
-// 提前准备好一个删除成功的提示函数，避免重复代码
+/**
+ * 统一下发删除成功的通知反馈
+ * @returns {void}
+ */
 const notifyDeleteSuccess = () => {
   notify({
     type: 'success',
@@ -403,11 +576,19 @@ const notifyDeleteSuccess = () => {
   })
 }
 
-// --- 文章操作 ---
+/**
+ * 跳转编辑文章页面
+ * @param {ArticleWithCategory} article - 要编辑的文章对象
+ */
 const editArticle = (article: ArticleWithCategory) => {
   router.push({ name: 'EditorEdit', params: { category: article.category, slug: article.id } })
 }
 
+/**
+ * 删除指定的文章
+ * @async
+ * @param {ArticleWithCategory} article - 要删除的文章对象
+ */
 const deleteArticle = async (article: ArticleWithCategory) => {
   const isConfirmed = await confirm(
     '确定删除吗OAO？将会永久消失哦（真的很久！）',
@@ -416,15 +597,18 @@ const deleteArticle = async (article: ArticleWithCategory) => {
 
   if (isConfirmed) {
     await api.delete(`/articles/${article.id}`)
-    await articleStore.fetchArticleIndex()
+    await refreshArticles() // 确保合集内的文章也同步被刷新
     notifyDeleteSuccess()
   }
 }
 
-// --- 友链操作 ---
+/**
+ * 删除指定的友链
+ * @async
+ * @param {string} id - 友链唯一 ID
+ */
 const deleteFriend = async (id: string) => {
   const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定删除该友链吗OAO？')
-
   if (isConfirmed) {
     await friendStore.deleteFriend(id)
     await friendStore.fetchFriends()
@@ -432,10 +616,13 @@ const deleteFriend = async (id: string) => {
   }
 }
 
-// --- 画廊操作 ---
+/**
+ * 删除指定的画廊作品
+ * @async
+ * @param {string} id - 作品唯一 ID
+ */
 const deleteArtwork = async (id: string) => {
   const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定删除该作品吗OAO？')
-
   if (isConfirmed) {
     await artworkStore.deleteArtwork(id)
     await artworkStore.fetchArtworks()
@@ -443,42 +630,38 @@ const deleteArtwork = async (id: string) => {
   }
 }
 
-// --- 计划操作 ---
-
 /**
- * 交换两个计划项的顺序，并同步至远端服务器。
- *
- * @param indexA - 第一个计划项的数组索引。
- * @param indexB - 第二个计划项的数组索引。
+ * 交换两个计划的排序顺序，并持久化到后端
+ * @async
+ * @param {number} indexA - 计划在数组中的当前索引
+ * @param {number} indexB - 计划在数组中的目标索引
  */
 const swapPlanOrder = async (indexA: number, indexB: number) => {
   const plans = activityStore.plans
-
-  // 在本地数组中交换位置以实现 UI 的即时响应
+  // 交换数组元素
   const temp = plans[indexA]
   plans[indexA] = plans[indexB]
   plans[indexB] = temp
-  // 重新分配全局的 sort_order 保证连续且无冲突
+
+  // 重新生成排序 payload
   const payload = plans.map((p, index) => {
     p.sort_order = index
-    return {
-      id: p.id,
-      sort_order: index,
-    }
+    return { id: p.id, sort_order: index }
   })
+
   try {
     await activityStore.reorderPlans(payload)
   } catch (error) {
-    notify({
-      type: 'error',
-      title: '排序保存失败',
-      message: `${error}`,
-    })
-    // 发生异常时回退到服务器数据
+    notify({ type: 'error', title: '排序保存失败', message: `${error}` })
     await activityStore.fetchPlans()
   }
 }
 
+/**
+ * 计划上移操作
+ * @async
+ * @param {PlanItem} plan - 计划项对象
+ */
 const movePlanUp = async (plan: PlanItem) => {
   const index = activityStore.plans.findIndex((p) => p.id === plan.id)
   if (index > 0) {
@@ -488,6 +671,11 @@ const movePlanUp = async (plan: PlanItem) => {
   }
 }
 
+/**
+ * 计划下移操作
+ * @async
+ * @param {PlanItem} plan - 计划项对象
+ */
 const movePlanDown = async (plan: PlanItem) => {
   const index = activityStore.plans.findIndex((p) => p.id === plan.id)
   if (index >= 0 && index < activityStore.plans.length - 1) {
@@ -497,6 +685,11 @@ const movePlanDown = async (plan: PlanItem) => {
   }
 }
 
+/**
+ * 删除指定的计划项
+ * @async
+ * @param {number} id - 计划 ID
+ */
 const deletePlan = async (id: number) => {
   const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定要删除这个计划吗OAO？')
   if (isConfirmed) {
@@ -506,12 +699,30 @@ const deletePlan = async (id: number) => {
   }
 }
 
-// --- 投喂操作 ---
+/**
+ * 删除指定的投喂记录
+ * @async
+ * @param {number} id - 投喂记录 ID
+ */
 const deleteSponsor = async (id: number) => {
   const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定要删除这条投喂记录吗OAO？')
   if (isConfirmed) {
     await sponsorStore.deleteSponsor(id)
     await sponsorStore.fetchSponsors()
+    notifyDeleteSuccess()
+  }
+}
+
+/**
+ * 删除指定的文章合集
+ * @async
+ * @param {string} id - 合集唯一 ID (slug)
+ */
+const deleteCollection = async (id: string) => {
+  const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定要删除这个合集吗OAO？')
+  if (isConfirmed) {
+    await api.delete(`/collections/${id}`)
+    await refreshArticles() // 刷新全部文章，确保连载文章变成散篇或者被正确移除
     notifyDeleteSuccess()
   }
 }

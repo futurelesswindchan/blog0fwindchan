@@ -53,7 +53,7 @@ const routes: RouteRecordRaw[] = [
             meta: {
               title: '技术文章',
               categoryKey: 'frontend',
-              pageTitle: '网站开发笔记',
+              pageTitle: '欢迎来到技术手札！',
               detailRouteName: 'FrontEndArticle',
               themeClass: 'theme-frontend',
             },
@@ -71,7 +71,7 @@ const routes: RouteRecordRaw[] = [
             meta: {
               title: '杂谈闲聊',
               categoryKey: 'topics',
-              pageTitle: '奇怪杂谈',
+              pageTitle: '这里是各种各样的奇怪杂谈！',
               detailRouteName: 'TopicsArticle',
               themeClass: 'theme-topics',
             },
@@ -89,7 +89,7 @@ const routes: RouteRecordRaw[] = [
             meta: {
               title: '小说故事',
               categoryKey: 'novels',
-              pageTitle: '幻想物语',
+              pageTitle: '各种脑洞设定小说故事散文等的集合地！',
               detailRouteName: 'NovelsArticle',
               themeClass: 'theme-novels',
             },
@@ -99,6 +99,12 @@ const routes: RouteRecordRaw[] = [
             name: 'NovelsArticle',
             component: () => import('@/views/articles/ArticleDetailView.vue'),
             meta: { title: '小说故事详情页' },
+          },
+          {
+            path: 'collection/:slug',
+            name: 'CollectionDetail',
+            component: () => import('@/views/articles/CollectionView.vue'),
+            meta: { title: '文章合集' },
           },
         ],
       },

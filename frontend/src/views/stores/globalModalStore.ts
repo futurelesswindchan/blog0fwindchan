@@ -1,10 +1,12 @@
 // src/views/stores/globalModalStore.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+
 import type { Friend } from './friendStore'
 import type { Artwork } from './artworkStore'
 import type { PlanItem } from './activityStore'
 import type { Sponsor } from './sponsorStore'
+import type { CollectionSummary } from './articleStore'
 
 export const useGlobalModalStore = defineStore('globalModal', () => {
   // --- 1. 系统级弹窗 ---
@@ -86,7 +88,7 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     closeAssetLibrary()
   }
 
-  // --- 7. 画廊预览 (Gallery Preview) ---
+  // --- 7. 业务级弹窗：画廊预览 ---
   const showGalleryPreview = ref(false)
   const previewArtwork = ref<Artwork | null>(null)
   const previewList = ref<Artwork[]>([])
@@ -118,6 +120,19 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     }
   }
 
+  // --- 8. 业务级弹窗：连载合集 ---
+  const showCollectionModal = ref(false)
+  const editingCollection = ref<CollectionSummary | null>(null)
+  const openCollectionModal = (collection: CollectionSummary | null = null) => {
+    editingCollection.value = collection
+    showCollectionModal.value = true
+  }
+  const closeCollectionModal = () => {
+    showCollectionModal.value = false
+    editingCollection.value = null
+  }
+
+  // 返回所有状态和方法，供组件使用
   return {
     showLogin,
     openLogin,
@@ -152,5 +167,9 @@ export const useGlobalModalStore = defineStore('globalModal', () => {
     editingSponsor,
     openSponsorModal,
     closeSponsorModal,
+    showCollectionModal,
+    editingCollection,
+    openCollectionModal,
+    closeCollectionModal,
   }
 })

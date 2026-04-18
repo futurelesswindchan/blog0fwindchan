@@ -11,9 +11,9 @@
           </div>
           <div class="card-content">
             <h3>技术手札</h3>
-            <p class="description">网站前后端开发笔记与心得，以及各种实用技术分享0w0！</p>
+            <p class="description">这里是咱的开发笔记与心得，以及各种实用技术分享0w0！</p>
             <div class="article-stats">
-              <span class="article-count">目前共有 {{ frontendArticlesCount }} 篇文章</span>
+              <span class="article-count">{{ frontendStatsText }}</span>
               <button class="view-btn">
                 查看文章
                 <i class="fas fa-arrow-right"></i>
@@ -35,7 +35,7 @@
             <h3>幻想物语</h3>
             <p class="description">非常非常神秘的连载与短篇故事？！（随缘更新中—v—）</p>
             <div class="article-stats">
-              <span class="article-count">目前共有 {{ novelsArticlesCount }} 篇文章</span>
+              <span class="article-count">{{ novelsStatsText }}</span>
               <button class="view-btn">
                 查看文章
                 <i class="fas fa-arrow-right"></i>
@@ -59,7 +59,7 @@
               关于生活、兴趣与日常的随笔... 总之就是各种奇奇怪怪的东西啦OAO！
             </p>
             <div class="article-stats">
-              <span class="article-count">目前共有 {{ topicsArticlesCount }} 篇文章</span>
+              <span class="article-count">{{ topicsStatsText }}</span>
               <button class="view-btn">
                 查看文章
                 <i class="fas fa-arrow-right"></i>
@@ -77,19 +77,36 @@
 </template>
 
 <script setup lang="ts">
+import { useArticleStore } from '@/views/stores/articleStore'
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useArticleStore } from '@/views/stores/articleStore'
 
 import '@/styles/pageTitleArt.css'
 
 const router = useRouter()
 const articleStore = useArticleStore()
 
-// 各类文章数量
-const frontendArticlesCount = computed(() => (articleStore.getArticleList('frontend') || []).length)
-const topicsArticlesCount = computed(() => (articleStore.getArticleList('topics') || []).length)
-const novelsArticlesCount = computed(() => (articleStore.getArticleList('novels') || []).length)
+// 全能统计文本生成器
+const getStatsText = (category: string) => {
+  const looseArticles = articleStore.getArticleList(category) || []
+  const collections = articleStore.getCollectionList(category) || []
+
+  // 1. 计算总文章数 = 散篇文章数 + 所有合集里的文章数
+  const totalArticles =
+    looseArticles.length + collections.reduce((sum, col) => sum + col.article_count, 0)
+
+  // 2. 动态生成优雅的文案
+  if (collections.length > 0) {
+    return `目前共有 ${totalArticles} 篇文章\n包含 ${collections.length} 个连载合集`
+  } else {
+    return `目前共有 ${totalArticles} 篇文章`
+  }
+}
+
+// 分别计算三个分类的统计文案
+const frontendStatsText = computed(() => getStatsText('frontend'))
+const topicsStatsText = computed(() => getStatsText('topics'))
+const novelsStatsText = computed(() => getStatsText('novels'))
 
 onMounted(async () => {
   await articleStore.fetchArticleIndex()
@@ -190,6 +207,7 @@ const goToArticle = (routeName: string) => {
 .article-count {
   font-size: 0.9rem;
   opacity: 0.7;
+  white-space: pre-line; /* 允许换行显示统计信息 */
 }
 
 .view-btn {
