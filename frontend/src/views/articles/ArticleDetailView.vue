@@ -146,10 +146,13 @@ const article = computed(() => articleStore.currentArticle)
 const articleContent = computed(() => article.value?.content || '')
 const currentArticleWithCategory = computed<ArticleWithCategory | null>(() => {
   if (!article.value) return null
-
+  // 去全局文章池里找到自己，把丢失的 collection_id 找回来！
+  const globalArticleInfo = allArticles.value.find((a) => a.id === article.value?.id)
   return {
     ...article.value,
-    category: type.value, // 这里的 type 就是上面推断出的 'frontend' | 'topics' | 'novels'
+    category: type.value,
+    // 如果后端没传，就用全局池子里的身份，双重保险！owo
+    collection_id: article.value.collection_id || globalArticleInfo?.collection_id || null,
   }
 })
 
