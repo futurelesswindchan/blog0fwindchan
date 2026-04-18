@@ -160,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
+import { useAllArticles, type ArticleWithCategory } from '@/composables/useAllArticles'
 import { useArtworkStore } from '@/views/stores/artworkStore'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -176,25 +176,17 @@ const qrCodeUrl = '/assets/images/qrcode.svg'
 
 // --- 状态管理 ---
 const router = useRouter()
-const articleStore = useArticleStore()
 const artworkStore = useArtworkStore()
-
+const { fetchAllArticles, sortedArticles, isFetchingGlobal } = useAllArticles()
 const isAvatarFlipped = ref(false)
 const sloganText = '唔...这都被你发现啦？(*/ω＼*)'
 
 // --- 数据获取 ---
-const isLoading = computed(() => articleStore.isLoading || artworkStore.loading)
+const isLoading = computed(() => isFetchingGlobal.value || artworkStore.loading)
 
 // 获取最新文章 (合并所有分类，按日期排序，取前2篇)
-const latestArticles = computed<ArticleSummary[]>(() => {
-  const allArticles: ArticleSummary[] = [
-    ...articleStore.getArticleList('frontend'),
-    ...articleStore.getArticleList('topics'),
-    ...articleStore.getArticleList('novels'),
-  ]
-
-  // 简单的日期字符串比较 (假设格式为 YYYY-MM-DD)
-  return allArticles.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 2)
+const latestArticles = computed<ArticleWithCategory[]>(() => {
+  return sortedArticles.value.slice(0, 2)
 })
 
 // 获取最新画作 (取第1幅)
@@ -207,7 +199,7 @@ const latestArtwork = computed(() => {
 
 onMounted(async () => {
   // 并行加载数据
-  await Promise.all([articleStore.fetchArticleIndex(), artworkStore.fetchArtworks()])
+  await Promise.all([fetchAllArticles(), artworkStore.fetchArtworks()])
 })
 
 // --- 交互逻辑 ---
@@ -215,14 +207,9 @@ const toggleAvatarFlip = () => {
   isAvatarFlipped.value = !isAvatarFlipped.value
 }
 
-const navigateToArticle = (article: ArticleSummary) => {
-  // 需要反查分类，或者在 ArticleSummary 中包含 category 字段
-  // 这里做一个简单的遍历查找 category
-  let category = 'frontend' // 默认
-  if (articleStore.getArticleList('topics').find((a) => a.id === article.id)) category = 'topics'
-  if (articleStore.getArticleList('novels').find((a) => a.id === article.id)) category = 'novels'
-
-  router.push(`/articles/${category}/${article.id}`)
+const navigateToArticle = (article: ArticleWithCategory) => {
+  // 不用再痛苦地反查啦，直接用 article.category 0v0
+  router.push(`/articles/${article.category}/${article.id}`)
 }
 
 const navigateToGallery = () => {

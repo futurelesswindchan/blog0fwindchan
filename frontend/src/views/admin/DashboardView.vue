@@ -292,6 +292,7 @@ import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import { useSponsorStore } from '@/views/stores/sponsorStore'
 import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useAllArticles } from '@/composables/useAllArticles'
 import { useFriendStore } from '@/views/stores/friendStore'
 import { useToast } from '@/composables/useToast'
 import { ref, computed, onMounted } from 'vue'
@@ -312,6 +313,7 @@ type ArticleWithCategory = ArticleSummary & { category: string }
 
 const router = useRouter()
 const { formatDate } = useArticleContent()
+const { allArticles, fetchAllArticles } = useAllArticles() // 调用组件获取所有的文章数据
 const { notify, confirm } = useToast()
 
 // =========================================
@@ -352,45 +354,18 @@ const currentTab = ref<(typeof tabs)[number]['key']>('articles')
 // =========================================
 
 /**
- * @description 专门用来存储从各个合集里“拆包”出来的连载文章
- * @type {import('vue').Ref<ArticleWithCategory[]>}
- */
-const collectionArticles = ref<ArticleWithCategory[]>([])
-
-/**
- * 拉取全局文章数据（包含散篇与合集内的连载文章）
+ * 刷新全局文章数据
  * @async
- * @returns {Promise<void>}
  */
 const refreshArticles = async () => {
-  // 1. 先拉取全局索引（拿到散篇和合集名单）
-  await articleStore.fetchArticleIndex()
-
-  // 2. 把所有合集名单整理成一维数组，方便后续遍历
-  const allCols = Object.entries(articleStore.collections).flatMap(([category, cols]) =>
-    cols.map((col) => ({ slug: col.id, category })),
-  )
-
-  // 3. 并发拉取所有合集的详情！后台管理嘛，暴力一点没关系 -w-
   try {
-    const results = await Promise.all(
-      allCols.map(async (col) => {
-        const response = await api.get(`/collection/${col.slug}`)
-        if (response.data && response.data.articles) {
-          // 把合集里的文章拿出来，强制打上 category 和 collection_id 钢印
-          return response.data.articles.map((a: ArticleSummary) => ({
-            ...a,
-            category: col.category,
-            collection_id: col.slug,
-          }))
-        }
-        return []
-      }),
-    )
-    // 4. 拍平数组，存入响应式变量
-    collectionArticles.value = results.flat()
+    // 直接呼叫我们的魔法函数！它会在底层把散篇和合集都处理得服服帖帖的~
+    await fetchAllArticles()
+
+    // 成功后可以给个小提示 awa
+    notify({ type: 'success', title: '拉取成功✨', message: '所有文章都抓回来啦！' })
   } catch (error) {
-    console.error('后台拉取合集文章失败啦 QAQ:', error)
+    notify({ type: 'error', title: '加载文章失败QAQ', message: `${error}` })
   }
 }
 
@@ -399,7 +374,7 @@ const refreshArticles = async () => {
  * @returns {void}
  */
 const refreshAllData = () => {
-  refreshArticles() // 替换掉原来的 fetchArticleIndex，确保合集文章也能加载
+  refreshArticles()
   friendStore.fetchFriends()
   artworkStore.fetchArtworks()
   activityStore.fetchPlans()
@@ -470,16 +445,6 @@ const handleCreate = () => {
 // =========================================
 // 🔍 搜索与分页逻辑 (Search & Pagination)
 // =========================================
-
-/**
- * @description 获取所有文章（散篇 + 合集拆包文章合并）
- */
-const allArticles = computed<ArticleWithCategory[]>(() => {
-  const looseArticles = Object.entries(articleStore.articles).flatMap(([category, articles]) =>
-    articles.map((article) => ({ ...article, category })),
-  )
-  return [...looseArticles, ...collectionArticles.value]
-})
 
 // --- 1. 文章搜索与分页 ---
 const {
