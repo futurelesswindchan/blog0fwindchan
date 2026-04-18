@@ -12,9 +12,10 @@
       <section class="friend-content">
         <div v-if="isLoading" class="loading">加载星海中...</div>
         <div v-else-if="hasError" class="error">数据加载失败了 QAQ</div>
+
         <div v-else>
           <!-- 核心：便当盒瀑布流网格 -->
-          <div class="bento-grid">
+          <div v-if="filteredItems.length > 0" class="bento-grid">
             <template v-for="item in filteredItems" :key="item.uniqueId">
               <!-- 大玻璃板：友链卡片 -->
               <a
@@ -71,6 +72,11 @@
               </a>
             </template>
           </div>
+          <EmptyState
+            v-else
+            icon="fa-search"
+            message="在星海中找寻不到这位小伙伴的踪迹...换个关键词试试？"
+          />
         </div>
 
         <PaginationControls
@@ -90,6 +96,7 @@ import { Friend, useFriendStore } from '@/views/stores/friendStore'
 import { Sponsor, useSponsorStore } from '@/views/stores/sponsorStore'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import LazyImage from '@/components/common/LazyImage.vue'
 
@@ -178,13 +185,6 @@ onErrorCaptured((err, instance, info) => {
 /* ==========================================================================
    1. 布局容器基础
    ========================================================================== */
-
-.friends-view-container {
-  width: 100%;
-  min-height: inherit;
-  display: flex;
-  flex-direction: column;
-}
 
 /*
  * 核心便当盒网格 (Bento Grid)
