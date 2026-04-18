@@ -1,21 +1,23 @@
+/* frontend\src\styles\typeWriter.css */
 /* 基础样式 */
 .type-writer {
   opacity: 1;
 }
 
-/* 卡片初始状态 */
-.type-writer .chapter-item {
+.type-writer:not(.typing-element) .chapter-item {
   opacity: 0;
   transform: translateY(30px);
-  transition: all 0.6s var(--aero-animation);
-  transition-delay: var(--item-delay, 0ms);
-  pointer-events: auto; /* 允许交互，动画不再阻塞点击 */
+  transition: none;
+  pointer-events: none;
 }
 
-/* 卡片出现动画 */
 .type-writer.typing-element .chapter-item {
   opacity: 1;
   transform: translateY(0);
+  /* 只有在进场时，才应用 0.6s 的丝滑过渡和延迟 */
+  transition: all 0.6s var(--aero-animation);
+  transition-delay: var(--item-delay, 0ms);
+  pointer-events: auto;
 }
 
 /* 标题文字样式 */

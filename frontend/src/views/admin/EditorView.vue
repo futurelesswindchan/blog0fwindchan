@@ -47,6 +47,18 @@
                 <option value="novels">幻想物语</option>
               </select>
             </div>
+
+            <!-- 连载合集选择 (只有当前分类有合集时才显示) -->
+            <div class="input-wrapper" v-show="availableCollections.length > 0">
+              <i class="fas fa-layer-group"></i>
+              <select v-model="form.collection_id" class="meta-select">
+                <option value="">独立单篇 (不加入合集)</option>
+                <option v-for="col in availableCollections" :key="col.id" :value="col.id">
+                  📁 {{ col.name }}
+                </option>
+              </select>
+            </div>
+
             <div class="input-wrapper">
               <i class="fas fa-calendar-alt"></i>
               <input v-model="form.date" type="date" class="meta-input date-input" />
@@ -220,7 +232,7 @@ import { useArticleInfo } from '@/composables/useArticleInfo'
 import { useArticleStore } from '@/views/stores/articleStore'
 import { useGlobalModalStore } from '@/views/stores/globalModalStore'
 import { useImageLayoutStore } from '@/views/stores/imageLayoutStore'
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { useRouter, useRoute } from 'vue-router'
 import { AxiosError } from 'axios'
@@ -290,9 +302,23 @@ const form = reactive({
   title: '',
   slug: '',
   category: 'frontend',
+  collection_id: '',
   date: new Date().toISOString().split('T')[0],
   content: '',
 })
+
+// 根据当前选中的分类，动态获取该分类下的合集列表
+const availableCollections = computed(() => {
+  return articleStore.getCollectionList(form.category) || []
+})
+
+// 当切换大分类时，自动清空合集选择，防止把 A 分类的文章塞进 B 分类的合集里！
+watch(
+  () => form.category,
+  () => {
+    form.collection_id = ''
+  },
+)
 
 // 计算文章内容
 const contentRef = computed(() => form.content)
@@ -301,6 +327,10 @@ const isNewPost = computed(() => !route.params.slug)
 
 // 初始化加载文章数据
 onMounted(async () => {
+  if (Object.keys(articleStore.collections).length === 0) {
+    await articleStore.fetchArticleIndex()
+  }
+
   if (!isNewPost.value) {
     const category = route.params.category as string
     const slug = route.params.slug as string
@@ -312,6 +342,7 @@ onMounted(async () => {
       form.content = post.content
       form.date = post.date
       form.category = category
+      form.collection_id = post.collection_id || ''
       isEditing.value = false
     } else {
       alert('加载文章失败，可能是不存在哦')
@@ -502,7 +533,15 @@ const savePost = async () => {
   }
   saving.value = true
   try {
-    const response = await api.post('/articles', { ...form, isNew: isNewPost.value })
+    // 在这里把前端用的 "" 转换回后端喜欢的 null
+    const payload = {
+      ...form,
+      collection_id: form.collection_id === '' ? null : form.collection_id,
+      isNew: isNewPost.value,
+    }
+
+    const response = await api.post('/articles', payload)
+
     if (response.status === 200) {
       isEditing.value = false
       if (isNewPost.value) {

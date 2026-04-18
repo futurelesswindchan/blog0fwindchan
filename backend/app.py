@@ -136,6 +136,42 @@ class Category(db.Model):
     )
 
 
+class Collection(db.Model):
+    """
+    连载合集（文件夹）模型
+    
+    字段说明：
+    - id: 自增主键
+    - slug: 合集的短标识（用于路由，如 dddf-series）
+    - name: 合集展示名称
+    - description: 合集描述（可选）
+    - category_id: 归属的大分类 ID
+    """
+    def __init__(self, slug: str, name: str, category_id: int, description: Optional[str] = None):
+        self.slug = slug
+        self.name = name
+        self.category_id = category_id
+        self.description = description
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
+    articles: Mapped[List["Article"]] = cast( # 关联该合集下的所有文章
+        Mapped[List["Article"]], db.relationship("Article", backref="collection", lazy=True, order_by="Article.date.asc()")
+    )
+
+    def to_dict_simple(self) -> Dict[str, Any]:
+        """简化的字典表示，用于合集列表展示"""
+        return {
+            "id": self.slug, 
+            "name": self.name, 
+            "description": self.description,
+            "article_count": len(self.articles) # 顺便返回合集内的文章数量，前端 UI 会用得上！
+        }
+
+
 class Article(db.Model):
     """
     存储文章相关字段的模型。
@@ -151,13 +187,14 @@ class Article(db.Model):
 
     # 依然是为了防止报类型错误，我们需要一个 __init__ 方法
     # 虽然 SQLAlchemy 会自动生成构造函数，但显式定义有助于类型检查和代码可读性
-    def __init__(self, slug: str, title: str, date: str, content: Optional[str], category_id: int, uid: Optional[str] = None):
+    def __init__(self, slug: str, title: str, date: str, content: Optional[str], category_id: int, uid: Optional[str] = None,  collection_id: Optional[int] = None):
         self.slug = slug
         self.title = title
         self.date = date
         self.content = content
         self.category_id = category_id
         self.uid = uid
+        self.collection_id = collection_id
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
@@ -166,10 +203,17 @@ class Article(db.Model):
     date: Mapped[str] = mapped_column(String(20), nullable=False)
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     category_id: Mapped[int] = mapped_column(ForeignKey("category.id"), nullable=False)
+    collection_id: Mapped[Optional[int]] = mapped_column(ForeignKey("collection.id"), nullable=True)
 
     def to_dict_simple(self) -> Dict[str, Any]:
         """简化的字典表示，适用于文章索引展示。"""
-        return {"id": self.slug, "uid": self.uid, "title": self.title, "date": self.date}
+        return {
+            "id": self.slug,
+            "uid": self.uid,
+            "title": self.title,
+            "date": self.date,
+            "collection_id": self.collection_id
+        }
 
 
 class Friend(db.Model):
@@ -442,16 +486,12 @@ def hello() -> str:
 @app.route("/api/articles/index")
 def get_article_index() -> Response:
     """
-    获取文章索引：按分类返回文章的简化信息（slug/title/date/uid）。
-
-    返回结构示例：
-    {
-        "frontend": [{"id": "xxx", "title": "...", "date": "..."}, ...],
-        "novels": [...]
-    }
+    获取文章索引：按分类返回文章的简化信息，并附加连载合集数据。
     """
 
-    data: Dict[str, List[Dict[str, Any]]] = {}
+    data: Dict[str, Any] = {}
+
+    data["_collections"] = {} # 专门开辟一个特殊字段存放合集数据
 
     # 查询所有分类
     categories: List[Category] = cast(
@@ -460,12 +500,23 @@ def get_article_index() -> Response:
 
     # 对每个分类查询该分类下所有文章并转换为简化字典
     for cat in categories:
+        # 1. 查询独立单篇（collection_id 为 None 的文章）
         articles: List[Article] = cast(
             List[Article],
-            db.session.execute(db.select(Article).filter_by(category_id=cat.id)).scalars().all(),
+            db.session.execute(
+                db.select(Article).filter_by(category_id=cat.id, collection_id=None)
+            ).scalars().all(),
         )
-
         data[cat.slug] = [a.to_dict_simple() for a in articles]
+
+        # 2. 查询该分类下的连载合集
+        collections: List[Collection] = cast(
+            List[Collection],
+            db.session.execute(
+                db.select(Collection).filter_by(category_id=cat.id)
+            ).scalars().all(),
+        )
+        data["_collections"][cat.slug] = [c.to_dict_simple() for c in collections]
 
     return jsonify(data)
 
@@ -505,12 +556,33 @@ def get_article_content(category_slug: str, article_slug: str) -> Response:
     )
 
 
+@app.route("/api/collection/<collection_slug>")
+def get_collection_detail(collection_slug: str) -> Response:
+    """
+    获取指定合集的详情，以及该合集下的所有文章列表。
+    """
+    collection = (
+        db.session.execute(db.select(Collection).filter_by(slug=collection_slug)).scalar_one_or_none()
+    )
+
+    if not collection:
+        return make_response(jsonify({"error": "Collection not found"}), 404)
+
+    return jsonify({
+        "id": collection.slug,
+        "name": collection.name,
+        "description": collection.description,
+        "articles": [a.to_dict_simple() for a in collection.articles]
+    })
+
+
 @app.route("/api/friends")
 def get_friends() -> Response:
     """返回站点友链列表（friends）。"""
 
     friends = db.session.execute(db.select(Friend)).scalars().all()
     return jsonify({"friends": [f.to_dict() for f in friends]})
+
 
 @app.route("/api/sponsors")
 def get_sponsors() -> Response:
@@ -523,12 +595,14 @@ def get_sponsors() -> Response:
     sponsors = db.session.execute(db.select(Sponsor)).scalars().all()
     return jsonify({"sponsors": [s.to_dict() for s in sponsors]})
 
+
 @app.route("/api/artworks")
 def get_artworks() -> Response:
     """返回插画 / 作品集。"""
 
     works = db.session.execute(db.select(Artwork)).scalars().all()
     return jsonify({"artworks": [w.to_dict() for w in works]})
+
 
 @app.route("/api/contributions")
 def get_contributions() -> Response:
@@ -540,6 +614,7 @@ def get_contributions() -> Response:
     """
     contribs = db.session.execute(db.select(Contribution)).scalars().all()
     return jsonify([c.to_dict() for c in contribs])
+
 
 @app.route("/api/plans")
 def get_plans() -> Response:
@@ -682,6 +757,15 @@ def save_article():
         category = Category.query.filter_by(slug=data["category"]).first()
         if not category:
             return jsonify({"error": "Invalid category"}), 400
+        
+        # 处理连载合集逻辑
+        collection_slug = data.get("collection_id")
+        real_collection_id = None
+        if collection_slug:
+            # 根据 slug 查出真正的合集 ID
+            col = Collection.query.filter_by(slug=collection_slug).first()
+            if col:
+                real_collection_id = col.id
 
         if is_new:
             # 新增文章，先检查 slug 是否重复
@@ -695,6 +779,7 @@ def save_article():
                 content=data.get("content", ""),
                 category_id=category.id,
                 uid=str(uuid.uuid4())[:8],
+                collection_id=real_collection_id
             )
 
             db.session.add(article)
@@ -709,6 +794,7 @@ def save_article():
             article.date = data.get("date", article.date)
             article.content = data.get("content", "")
             article.category_id = category.id
+            article.collection_id = real_collection_id
 
         # --- 更新每日贡献热力图 ---
         today_str = datetime.now().strftime("%Y-%m-%d")
@@ -810,6 +896,72 @@ def delete_article_asset():
             return jsonify({"error": str(e)}), 500
     
     return jsonify({"error": "File not found"}), 404
+
+# endregion
+
+
+# ==========================================
+# region 📁合集管理接口
+# ==========================================
+
+@app.route("/api/admin/collections", methods=["POST"])
+@jwt_required()
+def add_collection():
+    """新增合集"""
+    data = request.json or {}
+    category_slug = data.get("category")
+    
+    category = Category.query.filter_by(slug=category_slug).first()
+    if not category or not data.get("slug") or not data.get("name"):
+        return jsonify({"error": "Missing required fields (category, slug, name)"}), 400
+        
+    if Collection.query.filter_by(slug=data["slug"]).first():
+        return jsonify({"error": "Collection slug already exists"}), 400
+
+    new_col = Collection(
+        slug=data["slug"],
+        name=data["name"],
+        description=data.get("description", ""),
+        category_id=category.id
+    )
+    db.session.add(new_col)
+    db.session.commit()
+    return jsonify({"message": "Collection created"})
+
+
+@app.route("/api/admin/collections/<slug>", methods=["DELETE"])
+@jwt_required()
+def delete_collection(slug):
+    """删除合集，并温柔地遣散文章"""
+    col = Collection.query.filter_by(slug=slug).first()
+    if not col:
+        return jsonify({"error": "Collection not found"}), 404
+        
+    # 让该合集下的所有文章无家可归（变回独立单篇）
+    # SQLAlchemy 的 update 方法非常高效，直接在数据库层面批量把 collection_id 置空
+    Article.query.filter_by(collection_id=col.id).update({"collection_id": None})
+    
+    # 遣散完文章后，安心地删除空合集
+    db.session.delete(col)
+    db.session.commit()
+    
+    return jsonify({"message": "Collection deleted safely, articles are now independent."})
+
+@app.route("/api/admin/collections/<slug>", methods=["PUT"])
+@jwt_required()
+def update_collection(slug):
+    """更新连载合集信息"""
+    data = request.json or {}
+    col = Collection.query.filter_by(slug=slug).first()
+    if not col:
+        return jsonify({"error": "Collection not found"}), 404
+        
+    # 只允许修改名称和简介，slug和category不建议修改以免引起路由错乱
+    col.name = data.get("name", col.name)
+    col.description = data.get("description", col.description)
+    
+    db.session.commit()
+    return jsonify({"message": "Collection updated"})
 
 # endregion
 
@@ -931,7 +1083,7 @@ def delete_artwork(id):
 # endregion
 
 # ==========================================
-# region 📋 计划看板管理接口
+# region 📋计划管理接口
 # ==========================================
 
 @app.route("/api/admin/plans", methods=["POST"])
@@ -1103,7 +1255,6 @@ def delete_sponsor(id: int):
     db.session.delete(sponsor)
     db.session.commit()
     return jsonify({"message": "Sponsor deleted"})
-
 
 # endregion
 
