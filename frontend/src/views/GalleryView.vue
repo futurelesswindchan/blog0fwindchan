@@ -13,8 +13,9 @@
       <section class="gallery-content glass-container">
         <div v-if="artworkStore.loading" class="loading">加载中...</div>
         <div v-else-if="artworkStore.error" class="error">{{ artworkStore.error }}</div>
+
         <div v-else>
-          <div class="gallery-container">
+          <div v-if="filteredItems.length > 0" class="gallery-container">
             <div
               v-for="artwork in filteredItems"
               :key="artwork.id"
@@ -34,7 +35,7 @@
               </div>
             </div>
           </div>
-          <!-- 预览模态框代码已移除，交由全局组件处理 -->
+          <EmptyState v-else message="画廊里还没有相关的艺术品呢 qwq" />
         </div>
       </section>
 
@@ -53,6 +54,7 @@ import { computed, onMounted } from 'vue'
 import type { Artwork } from '@/views/stores/artworkStore'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import LazyImage from '@/components/common/LazyImage.vue'
 

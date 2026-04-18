@@ -28,7 +28,7 @@
         <FilterBar v-model:searchText="articleSearchText" placeholder="搜索文章标题或分类..." />
         <div class="list-wrapper">
           <div v-if="articleStore.isLoading" class="loading">加载中...</div>
-          <table v-else class="data-table">
+          <table v-else-if="paginatedArticles.length > 0" class="data-table">
             <thead>
               <tr>
                 <th class="col-title">标题</th>
@@ -66,6 +66,7 @@
               </tr>
             </tbody>
           </table>
+          <EmptyState v-else message="没有找到匹配的文章呢，要不要换个关键词试试？qwq" />
         </div>
         <PaginationControls :pagination="articlePagination" />
       </div>
@@ -78,7 +79,7 @@
         />
         <div class="list-wrapper">
           <div v-if="friendStore.loading" class="loading">加载中...</div>
-          <table v-else class="data-table">
+          <table v-else-if="paginatedFriends.length > 0" class="data-table">
             <thead>
               <tr>
                 <th class="col-name">名称</th>
@@ -108,6 +109,8 @@
               </tr>
             </tbody>
           </table>
+
+          <EmptyState v-else message="星海茫茫，没有搜到这位小伙伴的踪迹呢 owo" />
         </div>
         <PaginationControls :pagination="friendPagination" />
       </div>
@@ -117,7 +120,7 @@
         <FilterBar v-model:searchText="gallerySearchText" placeholder="搜索作品标题或描述..." />
         <div class="list-wrapper">
           <div v-if="artworkStore.loading" class="loading">加载中...</div>
-          <div v-else class="gallery-grid">
+          <div v-else-if="paginatedGallery.length > 0" class="gallery-grid">
             <div v-for="work in paginatedGallery" :key="work.id" class="gallery-item">
               <img :src="work.thumbnail" loading="lazy" />
               <div class="gallery-info">
@@ -133,6 +136,7 @@
               </div>
             </div>
           </div>
+          <EmptyState v-else message="画廊里空空的，没有找到相关作品 QAQ" />
         </div>
         <PaginationControls :pagination="galleryPagination" />
       </div>
@@ -142,7 +146,7 @@
         <FilterBar v-model:searchText="planSearchText" placeholder="搜索计划内容..." />
         <div class="list-wrapper">
           <div v-if="activityStore.isLoadingPlans" class="loading">加载中...</div>
-          <table v-else class="data-table plan-table">
+          <table v-else-if="paginatedPlans.length > 0" class="data-table plan-table">
             <thead>
               <tr>
                 <th class="col-status">状态</th>
@@ -183,6 +187,7 @@
               </tr>
             </tbody>
           </table>
+          <EmptyState v-else message="没有找到这个计划，是不是已经被你悄悄完成啦？-w-" />
         </div>
         <PaginationControls :pagination="planPagination" />
       </div>
@@ -192,7 +197,7 @@
         <FilterBar v-model:searchText="sponsorSearchText" placeholder="搜索投喂大佬昵称或留言..." />
         <div class="list-wrapper">
           <div v-if="sponsorStore.loading" class="loading">加载中...</div>
-          <table v-else class="data-table">
+          <table v-else-if="paginatedSponsors.length > 0" class="data-table">
             <thead>
               <tr>
                 <th class="col-name">大佬信息</th>
@@ -224,6 +229,7 @@
               </tr>
             </tbody>
           </table>
+          <EmptyState v-else message="没有找到相关的投喂记录呢，等待新的缘分吧~ awa" />
         </div>
         <PaginationControls :pagination="sponsorPagination" />
       </div>
@@ -233,7 +239,7 @@
         <FilterBar v-model:searchText="collectionSearchText" placeholder="搜索合集名称..." />
         <div class="list-wrapper">
           <div v-if="articleStore.isLoading" class="loading">加载中...</div>
-          <table v-else class="data-table">
+          <table v-else-if="paginatedCollections.length > 0" class="data-table">
             <thead>
               <tr>
                 <th class="col-title">合集名称</th>
@@ -264,6 +270,7 @@
               </tr>
             </tbody>
           </table>
+          <EmptyState v-else message="没有找到这个合集呢，要不要新建一个？0w0" />
         </div>
         <PaginationControls :pagination="collectionPagination" />
       </div>
@@ -291,6 +298,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import api from '@/api'
 
