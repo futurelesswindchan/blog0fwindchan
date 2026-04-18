@@ -82,10 +82,13 @@ import { useReadingProgress } from '@/composables/useReadingProgress'
 import { useArticleContent } from '@/composables/useArticleContent'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useCodeHighlight } from '@/composables/useCodeHighlight'
+import { useAllArticles } from '@/composables/useAllArticles'
 import { useArticleStore } from '@/views/stores/articleStore'
 import { useArticleInfo } from '@/composables/useArticleInfo'
 import { useToast } from '@/composables/useToast'
 import { useRoute } from 'vue-router'
+
+import type { ArticleWithCategory } from '@/composables/useAllArticles'
 
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
 import ArticleNavigation from '@/components/ArticleNavigation.vue'
@@ -135,22 +138,32 @@ const type = computed(() => {
   return 'frontend'
 })
 
-// 当前文章的响应式数据源
+// 1. 初始化全站文章池 (这个钩子会处理 fetchIndex 和 fetchCollectionDetail 的拍平逻辑)
+const { allArticles, fetchAllArticles } = useAllArticles()
+
+// 2. 依然从 store 拿当前文章
 const article = computed(() => articleStore.currentArticle)
 const articleContent = computed(() => article.value?.content || '')
+const currentArticleWithCategory = computed<ArticleWithCategory | null>(() => {
+  if (!article.value) return null
+
+  return {
+    ...article.value,
+    category: type.value, // 这里的 type 就是上面推断出的 'frontend' | 'topics' | 'novels'
+  }
+})
+
+// 3. 魔法导航连接！
+// 注意：我们要把 currentArticle 包装成符合接口的 Ref
+const { prevArticle, nextArticle } = useArticleNavigation({
+  currentArticle: currentArticleWithCategory, // 这里的类型包含了 ArticleWithCategory 的基础字段
+  allArticles,
+})
 
 // --- 文章元数据提取 ---
 // 解构出字数、精确行数、阅读时间以及更新行数的回调函数
 const { estimateWords, exactLineCount, readingTime, articleToc, updateLineCount } =
   useArticleInfo(articleContent)
-
-// --- 文章底部导航计算 ---
-const currentId = computed(() => route.params.id as string)
-const articles = computed(() => articleStore.getArticleList(type.value) || [])
-const { prevArticle, nextArticle } = useArticleNavigation({
-  articles,
-  currentId,
-})
 
 /**
  * 滚动监听处理器：计算并派发全局阅读进度
@@ -216,8 +229,9 @@ const handleContentClick = async (e: MouseEvent) => {
 // --- 生命周期钩子 ---
 
 onMounted(async () => {
-  // 1. 初始化拉取当前分类的文章索引
-  await articleStore.fetchArticleIndex()
+  // 1. 初始化拉取所有文章（包括拍平合集内容）
+  // 这样导航雷达才有足够的数据去搜索邻居 awa！
+  await fetchAllArticles()
 
   // 2. 依据路由 ID 拉取目标文章全文
   if (typeof route.params.id === 'string') {
