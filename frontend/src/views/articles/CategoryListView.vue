@@ -6,7 +6,7 @@
       <div class="back-area" @click="$router.push({ name: 'Articles' })">
         <i class="fas fa-arrow-left"></i>
       </div>
-      <h2 class="page-title">{{ currentMeta.pageTitle }}</h2>
+      <h2 class="page-title">{{ currentMeta?.pageTitle || '加载中...' }}</h2>
     </div>
 
     <div class="story-view">
@@ -136,10 +136,11 @@
 import { useArticleContent } from '@/composables/useArticleContent'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
+import { useCategoryMeta } from '@/composables/useCategoryMeta'
 import { vTypeWriter } from '@/directives/typeWriterDirective'
 import { useArticleStore } from '@/views/stores/articleStore'
-import { computed, onMounted, ref, watchEffect } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -150,46 +151,13 @@ import '@/styles/pageHeader.css'
 import '@/styles/typeWriter.css'
 import '@/styles/storyCard.css'
 
-const route = useRoute()
 const router = useRouter()
 const articleStore = useArticleStore()
 const settingsStore = useSettingsStore()
 const { formatDate } = useArticleContent()
 
-/**
- * 当前页面的路由元信息 (Meta) 状态缓存
- *
- * 为什么不使用 computed？
- * 当用户点击文章跳转到详情页时，路由发生变化，详情页的 route.meta 可能不包含 categoryKey。
- * 如果使用 computed，会导致组件在卸载/过渡的瞬间，categoryKey 跌落回默认值，
- * 从而引起文章列表数据瞬间突变，触发不必要的 DOM 重新渲染甚至报错崩溃。
- * 使用 ref 作为缓存，可以安全锁住离开时的最后有效状态。
- *
- * @type {import('vue').Ref<{categoryKey: string, pageTitle: string, detailRouteName: string, themeClass: string}>}
- */
-const currentMeta = ref({
-  categoryKey: 'frontend',
-  pageTitle: '文章列表',
-  detailRouteName: 'FrontEndArticle',
-  themeClass: 'theme-frontend',
-})
-
-/**
- * 监听路由 Meta 变化并更新缓存
- *
- * 仅当目标路由包含 categoryKey 时才进行更新（说明当前是在各个分类列表页之间切换）。
- * 如果跳转去了详情页，条件不成立，currentMeta 保持原样，完美护航组件卸载动画。
- */
-watchEffect(() => {
-  if (route.meta.categoryKey) {
-    currentMeta.value = {
-      categoryKey: route.meta.categoryKey as string,
-      pageTitle: route.meta.pageTitle as string,
-      detailRouteName: route.meta.detailRouteName as string,
-      themeClass: route.meta.themeClass as string,
-    }
-  }
-})
+// 一行代码搞定路由状态缓存！清爽又优雅 0wO
+const { currentMeta } = useCategoryMeta()
 
 /**
  * 动态获取对应分类的文章列表数据

@@ -10,7 +10,7 @@
       <div @click="$router.back()" class="back-area">
         <i class="fas fa-arrow-left"></i>
       </div>
-      <h2 class="page-title">{{ currentCollection?.name || '加载中...' }}</h2>
+      <h2 class="page-title">{{ currentMeta?.pageTitle || '加载中...' }}</h2>
     </div>
 
     <div class="story-view">
@@ -114,15 +114,18 @@
 
 <script setup lang="ts">
 import { useArticleContent } from '@/composables/useArticleContent'
-import { vTypeWriter } from '@/directives/typeWriterDirective'
-import { useArticleStore } from '@/views/stores/articleStore'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
-import { onMounted, computed } from 'vue'
+import { useCategoryMeta } from '@/composables/useCategoryMeta'
+import { vTypeWriter } from '@/directives/typeWriterDirective'
+import { useArticleStore } from '@/views/stores/articleStore'
 import { useRoute, useRouter } from 'vue-router'
-import FilterBar from '@/components/common/FilterBar.vue'
+import { onMounted, computed } from 'vue'
+
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import FilterBar from '@/components/common/FilterBar.vue'
+
 import '@/styles/correctContentMargin.css'
 import '@/styles/pageHeader.css'
 import '@/styles/typeWriter.css'
@@ -133,6 +136,9 @@ const router = useRouter()
 const articleStore = useArticleStore()
 const settingsStore = useSettingsStore()
 const { formatDate } = useArticleContent() // 引入格式化日期的小工具
+
+// 一行代码搞定路由状态缓存！清爽又优雅 0wO
+const { currentMeta } = useCategoryMeta()
 
 // 绑定全局状态里的当前合集数据
 const currentCollection = computed(() => articleStore.currentCollection)
