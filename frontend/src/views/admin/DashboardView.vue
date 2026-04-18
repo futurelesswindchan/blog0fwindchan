@@ -363,7 +363,11 @@ const refreshArticles = async () => {
     await fetchAllArticles()
 
     // 成功后可以给个小提示 awa
-    notify({ type: 'success', title: '拉取成功✨', message: '所有文章都抓回来啦！' })
+    notify({
+      type: 'success',
+      title: '拉取成功✨',
+      message: '遍历好全部合集啦，所有文章都抓回来咧！',
+    })
   } catch (error) {
     notify({ type: 'error', title: '加载文章失败QAQ', message: `${error}` })
   }
@@ -694,7 +698,7 @@ const deleteSponsor = async (id: number) => {
 const deleteCollection = async (id: string) => {
   const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定要删除这个合集吗OAO？')
   if (isConfirmed) {
-    await api.delete(`/collections/${id}`)
+    await api.delete(`/admin/collections/${id}`)
     await refreshArticles() // 刷新全部文章，确保连载文章变成散篇或者被正确移除
     notifyDeleteSuccess()
   }
