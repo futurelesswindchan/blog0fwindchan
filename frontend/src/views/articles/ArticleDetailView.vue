@@ -151,8 +151,8 @@ const currentArticleWithCategory = computed<ArticleWithCategory | null>(() => {
   return {
     ...article.value,
     category: type.value,
-    // 如果后端没传，就用全局池子里的身份，双重保险！owo
-    collection_id: article.value.collection_id || globalArticleInfo?.collection_id || null,
+    // 优先使用全局池子里被拍平后的 slug 字符串
+    collection_id: globalArticleInfo?.collection_id || article.value.collection_id || null,
   }
 })
 
