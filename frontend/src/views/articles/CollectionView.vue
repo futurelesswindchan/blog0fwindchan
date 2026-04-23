@@ -243,7 +243,7 @@ const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
 .info-body {
   font-size: 0.95rem;
   line-height: 1.6;
-  color: var(--text-color);
+  white-space: pre-wrap;
   opacity: 0.85;
   padding-top: 0.8rem;
   border-top: 1px dashed rgba(0, 0, 0, 0.1);
