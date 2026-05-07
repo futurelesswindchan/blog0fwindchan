@@ -15,7 +15,7 @@
     <div class="content-wrapper" ref="contentRef">
       <!-- 核心理念：始终全量渲染 Markdown，绝不中途截断 HTML 字符串，保证 DOM 节点完整，使其可被原生选中并支持超链接点击 -->
       <VueMarkdown
-        :source="content"
+        :source="sanitizedContent"
         :options="markdownOptions || defaultMarkdownOptions"
         :dark-theme="isDarkTheme"
       />
@@ -26,8 +26,9 @@
 <script setup lang="ts">
 import { VueMarkdown, type MarkdownOptions } from '@/composables/useArticleContent'
 import { useReadingProgress } from '@/composables/useReadingProgress'
-import { ref, watch, nextTick, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onUnmounted, computed } from 'vue'
 import { prepare, layout } from '@chenglou/pretext'
+import DOMPurify from 'dompurify'
 
 /**
  * 组件属性定义 (Props)
@@ -61,6 +62,21 @@ const props = withDefaults(defineProps<Props>(), {
   initialDelay: 800,
   chunkSize: 2,
   isDarkTheme: false,
+})
+
+/**
+ * Self-XSS 过滤器
+ * @description 拦截并过滤 content 中的恶意 HTML 标签（如 \<script\>, \<iframe onload=\> 等），
+ * 保留安全的文本和常规排版标签。
+ */
+const sanitizedContent = computed(() => {
+  if (!props.content) return ''
+  return DOMPurify.sanitize(props.content, {
+    // 如果以后会用到一些特殊的自定义标签或属性（比如 class, target），
+    // 可以在这里配置白名单放行哦！
+    // ADD_ATTR: ['target'],
+    // ADD_TAGS: ['my-custom-tag']
+  })
 })
 
 /**
@@ -378,7 +394,7 @@ const startTyping = async () => {
 }
 
 // 监听内容变化，重置并重启打字机
-watch(() => props.content, startTyping, { immediate: true })
+watch(() => sanitizedContent.value, startTyping, { immediate: true })
 
 // 监听 enabled 状态，如果用户在中途突然关闭特效设置，瞬间完成所有输出！
 watch(
