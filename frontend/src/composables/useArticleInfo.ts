@@ -110,7 +110,7 @@ export function useArticleInfo(content: Ref<string> | ComputedRef<string>) {
       const level = match[1].length
       const text = match[2].trim()
 
-      // 防弹装甲 2 & 3：使用 slugify 剔除标点生成基础 ID，并处理同名标题冲突
+      // 使用 slugify 剔除标点生成基础 ID，并处理同名标题冲突
       let baseSlug = slugify(text)
 
       // 兜底：如果标题全是标点被清空了，给个默认的前缀
