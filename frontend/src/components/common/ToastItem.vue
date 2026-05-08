@@ -1,3 +1,4 @@
+<!-- frontend\src\components\common\ToastItem.vue -->
 <template>
   <div
     class="toast-item"
