@@ -85,11 +85,11 @@
 
 <script setup lang="ts">
 import { useReadingProgress } from '@/composables/useReadingProgress'
+import { useTocPet, globalNavOffset } from '@/composables/useTocPet'
 import { useSettingsStore } from '@/views/stores/useSettingsStore'
 import { computed, nextTick, watch, onUnmounted, ref } from 'vue'
 import { useToastStore } from '@/views/stores/toastStore'
 import { useToast } from '@/composables/useToast'
-import { useTocPet } from '@/composables/useTocPet'
 
 import type { TocItem } from '@/composables/useArticleInfo'
 
@@ -155,14 +155,20 @@ const scrollToAnchor = (id: string) => {
  * @description 监听全局吐司数量，当吐司出现在右下角时，自动计算向上躲闪的 translateY 距离。
  */
 const dodgeOffset = computed(() => {
-  // 只有当吐司设置在右下角时，才需要躲避哦
-  if (settingsStore.toast.position !== 'bottom-right') return 0
+  let offset = 0
 
-  const toastCount = toastStore.toasts.length
-  if (toastCount === 0) return 0
+  // 优先叠加底部导航栏的躲避高度
+  offset += globalNavOffset.value - 10
 
-  // 每个吐司平均高度 + gap 约 76px，再额外加 12px 作为和小精灵的呼吸间距
-  return toastCount * 76 + 12
+  // 叠加 Toast 的躲避高度
+  if (settingsStore.toast.position == 'bottom-right') {
+    // 只有当吐司设置在右下角时，才需要躲避哦
+    const toastCount = toastStore.toasts.length
+    if (toastCount > 0) {
+      offset += toastCount * 76 + 12
+    }
+  }
+  return offset
 })
 
 // 当前高亮的章节 ID
@@ -250,6 +256,13 @@ onUnmounted(() => {
     right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
     background-color 0.4s,
     box-shadow 0.4s; */
+}
+
+@media (max-width: 768px) {
+  .toc-pet-wrapper {
+    width: auto;
+    max-width: calc(100vw - 40px);
+  }
 }
 
 /* --- 头部常态区 --- */
