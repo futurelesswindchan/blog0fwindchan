@@ -1,3 +1,4 @@
+// frontend\src\views\stores\toastStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useSettingsStore } from './useSettingsStore'
