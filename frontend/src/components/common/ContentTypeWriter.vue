@@ -14,21 +14,19 @@
   >
     <div class="content-wrapper" ref="contentRef">
       <!-- 核心理念：始终全量渲染 Markdown，绝不中途截断 HTML 字符串，保证 DOM 节点完整，使其可被原生选中并支持超链接点击 -->
-      <VueMarkdown
-        :source="sanitizedContent"
-        :options="markdownOptions || defaultMarkdownOptions"
-        :dark-theme="isDarkTheme"
-      />
+      <div v-html="sanitizedHtml"></div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { VueMarkdown, type MarkdownOptions } from '@/composables/useArticleContent'
 import { useReadingProgress } from '@/composables/useReadingProgress'
+import { useArticleContent } from '@/composables/useArticleContent'
+import { useCodeHighlight } from '@/composables/useCodeHighlight'
 import { ref, watch, nextTick, onUnmounted, computed } from 'vue'
 import { prepare, layout } from '@chenglou/pretext'
-import DOMPurify from 'dompurify'
+
+import markdownit from 'markdown-it'
 
 /**
  * 组件属性定义 (Props)
@@ -42,18 +40,11 @@ import DOMPurify from 'dompurify'
  */
 interface Props {
   content: string
-  markdownOptions?: MarkdownOptions
   isDarkTheme?: boolean
   enabled?: boolean
   speed?: number
   initialDelay?: number
   chunkSize?: number
-}
-
-const defaultMarkdownOptions: MarkdownOptions = {
-  linkify: true,
-  typographer: true,
-  html: true,
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -64,19 +55,31 @@ const props = withDefaults(defineProps<Props>(), {
   isDarkTheme: false,
 })
 
+// 引入文章内容相关的工具函数和状态
+const { sanitizeHtml } = useArticleContent()
+const { codeHighlightOptions } = useCodeHighlight()
+
 /**
- * Self-XSS 过滤器
- * @description 拦截并过滤 content 中的恶意 HTML 标签（如 \<script\>, \<iframe onload=\> 等），
- * 保留安全的文本和常规排版标签。
+ * 预初始化 markdown-it 实例
+ * @description 用于在打字机启动前，先生成一份完整的、经过净化的 HTML 结构
  */
-const sanitizedContent = computed(() => {
+const md = new markdownit({
+  ...codeHighlightOptions,
+})
+
+/**
+ * 最终生成的安全 HTML
+ * @description
+ * 1. 先由 markdown-it 将 Markdown 源码转为 HTML。
+ * 2. 此时代码块里的 <script> 已经变成了 &lt;script&gt;（纯文本），引用块 > 变成了 <blockquote>。
+ * 3. 再由 DOMPurify 进行安全扫描，此时它不会误杀代码块，也不会破坏引用块样式！
+ */
+const sanitizedHtml = computed(() => {
   if (!props.content) return ''
-  return DOMPurify.sanitize(props.content, {
-    // 如果以后会用到一些特殊的自定义标签或属性（比如 class, target），
-    // 可以在这里配置白名单放行哦！
-    // ADD_ATTR: ['target'],
-    // ADD_TAGS: ['my-custom-tag']
-  })
+  // 1. md.render 会调用 highlightCode 生成带 Header 的 HTML
+  const rawHtml = md.render(props.content)
+  // 2. sanitizeHtml 经过白名单放行，保留 class 和 data-code
+  return sanitizeHtml(rawHtml)
 })
 
 /**
@@ -394,7 +397,7 @@ const startTyping = async () => {
 }
 
 // 监听内容变化，重置并重启打字机
-watch(() => sanitizedContent.value, startTyping, { immediate: true })
+watch(() => sanitizedHtml.value, startTyping, { immediate: true })
 
 // 监听 enabled 状态，如果用户在中途突然关闭特效设置，瞬间完成所有输出！
 watch(
