@@ -1,3 +1,4 @@
+// frontend\src\composables\useToast.ts
 import { useToastStore, type ToastType } from '@/views/stores/toastStore'
 
 /**
