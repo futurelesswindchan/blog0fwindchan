@@ -1,5 +1,6 @@
 # backend\app.py
 import os
+import sys
 import uuid
 
 from typing import Any, Dict, List, Optional, cast
@@ -11,6 +12,8 @@ from dotenv import load_dotenv  # 用于加载 .env 文件到环境变量
 from flask import Flask, Response, jsonify, make_response, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from werkzeug.security import (
     check_password_hash,
@@ -35,11 +38,29 @@ from sqlalchemy.orm import Mapped, mapped_column
 # 将项目根目录下的 .env 文件加载到环境变量（如果存在）
 load_dotenv()
 
+# 启动前安全检查：强制要求配置 .env
+cors_origins_raw = os.getenv("CORS_ORIGINS")
+if not cors_origins_raw:
+    print("❌ [呜哇！致命错误] 没有找到 CORS_ORIGINS 环境变量！")
+    print("👉 请在 backend 目录下新建/找到 `.env` 文件，并填入允许跨域的域名。")
+    print("   本地开发示例：CORS_ORIGINS=http://localhost:5173")
+    print("   线上部署示例：CORS_ORIGINS=https://你的博客域名")
+    sys.exit(1)  # 赖在地上不干活，直接退出程序！awa
+cors_origins = cors_origins_raw.split(",")
+
 # 创建 Flask 应用实例
 app = Flask(__name__)
 
-# 开启跨域支持（允许来自前端的跨域请求）
-CORS(app)
+# 开启跨域支持（使用刚刚严格检查过的配置）
+CORS(app, resources={r"/api/*": {"origins": cors_origins}})
+
+# 初始化限流器 (防暴力破解)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"], # 全局默认限制：每天200次，每小时50次
+    storage_uri="memory://" # 简单起见先存在内存中
+)
 
 # 配置数据库连接（此处使用 SQLite 文件数据库 blog.db）
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///blog.db"
@@ -652,6 +673,7 @@ def get_plans() -> Response:
 # ==========================================
 
 @app.route("/api/admin/login", methods=["POST"])
+@limiter.limit("5 per minute")  # 限制同一个 IP 每分钟只能尝试登录 5 次
 def admin_login():
     """
     管理员登录接口：验证用户名与密码，成功则返回 `access_token` 和 `refresh_token`。

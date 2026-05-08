@@ -95,15 +95,22 @@ source venv/bin/activate
 # 5. 安装所有魔法咒语（依赖）
 pip install -r requirements.txt
 
-# 6. 【超重要】创建你的专属管理员账号！
+# 6. 【超重要】配置环境变量！
+#    在 backend 目录下新建一个名为 `.env` 的文件，并写入以下内容：
+JWT_SECRET_KEY=你的专属超级复杂密钥（随便脸滚键盘打一串）
+CORS_ORIGINS=http://localhost:5173
+#    关于 CORS 跨域配置 (CORS_ORIGINS) 的填写指南：
+#    - [本地开发]: 填入本地前端地址 -> CORS_ORIGINS=http://localhost:5173
+#    - [线上部署-场景A]: 前后端分离部署，后端在独立域名/端口 -> CORS_ORIGINS=https://你的前端域名.com
+#    - [线上部署-场景B]: Nginx 反向代理 (前后端同域名) -> 不触发跨域，填前端域名或本地地址均可
+
+# 7. 【超重要】创建你的专属管理员账号！
 #    按照提示输入用户名和密码
 flask create-admin
-
-# 7. 【可选】一键让博客内容满满当当！
+# 8. 【可选】一键让博客内容满满当当！
 #    这个脚本会把所有教程和示例文章都导入数据库
 python init_db.py
-
-# 8. 启动后端服务！
+# 9. 启动后端服务！
 python app.py
 ```
 
