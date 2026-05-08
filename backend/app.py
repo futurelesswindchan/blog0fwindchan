@@ -1313,4 +1313,15 @@ if __name__ == "__main__":
         # 2. 初始化默认分类数据
         init_default_data()
         
-    app.run(debug=True, port=5000)
+    # 🛡️ 动态判断是否开启 Debug 模式
+    # 如果 .env 里写了 FLASK_DEBUG=True，才会开启调试；否则默认关闭
+    is_debug = os.getenv("FLASK_DEBUG", "False").lower() in ["true", "1", "t"]
+    
+    # 顺便把端口也做成可配置的，默认 5000
+    run_port = int(os.getenv("FLASK_PORT", 5000))
+    
+    if not is_debug:
+        print("🛡️ 生产环境模式已启动 (Debug: OFF)")
+    else:
+        print("🐛 开发者调试模式已启动 (Debug: ON)")
+    app.run(debug=is_debug, port=run_port)
