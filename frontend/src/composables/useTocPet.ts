@@ -2,6 +2,9 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { useReadingProgress } from '@/composables/useReadingProgress'
 
+// 全局导航躲避偏移量 (暴露出供其他组件修改)
+export const globalNavOffset = ref<number>(0)
+
 /**
  * 宠物情绪枚举类型
  * @typedef {'typing' | 'reading' | 'sleepy' | 'dizzy' | 'shocked'} PetMood

@@ -1,6 +1,6 @@
 <!-- frontend/src/components/ArticleNavigation.vue -->
 <template>
-  <div class="bottom-nav">
+  <div class="bottom-nav" ref="navRef">
     <!-- 上一篇按钮：当 prevArticle 为空时禁用 -->
     <button
       class="nav-btn prev"
@@ -57,6 +57,7 @@
  * 依赖于 `ArticleWithCategory` 接口以实现基于分类的自动路由映射。
  */
 
+import { globalNavOffset } from '@/composables/useTocPet'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -96,6 +97,14 @@ const router = useRouter()
  * @type {import('vue').Ref<boolean>}
  */
 const showScrollTop = ref(false)
+
+/**
+ * @description 导航组件的 DOM 引用和 Intersection Observer 实例.
+ * @type {import('vue').Ref<HTMLElement | null>}
+ * @type {IntersectionObserver | null}
+ */
+const navRef = ref<HTMLElement | null>(null)
+let navObserver: IntersectionObserver | null = null
 
 /**
  * 处理文章跳转逻辑
@@ -162,10 +171,33 @@ const handleScroll = (): void => {
 // 生命周期：组件挂载时绑定滚动事件
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
+
+  // 监听导航栏是否进入屏幕视口
+  navObserver = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        // 当导航栏露出时，计算其高度并加上 20px 安全间距，赋值给全局偏移量
+        const navHeight = entry.boundingClientRect.height
+        globalNavOffset.value = navHeight + 20
+      } else {
+        // 导航栏离开视口，小精灵回落
+        globalNavOffset.value = 0
+      }
+    },
+    { threshold: 0 }, // 只要露出一点点就触发
+  )
+  if (navRef.value) {
+    navObserver.observe(navRef.value)
+  }
 })
 
 // 生命周期：组件卸载时移除滚动事件，防止内存泄漏
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+
+  if (navObserver) {
+    navObserver.disconnect() // 断开观察器
+  }
+  globalNavOffset.value = 0 // 状态复位，防止影响其他页面
 })
 </script>
