@@ -252,6 +252,13 @@ onUnmounted(() => {
     box-shadow 0.4s; */
 }
 
+@media (max-width: 768px) {
+  .toc-pet-wrapper {
+    width: auto;
+    max-width: calc(100vw - 40px);
+  }
+}
+
 /* --- 头部常态区 --- */
 .pet-header {
   display: flex;

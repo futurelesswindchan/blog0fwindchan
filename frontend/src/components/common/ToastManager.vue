@@ -37,12 +37,24 @@ const settingsStore = useSettingsStore()
   flex-direction: column; /* 新消息在底部，旧消息往上顶 */
 }
 
+@media (max-width: 768px) {
+  .toast-container.bottom-left {
+    left: 10px;
+  }
+}
+
 /* 右下 */
 .toast-container.bottom-right {
   bottom: 20px;
   right: 20px;
   flex-direction: column;
   align-items: flex-end; /* 靠右对齐 */
+}
+
+@media (max-width: 768px) {
+  .toast-container.bottom-right {
+    right: 10px;
+  }
 }
 
 /* 右上 */
@@ -53,11 +65,23 @@ const settingsStore = useSettingsStore()
   align-items: flex-end;
 }
 
+@media (max-width: 768px) {
+  .toast-container.top-right {
+    right: 10px;
+  }
+}
+
 /* 左上 */
 .toast-container.top-left {
   top: 20px;
   left: 20px;
   flex-direction: column-reverse;
+}
+
+@media (max-width: 768px) {
+  .toast-container.top-left {
+    left: 10px;
+  }
 }
 
 /* 动画定义 */

@@ -138,7 +138,7 @@ onUnmounted(() => {
 <style scoped>
 .toast-item {
   position: relative;
-  width: 340px;
+  width: 400px;
   padding: 12px 16px;
   margin-top: 12px;
   display: flex;
@@ -150,6 +150,13 @@ onUnmounted(() => {
   background-color: var(--dark-text);
   border-radius: 2px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 768px) {
+  .toast-item {
+    width: auto;
+    max-width: calc(100vw - 40px);
+  }
 }
 
 /* 颜色变体 */
