@@ -97,6 +97,8 @@ pip install -r requirements.txt
 
 # 6. 【超重要】配置环境变量！
 #    在 backend 目录下新建一个名为 `.env` 的文件，并写入以下内容：
+
+FLASK_DEBUG=True  # 本地开发时开启，线上部署时请务必删除或设为 False！
 JWT_SECRET_KEY=你的专属超级复杂密钥（随便脸滚键盘打一串）
 CORS_ORIGINS=http://localhost:5173
 #    关于 CORS 跨域配置 (CORS_ORIGINS) 的填写指南：
