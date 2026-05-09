@@ -58,7 +58,7 @@ CORS(app, resources={r"/api/*": {"origins": cors_origins}})
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["200 per day", "50 per hour"], # 全局默认限制：每天200次，每小时50次
+    default_limits=["50000 per day", "5000 per hour"], # 全局默认限制
     storage_uri="memory://" # 简单起见先存在内存中
 )
 
