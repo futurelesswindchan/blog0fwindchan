@@ -10,9 +10,16 @@
 >
 > A highly customizable, aesthetic full-stack personal blog built with Vue 3, TypeScript & Flask.
 
-![示例图片1](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview1.png)  
-![示例图片2](https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview2.png)
-
+<table>
+  <tr>
+    <td><img width="445" alt="preview_light" src="https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview1.png" /></td>
+    <td><img width="445" alt="preview_dark" src="https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview2.png" /></td>
+  </tr>
+  <tr>
+    <td align="center">☀️ 浅色模式</td>
+    <td align="center">🌙 深色模式</td>
+  </tr>
+</table>
 ---
 
 ## 📖 项目简介 (Introduction)
