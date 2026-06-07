@@ -126,10 +126,10 @@ import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 
-import '@/styles/correctContentMargin.css'
-import '@/styles/pageHeader.css'
-import '@/styles/typeWriter.css'
-import '@/styles/storyCard.css'
+import '@/styles/layout/correctContentMargin.css'
+import '@/styles/layout/pageHeader.css'
+import '@/styles/components/typeWriter.css'
+import '@/styles/components/storyCard.css'
 
 const route = useRoute()
 const router = useRouter()
