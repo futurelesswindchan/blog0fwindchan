@@ -83,7 +83,7 @@
 
 <script setup lang="ts">
 import { useImageLayoutStore } from '@/stores/imageLayoutStore'
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const layoutStore = useImageLayoutStore()
 

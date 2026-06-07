@@ -83,7 +83,7 @@ import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { AxiosError } from 'axios'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import api from '@/api'
 
 const { notify, confirm } = useToast()

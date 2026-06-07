@@ -65,7 +65,7 @@ import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { useArtworkStore } from '@/stores/artworkStore'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import ImageUploader from '@/components/admin/ImageUploader.vue'
 
 const modalStore = useGlobalModalStore()

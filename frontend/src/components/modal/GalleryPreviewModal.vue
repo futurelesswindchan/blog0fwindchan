@@ -63,7 +63,7 @@
 <script setup lang="ts">
 import { useGlobalModalStore } from '@/stores/globalModalStore'
 import LazyImage from '@/components/common/LazyImage.vue'
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const modalStore = useGlobalModalStore()
 </script>

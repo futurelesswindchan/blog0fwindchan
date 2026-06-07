@@ -51,7 +51,7 @@ import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { useActivityStore } from '@/stores/activityStore'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const modalStore = useGlobalModalStore()
 const activityStore = useActivityStore()
