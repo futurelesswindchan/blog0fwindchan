@@ -79,7 +79,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { AxiosError } from 'axios'
 import { useToast } from '@/composables/useToast'
 

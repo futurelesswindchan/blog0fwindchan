@@ -91,9 +91,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onErrorCaptured } from 'vue'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
-import { Friend, useFriendStore } from '@/views/stores/friendStore'
-import { Sponsor, useSponsorStore } from '@/views/stores/sponsorStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
+import { Friend, useFriendStore } from '@/stores/friendStore'
+import { Sponsor, useSponsorStore } from '@/stores/sponsorStore'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'

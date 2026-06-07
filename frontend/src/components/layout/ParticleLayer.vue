@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 const props = defineProps<{
   isDarkTheme: boolean

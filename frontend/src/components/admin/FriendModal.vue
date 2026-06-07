@@ -57,8 +57,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useFriendStore } from '@/views/stores/friendStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useFriendStore } from '@/stores/friendStore'
 import { useToast } from '@/composables/useToast'
 
 import BaseModal from '../common/BaseModal.vue'

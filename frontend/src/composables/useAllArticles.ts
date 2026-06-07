@@ -1,6 +1,6 @@
 // src/composables/useAllArticles.ts
 import { ref, computed } from 'vue'
-import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
+import { useArticleStore, type ArticleSummary } from '@/stores/articleStore'
 
 // 扩展一下接口，打上分类和合集的“钢印” awa
 export interface ArticleWithCategory extends ArticleSummary {

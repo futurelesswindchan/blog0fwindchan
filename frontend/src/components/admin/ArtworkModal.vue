@@ -61,8 +61,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useArtworkStore } from '@/stores/artworkStore'
 import { useToast } from '@/composables/useToast'
 
 import BaseModal from '../common/BaseModal.vue'

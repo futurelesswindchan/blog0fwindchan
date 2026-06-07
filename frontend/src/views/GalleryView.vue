@@ -45,13 +45,13 @@
 </template>
 
 <script setup lang="ts">
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
-import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useArtworkStore } from '@/stores/artworkStore'
 import { computed, onMounted } from 'vue'
 
-import type { Artwork } from '@/views/stores/artworkStore'
+import type { Artwork } from '@/stores/artworkStore'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'

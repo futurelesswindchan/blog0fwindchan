@@ -1,7 +1,7 @@
 // src/api/index.ts
 
 import axios from 'axios'
-import { useAdminStore } from '@/views/stores/adminStore'
+import { useAdminStore } from '@/stores/adminStore'
 
 // 创建一个 Axios 实例
 const api = axios.create({

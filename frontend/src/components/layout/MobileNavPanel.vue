@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { ref, computed } from 'vue'
 
 const { isDarkTheme } = defineProps<{

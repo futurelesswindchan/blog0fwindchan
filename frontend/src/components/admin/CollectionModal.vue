@@ -76,8 +76,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useArticleStore, type CollectionSummary } from '@/views/stores/articleStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useArticleStore, type CollectionSummary } from '@/stores/articleStore'
 import { useToast } from '@/composables/useToast'
 import BaseModal from '../common/BaseModal.vue'
 import api from '@/api'
