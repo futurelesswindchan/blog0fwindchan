@@ -24,5 +24,5 @@ const { isDarkTheme } = useArticleContent()
 </script>
 
 <style>
-@import '@/styles/theme.css';
+@import '@/styles/theme/theme.css';
 </style>

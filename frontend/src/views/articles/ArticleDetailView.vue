@@ -94,11 +94,11 @@ import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
 import ArticleNavigation from '@/components/ArticleNavigation.vue'
 import ArticleTocPet from '@/components/common/ArticleTocPet.vue'
 
-import '@/styles/correctContentMargin.css'
-import '@/styles/articleContent.css'
-import '@/styles/articleInfo.css'
-import '@/styles/pageHeader.css'
-import '@/styles/codeBlock.css'
+import '@/styles/layout/correctContentMargin.css'
+import '@/styles/components/articleContent.css'
+import '@/styles/components/articleInfo.css'
+import '@/styles/layout/pageHeader.css'
+import '@/styles/components/codeBlock.css'
 
 // --- Store 与路由实例 ---
 const settingsStore = useSettingsStore()

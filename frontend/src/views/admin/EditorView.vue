@@ -240,11 +240,11 @@ import { AxiosError } from 'axios'
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
 import api from '@/api'
 
-import '@/styles/correctContentMargin.css'
-import '@/styles/articleContent.css'
-import '@/styles/articleInfo.css'
-import '@/styles/pageHeader.css'
-import '@/styles/codeBlock.css'
+import '@/styles/layout/correctContentMargin.css'
+import '@/styles/components/articleContent.css'
+import '@/styles/components/articleInfo.css'
+import '@/styles/layout/pageHeader.css'
+import '@/styles/components/codeBlock.css'
 
 const router = useRouter()
 const route = useRoute()

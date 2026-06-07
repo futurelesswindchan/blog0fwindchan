@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import '@/styles/pagination.css'
+import '@/styles/components/pagination.css'
 
 interface Pagination {
   currentPage: number

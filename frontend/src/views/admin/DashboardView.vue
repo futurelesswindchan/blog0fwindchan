@@ -303,7 +303,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import api from '@/api'
 
-import '@/styles/pageTitleArt.css'
+import '@/styles/layout/pageTitleArt.css'
 
 /**
  * @typedef {ArticleSummary & { category: string }} ArticleWithCategory

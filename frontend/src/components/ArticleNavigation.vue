@@ -63,7 +63,7 @@ import { useRouter } from 'vue-router'
 
 import type { ArticleWithCategory } from '@/composables/useAllArticles'
 
-import '@/styles/articleNavigation.css'
+import '@/styles/components/articleNavigation.css'
 
 /**
  * 组件属性定义 (Props)

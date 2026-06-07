@@ -100,8 +100,8 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import LazyImage from '@/components/common/LazyImage.vue'
 
-import '@/styles/correctContentMargin.css'
-import '@/styles/pageTitleArt.css'
+import '@/styles/layout/correctContentMargin.css'
+import '@/styles/layout/pageTitleArt.css'
 
 const friendStore = useFriendStore()
 const sponsorStore = useSponsorStore()
