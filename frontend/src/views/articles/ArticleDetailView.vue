@@ -91,7 +91,7 @@ import { useRoute } from 'vue-router'
 import type { ArticleWithCategory } from '@/composables/useAllArticles'
 
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
-import ArticleNavigation from '@/components/ArticleNavigation.vue'
+import ArticleNavigation from '@/components/common/ArticleNavigation.vue'
 import ArticleTocPet from '@/components/common/ArticleTocPet.vue'
 
 import '@/styles/layout/correctContentMargin.css'
