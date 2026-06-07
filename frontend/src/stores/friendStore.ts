@@ -1,7 +1,7 @@
 // frontend\src\views\stores\friendStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import api from '@/api' // 引入封装好的 axios 实例
+import { getFriends, addFriend, updateFriend, deleteFriend } from '@/api/friend' // 引入封装好的 axios 实例
 
 /**
  * 友链数据接口
@@ -26,7 +26,7 @@ export const useFriendStore = defineStore('friend', () => {
     if (loaded.value) return
     loading.value = true
     try {
-      const response = await api.get('/friends')
+      const response = await getFriends()
       friends.value = response.data.friends
       loaded.value = true
     } catch (err: unknown) {

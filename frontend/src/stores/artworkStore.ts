@@ -1,7 +1,7 @@
 // src/views/stores/artworkStore.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import api from '@/api' // 保持使用封装好的 axios 实例，以便处理 JWT
+import { getArtworks, getArtworkById, addArtwork, updateArtwork, deleteArtwork } from '@/api/artwork' // 保持使用封装好的 axios 实例，以便处理 JWT
 
 export interface Artwork {
   id: string
@@ -117,7 +117,7 @@ export const useArtworkStore = defineStore('artwork', () => {
     loading.value = true
     try {
       console.log('📡 Adding new artwork...')
-      const response = await api.post('/artworks', workData)
+      const response = await addArtwork(workData)
       const newArtwork = response.data.artwork
 
       // 更新本地列表
@@ -139,7 +139,7 @@ export const useArtworkStore = defineStore('artwork', () => {
     loading.value = true
     try {
       console.log(`📡 Updating artwork: ${id}...`)
-      const response = await api.put(`/artworks/${id}`, workData)
+      const response = await updateArtwork(id, workData)
       const updatedArtwork = response.data.artwork
 
       // 更新列表中的数据
@@ -169,7 +169,7 @@ export const useArtworkStore = defineStore('artwork', () => {
     loading.value = true
     try {
       console.log(`📡 Deleting artwork: ${id}...`)
-      await api.delete(`/artworks/${id}`)
+      await deleteArtwork(id)
 
       // 从本地列表移除
       artworks.value = artworks.value.filter((w) => w.id !== id)
@@ -205,4 +205,6 @@ export const useArtworkStore = defineStore('artwork', () => {
     updateArtwork,
     deleteArtwork,
   }
+})
+
 })

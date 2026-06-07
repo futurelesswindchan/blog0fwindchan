@@ -1,6 +1,7 @@
 // frontend/src/views/stores/sponsorStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { addSponsor as apiAddSponsor, updateSponsor as apiUpdateSponsor, deleteSponsor as apiDeleteSponsor } from '@/api/sponsor'
 import api from '@/api/index'
 
 /**
@@ -30,7 +31,7 @@ export const useSponsorStore = defineStore('sponsor', () => {
     loading.value = true
     error.value = null
     try {
-      const { data } = await api.get<{ sponsors: Sponsor[] }>('/sponsors')
+      const { data } = await getSponsors()
       sponsors.value = data.sponsors || []
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -51,7 +52,7 @@ export const useSponsorStore = defineStore('sponsor', () => {
    * @throws {Error} 请求失败时抛出异常。
    */
   const addSponsor = async (payload: Omit<Sponsor, 'id' | 'date'> & { date?: string }) => {
-    await api.post('/sponsors', payload)
+    await apiAddSponsor(payload)
   }
 
   /**
@@ -72,7 +73,7 @@ export const useSponsorStore = defineStore('sponsor', () => {
    * @throws {Error} 请求失败时抛出异常。
    */
   const deleteSponsor = async (id: number) => {
-    await api.delete(`/sponsors/${id}`)
+    await apiDeleteSponsor(id)
   }
 
   return {
@@ -84,4 +85,5 @@ export const useSponsorStore = defineStore('sponsor', () => {
     updateSponsor,
     deleteSponsor,
   }
+})
 })

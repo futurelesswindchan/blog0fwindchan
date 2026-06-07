@@ -16,7 +16,7 @@ export const useAdminStore = defineStore('admin', () => {
   // 登录
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await api.post('/admin/login', { username, password })
+      const response = await apiLogin({ username, password })
 
       // 后端成功返回了 access_token 和 refresh_token
       access_token.value = response.data.access_token
@@ -36,16 +36,7 @@ export const useAdminStore = defineStore('admin', () => {
   // 刷新 Token
   const refreshToken = async (): Promise<string> => {
     try {
-      const response = await api.post(
-        '/admin/refresh',
-        {},
-        {
-          headers: {
-            // 刷新接口需要携带 refresh_token
-            Authorization: `Bearer ${refresh_token.value}`,
-          },
-        },
-      )
+      const response = await apiRefreshToken(refresh_token.value || '')
 
       // 更新 access_token
       access_token.value = response.data.access_token
@@ -78,6 +69,13 @@ export const useAdminStore = defineStore('admin', () => {
   return {
     access_token,
     refresh_token,
+    isAuthenticated,
+    login,
+    logout,
+    refreshToken,
+  }
+})
+en,
     isAuthenticated,
     login,
     logout,

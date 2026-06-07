@@ -1,6 +1,7 @@
 // frontend\src\views\stores\activityStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { getContributions, getPlans, addPlan as apiAddPlan, updatePlan as apiUpdatePlan, deletePlan as apiDeletePlan, reorderPlans as apiReorderPlans } from '@/api/activity'
 import api from '@/api/index'
 
 /**
@@ -52,7 +53,7 @@ export const useActivityStore = defineStore('activity', () => {
   const fetchPlans = async () => {
     try {
       isLoadingPlans.value = true
-      const { data } = await api.get<PlanItem[]>('/plans')
+      const { data } = await getPlans()
       plans.value = data
     } catch (error) {
       console.error('获取计划数据失败:', error)
@@ -67,7 +68,7 @@ export const useActivityStore = defineStore('activity', () => {
    * @param payload - 包含计划内容与状态的数据载荷。
    */
   const addPlan = async (payload: { content: string; status?: string }) => {
-    await api.post('/admin/plans', payload)
+    await apiAddPlan(payload)
   }
 
   /**
@@ -110,3 +111,4 @@ export const useActivityStore = defineStore('activity', () => {
     reorderPlans,
   }
 })
+)

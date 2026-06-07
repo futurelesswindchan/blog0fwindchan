@@ -80,7 +80,7 @@ import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { useArticleStore, type CollectionSummary } from '@/stores/articleStore'
 import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/common/BaseModal.vue'
-import api from '@/api'
+import { createCollection, updateCollection } from '@/api/collection'
 
 const modalStore = useGlobalModalStore()
 const articleStore = useArticleStore()
@@ -123,7 +123,7 @@ const handleSubmit = async () => {
       await api.put(`/admin/collections/${form.slug}`, form)
     } else {
       // 否则调用 POST 接口新建
-      await api.post('/admin/collections', form)
+      await createCollection(form)
     }
 
     await articleStore.fetchArticleIndex() // 刷新全局状态
