@@ -61,11 +61,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useArtworkStore } from '@/stores/artworkStore'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import ImageUploader from '@/components/admin/ImageUploader.vue'
 
 const modalStore = useGlobalModalStore()
@@ -88,11 +88,11 @@ watch(
   () => modalStore.editingArtwork,
   (newVal) => {
     if (newVal) {
-      form.title = newVal.title
-      form.thumbnail = newVal.thumbnail
-      form.fullsize = newVal.fullsize
-      form.description = newVal.description || ''
-      form.date = newVal.date
+      form.title = newVal.title ?? ''
+      form.thumbnail = newVal.thumbnail ?? ''
+      form.fullsize = newVal.fullsize ?? ''
+      form.description = newVal.description ?? ''
+      form.date = newVal.date ?? ''
     } else {
       form.title = ''
       form.thumbnail = ''

@@ -79,12 +79,12 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { AxiosError } from 'axios'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
-import api from '@/api'
+import BaseModal from '@/components/common/BaseModal.vue'
+import { getAssets, uploadAsset, deleteAsset as apiDeleteAsset } from '@/api/asset'
 
 const { notify, confirm } = useToast()
 
@@ -110,7 +110,7 @@ watch(
 const fetchAssets = async () => {
   loading.value = true
   try {
-    const res = await api.get('/admin/assets')
+    const res = await getAssets()
     assets.value = res.data.assets
   } catch (e) {
     const err = e as AxiosError<{ error?: string }>
@@ -138,7 +138,7 @@ const handleFileChange = async (e: Event) => {
   formData.append('type', 'article')
 
   try {
-    await api.post('/upload', formData)
+    await uploadAsset(formData)
     await fetchAssets()
 
     notify({
@@ -183,7 +183,7 @@ const deleteAsset = async (asset: Asset) => {
   if (!isConfirmed) return
 
   try {
-    await api.delete('/admin/assets', { params: { filename: asset.name } })
+    await apiDeleteAsset(asset.name)
     await fetchAssets()
 
     notify({

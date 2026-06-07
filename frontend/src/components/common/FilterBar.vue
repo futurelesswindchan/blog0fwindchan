@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import '@/styles/searchBar.css'
+import '@/styles/components/searchBar.css'
 
 interface SortButton {
   icon: string

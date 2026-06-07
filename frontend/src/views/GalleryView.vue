@@ -24,8 +24,8 @@
             >
               <div class="artwork-image">
                 <LazyImage
-                  :src="artwork.thumbnail"
-                  :alt="artwork.title"
+                  :src="artwork.thumbnail ?? ''"
+                  :alt="artwork.title ?? ''"
                   className="artwork-thumbnail"
                 />
               </div>
@@ -45,21 +45,21 @@
 </template>
 
 <script setup lang="ts">
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
-import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useArtworkStore } from '@/stores/artworkStore'
 import { computed, onMounted } from 'vue'
 
-import type { Artwork } from '@/views/stores/artworkStore'
+import type { Artwork } from '@/types/artwork'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import LazyImage from '@/components/common/LazyImage.vue'
 
-import '@/styles/correctContentMargin.css'
-import '@/styles/pageTitleArt.css'
+import '@/styles/layout/correctContentMargin.css'
+import '@/styles/layout/pageTitleArt.css'
 
 const artworkStore = useArtworkStore()
 const modalStore = useGlobalModalStore()
@@ -68,9 +68,9 @@ const settingsStore = useSettingsStore()
 
 const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   items: artworks,
-  searchFields: (artwork) => [artwork.title],
+  searchFields: (artwork) => [artwork.title ?? ''],
   sortType: 'date',
-  sortBy: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  sortBy: (a, b) => new Date(b.date ?? '').getTime() - new Date(a.date ?? '').getTime(),
 
   // 这里使用了 computed，所以当 settingsStore 变化时，
   // useSearchAndSort 内部的 pageSize 也会变化，从而触发重新计算分页

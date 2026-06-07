@@ -289,11 +289,11 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useAdminStore } from '@/views/stores/adminStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useAdminStore } from '@/stores/adminStore'
 import { useToast } from '@/composables/useToast'
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const modalStore = useGlobalModalStore()
 const settingsStore = useSettingsStore()

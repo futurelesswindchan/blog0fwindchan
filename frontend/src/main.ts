@@ -4,8 +4,8 @@ import router from './router'
 import { createPinia } from 'pinia'
 
 // 确保样式引入顺序正确
-import '@/styles/theme.css'
-import '@/styles/customColor.css'
+import '@/styles/theme/theme.css'
+import '@/styles/theme/customColor.css'
 import '@fortawesome/fontawesome-free/css/all.css'
 import 'highlight.js/styles/base16/tomorrow-night.css'
 

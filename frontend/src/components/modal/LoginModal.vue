@@ -84,11 +84,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAdminStore } from '@/views/stores/adminStore'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useAdminStore } from '@/stores/adminStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const username = ref('')
 const password = ref('')

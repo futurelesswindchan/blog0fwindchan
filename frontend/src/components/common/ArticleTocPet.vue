@@ -86,9 +86,9 @@
 <script setup lang="ts">
 import { useReadingProgress } from '@/composables/useReadingProgress'
 import { useTocPet, globalNavOffset } from '@/composables/useTocPet'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { computed, nextTick, watch, onUnmounted, ref } from 'vue'
-import { useToastStore } from '@/views/stores/toastStore'
+import { useToastStore } from '@/stores/toastStore'
 import { useToast } from '@/composables/useToast'
 
 import type { TocItem } from '@/composables/useArticleInfo'

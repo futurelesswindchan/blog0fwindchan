@@ -133,7 +133,7 @@ const setupIntersectionObserver = () => {
 ```typescript
 // GalleryPreviewModal.vue
 <script setup lang="ts">
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
 import LazyImage from '@/components/common/LazyImage.vue'
 import BaseModal from '../common/BaseModal.vue'
 

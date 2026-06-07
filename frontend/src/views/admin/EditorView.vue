@@ -229,22 +229,22 @@
 import { useArticleContent } from '@/composables/useArticleContent'
 import { useCodeHighlight } from '@/composables/useCodeHighlight'
 import { useArticleInfo } from '@/composables/useArticleInfo'
-import { useArticleStore } from '@/views/stores/articleStore'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useImageLayoutStore } from '@/views/stores/imageLayoutStore'
+import { useArticleStore } from '@/stores/articleStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useImageLayoutStore } from '@/stores/imageLayoutStore'
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { useRouter, useRoute } from 'vue-router'
 import { AxiosError } from 'axios'
 
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
-import api from '@/api'
+import { createArticle } from '@/api/article'
 
-import '@/styles/correctContentMargin.css'
-import '@/styles/articleContent.css'
-import '@/styles/articleInfo.css'
-import '@/styles/pageHeader.css'
-import '@/styles/codeBlock.css'
+import '@/styles/layout/correctContentMargin.css'
+import '@/styles/components/articleContent.css'
+import '@/styles/components/articleInfo.css'
+import '@/styles/layout/pageHeader.css'
+import '@/styles/components/codeBlock.css'
 
 const router = useRouter()
 const route = useRoute()
@@ -342,7 +342,7 @@ onMounted(async () => {
       form.content = post.content
       form.date = post.date
       form.category = category
-      form.collection_id = post.collection_id || ''
+      form.collection_id = String(post.collection_id || '')
       isEditing.value = false
     } else {
       alert('加载文章失败，可能是不存在哦')
@@ -540,7 +540,7 @@ const savePost = async () => {
       isNew: isNewPost.value,
     }
 
-    const response = await api.post('/articles', payload)
+    const response = await createArticle(payload)
 
     if (response.status === 200) {
       isEditing.value = false

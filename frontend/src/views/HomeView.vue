@@ -97,8 +97,8 @@
           <div class="card-badge">New Art</div>
           <!-- 背景图 -->
           <LazyImage
-            :src="latestArtwork.thumbnail"
-            :alt="latestArtwork.title"
+            :src="latestArtwork.thumbnail ?? ''"
+            :alt="latestArtwork.title ?? ''"
             className="artwork-bg"
             :containerStyle="{
               position: 'absolute',
@@ -160,8 +160,9 @@
 </template>
 
 <script setup lang="ts">
-import { useAllArticles, type ArticleWithCategory } from '@/composables/useAllArticles'
-import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useAllArticles } from '@/composables/useAllArticles'
+import type { ArticleWithCategory } from '@/types/article'
+import { useArtworkStore } from '@/stores/artworkStore'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
