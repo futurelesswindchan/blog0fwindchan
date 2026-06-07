@@ -1,4 +1,4 @@
-<!-- frontend\src\components\common\ToastManager.vue -->
+<!-- src/components/feedback/ToastManager.vue -->
 <template>
   <Teleport to="body">
     <!--动态绑定位置 class -->

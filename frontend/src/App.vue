@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { useArticleContent } from '@/composables/useArticleContent'
 import GlobalModals from '@/components/modal/GlobalModals.vue'
-import ToastManager from '@/components/common/ToastManager.vue'
+import ToastManager from '@/components/feedback/ToastManager.vue'
 
 const { isDarkTheme } = useArticleContent()
 </script>
