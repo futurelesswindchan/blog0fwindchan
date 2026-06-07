@@ -301,7 +301,8 @@ import { useRouter } from 'vue-router'
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
-import api from '@/api'
+import { deleteArticle } from '@/api/article'
+import { deleteCollection } from '@/api/collection'
 
 import '@/styles/layout/pageTitleArt.css'
 
@@ -698,7 +699,7 @@ const deleteSponsor = async (id: number) => {
 const deleteCollection = async (id: string) => {
   const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定要删除这个合集吗OAO？')
   if (isConfirmed) {
-    await api.delete(`/admin/collections/${id}`)
+    await deleteCollection(id)
     await refreshArticles() // 刷新全部文章，确保连载文章变成散篇或者被正确移除
     notifyDeleteSuccess()
   }
@@ -1271,3 +1272,4 @@ const deleteCollection = async (id: string) => {
   }
 }
 </style>
+tyle>

@@ -238,7 +238,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { AxiosError } from 'axios'
 
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
-import api from '@/api'
+import { createArticle } from '@/api/article'
 
 import '@/styles/layout/correctContentMargin.css'
 import '@/styles/components/articleContent.css'
@@ -540,7 +540,7 @@ const savePost = async () => {
       isNew: isNewPost.value,
     }
 
-    const response = await api.post('/articles', payload)
+    const response = await createArticle(payload)
 
     if (response.status === 200) {
       isEditing.value = false

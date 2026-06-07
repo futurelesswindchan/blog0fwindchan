@@ -84,7 +84,7 @@ import { AxiosError } from 'axios'
 import { useToast } from '@/composables/useToast'
 
 import BaseModal from '@/components/common/BaseModal.vue'
-import api from '@/api'
+import { getAssets, uploadAsset, deleteAsset } from '@/api/asset'
 
 const { notify, confirm } = useToast()
 
@@ -183,7 +183,7 @@ const deleteAsset = async (asset: Asset) => {
   if (!isConfirmed) return
 
   try {
-    await api.delete('/admin/assets', { params: { filename: asset.name } })
+    await deleteAsset(asset.name)
     await fetchAssets()
 
     notify({
@@ -403,6 +403,10 @@ const deleteAsset = async (asset: Asset) => {
 }
 
 .toolbar-actions .modal-btn-primary {
+  margin: 0 auto;
+}
+</style>
+ry {
   margin: 0 auto;
 }
 </style>
