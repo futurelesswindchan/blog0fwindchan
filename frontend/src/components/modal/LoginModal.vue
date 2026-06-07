@@ -88,7 +88,7 @@ import { useAdminStore } from '@/stores/adminStore'
 import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const username = ref('')
 const password = ref('')
