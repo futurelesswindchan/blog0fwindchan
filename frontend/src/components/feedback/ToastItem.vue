@@ -1,4 +1,4 @@
-<!-- frontend\src\components\common\ToastItem.vue -->
+<!-- src/components/feedback/ToastItem.vue -->
 <template>
   <div
     class="toast-item"
