@@ -88,7 +88,7 @@ import { useArticleInfo } from '@/composables/useArticleInfo'
 import { useToast } from '@/composables/useToast'
 import { useRoute } from 'vue-router'
 
-import type { ArticleWithCategory } from '@/composables/useAllArticles'
+import type { ArticleWithCategory } from '@/types/article'
 
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
 import ArticleNavigation from '@/components/common/ArticleNavigation.vue'

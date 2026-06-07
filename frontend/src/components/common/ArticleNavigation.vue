@@ -61,7 +61,7 @@ import { globalNavOffset } from '@/composables/useTocPet'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { ArticleWithCategory } from '@/composables/useAllArticles'
+import type { ArticleWithCategory } from '@/types/article'
 
 import '@/styles/components/articleNavigation.css'
 

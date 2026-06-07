@@ -88,11 +88,11 @@ watch(
   () => modalStore.editingArtwork,
   (newVal) => {
     if (newVal) {
-      form.title = newVal.title
-      form.thumbnail = newVal.thumbnail
-      form.fullsize = newVal.fullsize
-      form.description = newVal.description || ''
-      form.date = newVal.date
+      form.title = newVal.title ?? ''
+      form.thumbnail = newVal.thumbnail ?? ''
+      form.fullsize = newVal.fullsize ?? ''
+      form.description = newVal.description ?? ''
+      form.date = newVal.date ?? ''
     } else {
       form.title = ''
       form.thumbnail = ''

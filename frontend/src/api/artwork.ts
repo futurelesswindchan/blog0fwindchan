@@ -1,5 +1,5 @@
 import api from './index'
-import type { Artwork } from '@/stores/artworkStore'
+import type { Artwork } from '@/types/artwork'
 
 export const getArtworks = () => api.get('/artworks')
 export const getArtworkById = (id: string) => api.get(`/artworks/${id}`)

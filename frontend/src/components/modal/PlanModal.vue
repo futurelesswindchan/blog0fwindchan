@@ -60,7 +60,10 @@ const { notify, confirm } = useToast()
 const submitting = ref(false)
 const isEdit = computed(() => !!modalStore.editingPlan)
 
-const form = reactive({
+const form = reactive<{
+  content: string
+  status: 'todo' | 'doing' | 'done'
+}>({
   content: '',
   status: 'todo',
 })

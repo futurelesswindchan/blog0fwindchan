@@ -17,8 +17,8 @@
       <div class="preview-middle">
         <LazyImage
           :key="modalStore.previewArtwork.id"
-          :src="modalStore.previewArtwork.fullsize"
-          :alt="modalStore.previewArtwork.title"
+          :src="modalStore.previewArtwork.fullsize ?? ''"
+          :alt="modalStore.previewArtwork.title ?? ''"
           className="preview-image"
         />
 

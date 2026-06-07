@@ -77,7 +77,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import { useGlobalModalStore } from '@/stores/globalModalStore'
-import { useArticleStore, type CollectionSummary } from '@/stores/articleStore'
+import { useArticleStore } from '@/stores/articleStore'
+import type { CollectionSummary } from '@/types/article'
 import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/common/BaseModal.vue'
 import { createCollection, updateCollection } from '@/api/collection'
@@ -120,7 +121,7 @@ const handleSubmit = async () => {
   try {
     if (isEdit.value) {
       // 如果是编辑，调用 PUT 接口
-      await api.put(`/admin/collections/${form.slug}`, form)
+      await updateCollection(form.slug, form)
     } else {
       // 否则调用 POST 接口新建
       await createCollection(form)

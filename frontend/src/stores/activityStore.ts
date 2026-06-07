@@ -55,7 +55,7 @@ export const useActivityStore = defineStore('activity', () => {
    *
    * @param payload - 包含计划内容与状态的数据载荷。
    */
-  const addPlan = async (payload: { content: string; status?: string }) => {
+  const addPlan = async (payload: { content: string; status?: 'todo' | 'doing' | 'done' }) => {
     await apiAddPlan(payload)
   }
 
@@ -65,7 +65,7 @@ export const useActivityStore = defineStore('activity', () => {
    * @param id - 计划的唯一标识符。
    * @param payload - 包含更新后内容与状态的数据载荷。
    */
-  const updatePlan = async (id: number, payload: { content: string; status: string }) => {
+  const updatePlan = async (id: number, payload: { content: string; status: 'todo' | 'doing' | 'done' }) => {
     await apiUpdatePlan(id, payload)
   }
 

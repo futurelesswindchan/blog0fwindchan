@@ -1,5 +1,5 @@
 import api from './index'
-import type { Sponsor } from '@/stores/sponsorStore'
+import type { Sponsor } from '@/types/sponsor'
 
 export const getSponsors = () => api.get('/sponsors')
 export const addSponsor = (data: Partial<Sponsor>) => api.post('/sponsors', data)

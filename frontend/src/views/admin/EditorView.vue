@@ -342,7 +342,7 @@ onMounted(async () => {
       form.content = post.content
       form.date = post.date
       form.category = category
-      form.collection_id = post.collection_id || ''
+      form.collection_id = String(post.collection_id || '')
       isEditing.value = false
     } else {
       alert('加载文章失败，可能是不存在哦')

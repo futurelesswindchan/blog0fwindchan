@@ -20,14 +20,14 @@
               <!-- 大玻璃板：友链卡片 -->
               <a
                 v-if="item.type === 'friend'"
-                :href="item.data.url"
+                :href="item.data.url ?? undefined"
                 target="_blank"
                 class="bento-item friend-card glass-container"
                 :class="{ 'reverse-layout': item.isReversed }"
               >
                 <div class="friend-avatar-wrapper">
                   <LazyImage
-                    :src="item.data.avatar"
+                    :src="item.data.avatar ?? ''"
                     :alt="item.data.name"
                     className="avatar"
                     :containerStyle="{ width: '100%', height: '100%', borderRadius: '0' }"
@@ -35,7 +35,7 @@
                 </div>
                 <div class="friend-info">
                   <h3>{{ item.data.name }}</h3>
-                  <p class="desc" :title="item.data.desc">{{ item.data.desc }}</p>
+                  <p class="desc" :title="item.data.desc ?? undefined">{{ item.data.desc }}</p>
                   <div class="tags">
                     <span v-for="tag in item.data.tags" :key="tag" class="tag">
                       {{ tag }}
@@ -65,7 +65,7 @@
                     <span class="shard-name" :title="item.data.name">{{ item.data.name }}</span>
                     <span class="shard-date">{{ item.data.date }}</span>
                   </div>
-                  <div class="shard-message" :title="item.data.message">
+                  <div class="shard-message" :title="item.data.message ?? undefined">
                     "{{ item.data.message || '留下了一抹星光...' }}"
                   </div>
                 </div>
@@ -92,8 +92,10 @@
 import { computed, onMounted, onErrorCaptured } from 'vue'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import { useSettingsStore } from '@/stores/useSettingsStore'
-import { Friend, useFriendStore } from '@/stores/friendStore'
-import { Sponsor, useSponsorStore } from '@/stores/sponsorStore'
+import { useFriendStore } from '@/stores/friendStore'
+import { useSponsorStore } from '@/stores/sponsorStore'
+import type { Friend } from '@/types/friend'
+import type { Sponsor } from '@/types/sponsor'
 
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -160,7 +162,7 @@ const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   items: mixedData,
   searchFields: (item) => {
     if (item.type === 'friend') {
-      return [item.data.name, item.data.desc, ...(item.data.tags || [])]
+      return [item.data.name, item.data.desc ?? '', ...(item.data.tags || [])]
     } else {
       return [item.data.name, item.data.message || '']
     }
@@ -454,3 +456,4 @@ onErrorCaptured((err, instance, info) => {
   }
 }
 </style>
+style>

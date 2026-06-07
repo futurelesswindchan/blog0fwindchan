@@ -86,9 +86,9 @@ watch(
   (newVal) => {
     if (newVal) {
       form.name = newVal.name
-      form.url = newVal.url
-      form.avatar = newVal.avatar || ''
-      form.desc = newVal.desc || ''
+      form.url = newVal.url ?? ''
+      form.avatar = newVal.avatar ?? ''
+      form.desc = newVal.desc ?? ''
       tagsInput.value = (newVal.tags || []).join(', ')
     } else {
       // 重置表单
