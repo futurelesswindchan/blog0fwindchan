@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
-import { useToastStore } from '@/views/stores/toastStore'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useToastStore } from '@/stores/toastStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import ToastItem from './ToastItem.vue'
 
 const store = useToastStore()

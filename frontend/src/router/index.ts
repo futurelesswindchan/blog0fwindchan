@@ -1,11 +1,11 @@
 // src/router/index.ts
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import MainLayout from '@/components/layout/MainLayout.vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useToastStore } from '@/views/stores/toastStore'
-import { useFriendStore } from '@/views/stores/friendStore'
-import { useArtworkStore } from '@/views/stores/artworkStore'
-import { useAdminStore } from '@/views/stores/adminStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useToastStore } from '@/stores/toastStore'
+import { useFriendStore } from '@/stores/friendStore'
+import { useArtworkStore } from '@/stores/artworkStore'
+import { useAdminStore } from '@/stores/adminStore'
 
 /**
  * @module RouterConfiguration

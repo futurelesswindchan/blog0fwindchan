@@ -161,7 +161,7 @@
 
 <script setup lang="ts">
 import { useAllArticles, type ArticleWithCategory } from '@/composables/useAllArticles'
-import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useArtworkStore } from '@/stores/artworkStore'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 

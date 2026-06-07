@@ -114,11 +114,11 @@
 
 <script setup lang="ts">
 import { useArticleContent } from '@/composables/useArticleContent'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import { useCategoryMeta } from '@/composables/useCategoryMeta'
 import { vTypeWriter } from '@/directives/typeWriterDirective'
-import { useArticleStore } from '@/views/stores/articleStore'
+import { useArticleStore } from '@/stores/articleStore'
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, computed } from 'vue'
 

@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useToastStore, type ToastType } from '@/views/stores/toastStore'
+import { useToastStore, type ToastType } from '@/stores/toastStore'
 
 const props = defineProps<{
   id: number

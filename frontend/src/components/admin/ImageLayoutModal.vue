@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { useImageLayoutStore } from '@/views/stores/imageLayoutStore'
+import { useImageLayoutStore } from '@/stores/imageLayoutStore'
 import BaseModal from '../common/BaseModal.vue'
 
 const layoutStore = useImageLayoutStore()

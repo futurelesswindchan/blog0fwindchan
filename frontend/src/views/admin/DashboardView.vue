@@ -284,16 +284,16 @@
  * @description 后台管理核心主控台逻辑。包含文章、合集、画廊、友链、投喂、计划的增删改查与分页搜索。
  */
 
-import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
-import { PlanItem, useActivityStore } from '@/views/stores/activityStore'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useArticleStore, type ArticleSummary } from '@/stores/articleStore'
+import { PlanItem, useActivityStore } from '@/stores/activityStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { useArticleContent } from '@/composables/useArticleContent'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
-import { useSponsorStore } from '@/views/stores/sponsorStore'
-import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useSponsorStore } from '@/stores/sponsorStore'
+import { useArtworkStore } from '@/stores/artworkStore'
 import { useAllArticles } from '@/composables/useAllArticles'
-import { useFriendStore } from '@/views/stores/friendStore'
+import { useFriendStore } from '@/stores/friendStore'
 import { useToast } from '@/composables/useToast'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
