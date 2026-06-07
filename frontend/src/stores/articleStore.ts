@@ -1,33 +1,6 @@
 // frontend\src\views\stores\articleStore.ts
 import { defineStore } from 'pinia'
-
-// --- 数据接口定义 (与后端返回结构对齐) ---
-
-// 文章摘要接口（用于列表页展示）
-export interface ArticleSummary {
-  id: string // 后端的 slug
-  uid: string // 后端的 uid
-  title: string
-  date: string
-  collection_id?: string | null // 为了适配旧文章数据、没有合集的文章，所以这是可选项
-}
-
-// 文章详情接口，包含完整内容（Markdown 格式）
-export interface ArticleDetail extends ArticleSummary {
-  content: string // Markdown 内容
-}
-
-// 合集摘要接口（用于分类列表页展示卡片）
-export interface CollectionSummary {
-  id: string // 后端的 slug
-  name: string
-  description?: string
-  article_count: number
-}
-// 合集详情接口（用于点进合集后的列表页）
-export interface CollectionDetail extends CollectionSummary {
-  articles: ArticleSummary[]
-}
+import type { ArticleSummary, ArticleDetail, CollectionSummary, CollectionDetail } from '@/types/article'
 
 interface ArticleState {
   // 存储各分类下的文章列表 (摘要信息)

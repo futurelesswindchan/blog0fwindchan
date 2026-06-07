@@ -2,11 +2,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-import type { Friend } from './friendStore'
-import type { Artwork } from './artworkStore'
-import type { PlanItem } from './activityStore'
-import type { Sponsor } from './sponsorStore'
-import type { CollectionSummary } from './articleStore'
+import type { Friend } from '@/types/friend'
+import type { Artwork } from '@/types/artwork'
+import type { PlanItem } from '@/types/activity'
+import type { Sponsor } from '@/types/sponsor'
+import type { CollectionSummary } from '@/types/article'
 
 export const useGlobalModalStore = defineStore('globalModal', () => {
   // --- 1. 系统级弹窗 ---
