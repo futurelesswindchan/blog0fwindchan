@@ -3,7 +3,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '@/api'
+import { login as apiLogin, refreshToken as apiRefreshToken } from '@/api/admin'
 
 export const useAdminStore = defineStore('admin', () => {
   const router = useRouter()
@@ -69,13 +69,6 @@ export const useAdminStore = defineStore('admin', () => {
   return {
     access_token,
     refresh_token,
-    isAuthenticated,
-    login,
-    logout,
-    refreshToken,
-  }
-})
-en,
     isAuthenticated,
     login,
     logout,

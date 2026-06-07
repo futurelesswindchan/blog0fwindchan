@@ -1,19 +1,8 @@
 // frontend\src\views\stores\friendStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { getFriends, addFriend, updateFriend, deleteFriend } from '@/api/friend' // 引入封装好的 axios 实例
-
-/**
- * 友链数据接口
- */
-export interface Friend {
-  id: string
-  name: string
-  desc: string
-  url: string
-  avatar: string
-  tags: string[]
-}
+import { getFriends, addFriend as apiAddFriend, updateFriend as apiUpdateFriend, deleteFriend as apiDeleteFriend } from '@/api/friend' // 引入封装好的 axios 实例
+import type { Friend } from '@/types/friend'
 
 export const useFriendStore = defineStore('friend', () => {
   const friends = ref<Friend[]>([])
@@ -45,14 +34,14 @@ export const useFriendStore = defineStore('friend', () => {
 
   // 新增友链
   const addFriend = async (friendData: Partial<Friend>) => {
-    const response = await api.post('/friends', friendData)
+    const response = await apiAddFriend(friendData)
     // 后端返回了新创建的对象，我们直接 push 到本地数组，省去一次刷新
     friends.value.push(response.data.friend)
   }
 
   // 更新友链
   const updateFriend = async (id: string, friendData: Partial<Friend>) => {
-    const response = await api.put(`/friends/${id}`, friendData)
+    const response = await apiUpdateFriend(id, friendData)
     // 更新本地数组中的那一项
     const index = friends.value.findIndex((f) => f.id === id)
     if (index !== -1) {
@@ -62,7 +51,7 @@ export const useFriendStore = defineStore('friend', () => {
 
   // 删除友链
   const deleteFriend = async (id: string) => {
-    await api.delete(`/friends/${id}`)
+    await apiDeleteFriend(id)
     // 从本地数组移除
     friends.value = friends.value.filter((f) => f.id !== id)
   }

@@ -1,27 +1,15 @@
 // frontend\src\views\stores\activityStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { getContributions, getPlans, addPlan as apiAddPlan, updatePlan as apiUpdatePlan, deletePlan as apiDeletePlan, reorderPlans as apiReorderPlans } from '@/api/activity'
-import api from '@/api/index'
-
-/**
- * 每日贡献度数据接口。
- */
-export interface ContributionDay {
-  date: string
-  count: number
-}
-
-/**
- * 计划项数据接口。
- */
-export interface PlanItem {
-  id: number
-  content: string
-  status: 'todo' | 'doing' | 'done'
-  update_date: string
-  sort_order: number
-}
+import {
+  getContributions,
+  getPlans,
+  addPlan as apiAddPlan,
+  updatePlan as apiUpdatePlan,
+  deletePlan as apiDeletePlan,
+  reorderPlans as apiReorderPlans,
+} from '@/api/activity'
+import type { ContributionDay, PlanItem } from '@/types/activity'
 
 /**
  * 活动状态仓库，管理热力图贡献数据和近期计划。
@@ -38,7 +26,7 @@ export const useActivityStore = defineStore('activity', () => {
    */
   const fetchContributions = async () => {
     try {
-      const { data } = await api.get<ContributionDay[]>('/contributions')
+      const { data } = await getContributions()
       contributions.value = data
     } catch (error) {
       console.error('获取贡献数据失败:', error)
@@ -78,7 +66,7 @@ export const useActivityStore = defineStore('activity', () => {
    * @param payload - 包含更新后内容与状态的数据载荷。
    */
   const updatePlan = async (id: number, payload: { content: string; status: string }) => {
-    await api.put(`/admin/plans/${id}`, payload)
+    await apiUpdatePlan(id, payload)
   }
 
   /**
@@ -87,7 +75,7 @@ export const useActivityStore = defineStore('activity', () => {
    * @param id - 计划的唯一标识符。
    */
   const deletePlan = async (id: number) => {
-    await api.delete(`/admin/plans/${id}`)
+    await apiDeletePlan(id)
   }
 
   /**
@@ -96,7 +84,7 @@ export const useActivityStore = defineStore('activity', () => {
    * @param payload - 包含计划 ID 与新排序权重的数组。
    */
   const reorderPlans = async (payload: { id: number; sort_order: number }[]) => {
-    await api.put('/admin/plans/reorder', payload)
+    await apiReorderPlans(payload)
   }
 
   return {
@@ -111,4 +99,3 @@ export const useActivityStore = defineStore('activity', () => {
     reorderPlans,
   }
 })
-)

@@ -1,16 +1,8 @@
 // src/views/stores/artworkStore.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { getArtworks, getArtworkById, addArtwork, updateArtwork, deleteArtwork } from '@/api/artwork' // 保持使用封装好的 axios 实例，以便处理 JWT
-
-export interface Artwork {
-  id: string
-  title: string
-  thumbnail: string
-  fullsize: string
-  description: string
-  date: string
-}
+import { getArtworks, getArtworkById as getArtworkByIdAPI, addArtwork as apiAddArtwork, updateArtwork as apiUpdateArtwork, deleteArtwork as apiDeleteArtwork } from '@/api/artwork' // 保持使用封装好的 axios 实例，以便处理 JWT
+import type { Artwork } from '@/types/artwork'
 
 export const useArtworkStore = defineStore('artwork', () => {
   // --- State ---
@@ -46,7 +38,7 @@ export const useArtworkStore = defineStore('artwork', () => {
 
     try {
       console.log('📡 Fetching artworks list...')
-      const response = await api.get('/artworks')
+      const response = await getArtworks()
 
       // 假设后端返回结构为 { artworks: [...] }
       artworks.value = response.data.artworks
@@ -95,8 +87,8 @@ export const useArtworkStore = defineStore('artwork', () => {
       }
 
       // 如果本地没有，则请求后端接口
-      const response = await api.get(`/artworks/${id}`)
-      currentArtwork.value = response.data.artwork
+      const response = await getArtworkByIdAPI(id);
+      currentArtwork.value = response.data.artwork;
       console.log(`✅ Artwork '${id}' loaded successfully.`)
     } catch (err: unknown) {
       console.error(`💥 Failed to load artwork [${id}]:`, err)
@@ -117,7 +109,7 @@ export const useArtworkStore = defineStore('artwork', () => {
     loading.value = true
     try {
       console.log('📡 Adding new artwork...')
-      const response = await addArtwork(workData)
+      const response = await apiAddArtwork(workData)
       const newArtwork = response.data.artwork
 
       // 更新本地列表
@@ -139,7 +131,7 @@ export const useArtworkStore = defineStore('artwork', () => {
     loading.value = true
     try {
       console.log(`📡 Updating artwork: ${id}...`)
-      const response = await updateArtwork(id, workData)
+      const response = await apiUpdateArtwork(id, workData)
       const updatedArtwork = response.data.artwork
 
       // 更新列表中的数据
@@ -169,7 +161,7 @@ export const useArtworkStore = defineStore('artwork', () => {
     loading.value = true
     try {
       console.log(`📡 Deleting artwork: ${id}...`)
-      await deleteArtwork(id)
+      await apiDeleteArtwork(id)
 
       // 从本地列表移除
       artworks.value = artworks.value.filter((w) => w.id !== id)
@@ -205,6 +197,4 @@ export const useArtworkStore = defineStore('artwork', () => {
     updateArtwork,
     deleteArtwork,
   }
-})
-
 })

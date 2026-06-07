@@ -1,20 +1,13 @@
 // frontend/src/views/stores/sponsorStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { addSponsor as apiAddSponsor, updateSponsor as apiUpdateSponsor, deleteSponsor as apiDeleteSponsor } from '@/api/sponsor'
-import api from '@/api/index'
-
-/**
- * 投喂感谢数据接口。
- */
-export interface Sponsor {
-  id: number
-  name: string
-  avatar?: string
-  url?: string
-  message?: string
-  date: string
-}
+import {
+  getSponsors,
+  addSponsor as apiAddSponsor,
+  updateSponsor as apiUpdateSponsor,
+  deleteSponsor as apiDeleteSponsor,
+} from '@/api/sponsor'
+import type { Sponsor } from '@/types/sponsor'
 
 /**
  * 投喂感谢状态仓库。
@@ -63,7 +56,7 @@ export const useSponsorStore = defineStore('sponsor', () => {
    * @throws {Error} 请求失败时抛出异常。
    */
   const updateSponsor = async (id: number, payload: Partial<Sponsor>) => {
-    await api.put(`/sponsors/${id}`, payload)
+    await apiUpdateSponsor(id, payload)
   }
 
   /**
@@ -85,5 +78,4 @@ export const useSponsorStore = defineStore('sponsor', () => {
     updateSponsor,
     deleteSponsor,
   }
-})
 })
