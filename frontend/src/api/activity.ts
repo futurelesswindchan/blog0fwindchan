@@ -1,5 +1,5 @@
 import api from './index'
-import type { PlanItem } from '@/stores/activityStore'
+import type { PlanItem } from '@/types/activity'
 
 export const getContributions = () => api.get('/contributions')
 export const getPlans = () => api.get('/plans')

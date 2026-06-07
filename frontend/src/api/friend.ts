@@ -1,5 +1,5 @@
 import api from './index'
-import type { Friend } from '@/stores/friendStore'
+import type { Friend } from '@/types/friend'
 
 export const getFriends = () => api.get('/friends')
 export const addFriend = (data: Partial<Friend>) => api.post('/friends', data)

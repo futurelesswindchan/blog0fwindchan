@@ -50,7 +50,8 @@
 
 <script setup lang="ts">
 import { onMounted, computed, ref, nextTick } from 'vue'
-import { useActivityStore, type ContributionDay } from '@/stores/activityStore'
+import { useActivityStore } from '@/stores/activityStore'
+import type { ContributionDay } from '@/types/activity'
 
 const activityStore = useActivityStore()
 const scrollWrapper = ref<HTMLElement | null>(null)

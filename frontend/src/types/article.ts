@@ -7,7 +7,7 @@ export interface ArticleSummary {
   uid: string | null
   title: string
   date: string
-  collection_id: number | null
+  collection_id: number | string | null
 }
 
 /**
