@@ -8,7 +8,7 @@
  */
 
 import { computed, type Ref } from 'vue'
-import type { ArticleWithCategory } from '@/composables/useAllArticles'
+import type { ArticleWithCategory } from '@/types/article'
 
 /**
  * 导航配置接口

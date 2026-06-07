@@ -114,11 +114,11 @@
 
 <script setup lang="ts">
 import { useArticleContent } from '@/composables/useArticleContent'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
 import { useCategoryMeta } from '@/composables/useCategoryMeta'
 import { vTypeWriter } from '@/directives/typeWriterDirective'
-import { useArticleStore } from '@/views/stores/articleStore'
+import { useArticleStore } from '@/stores/articleStore'
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted, computed } from 'vue'
 
@@ -126,10 +126,10 @@ import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 
-import '@/styles/correctContentMargin.css'
-import '@/styles/pageHeader.css'
-import '@/styles/typeWriter.css'
-import '@/styles/storyCard.css'
+import '@/styles/layout/correctContentMargin.css'
+import '@/styles/layout/pageHeader.css'
+import '@/styles/components/typeWriter.css'
+import '@/styles/components/storyCard.css'
 
 const route = useRoute()
 const router = useRouter()

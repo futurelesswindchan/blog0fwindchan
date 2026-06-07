@@ -76,11 +76,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useArticleStore, type CollectionSummary } from '@/views/stores/articleStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useArticleStore } from '@/stores/articleStore'
+import type { CollectionSummary } from '@/types/article'
 import { useToast } from '@/composables/useToast'
-import BaseModal from '../common/BaseModal.vue'
-import api from '@/api'
+import BaseModal from '@/components/common/BaseModal.vue'
+import { createCollection, updateCollection } from '@/api/collection'
 
 const modalStore = useGlobalModalStore()
 const articleStore = useArticleStore()
@@ -120,10 +121,10 @@ const handleSubmit = async () => {
   try {
     if (isEdit.value) {
       // 如果是编辑，调用 PUT 接口
-      await api.put(`/admin/collections/${form.slug}`, form)
+      await updateCollection(form.slug, form)
     } else {
       // 否则调用 POST 接口新建
-      await api.post('/admin/collections', form)
+      await createCollection(form)
     }
 
     await articleStore.fetchArticleIndex() // 刷新全局状态

@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
 
 const props = defineProps<{
   isExpanded: boolean

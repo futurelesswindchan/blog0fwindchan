@@ -17,8 +17,8 @@
       <div class="preview-middle">
         <LazyImage
           :key="modalStore.previewArtwork.id"
-          :src="modalStore.previewArtwork.fullsize"
-          :alt="modalStore.previewArtwork.title"
+          :src="modalStore.previewArtwork.fullsize ?? ''"
+          :alt="modalStore.previewArtwork.title ?? ''"
           className="preview-image"
         />
 
@@ -61,9 +61,9 @@
 </template>
 
 <script setup lang="ts">
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
 import LazyImage from '@/components/common/LazyImage.vue'
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const modalStore = useGlobalModalStore()
 </script>

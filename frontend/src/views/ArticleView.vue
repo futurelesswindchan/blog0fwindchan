@@ -77,11 +77,11 @@
 </template>
 
 <script setup lang="ts">
-import { useArticleStore } from '@/views/stores/articleStore'
+import { useArticleStore } from '@/stores/articleStore'
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-import '@/styles/pageTitleArt.css'
+import '@/styles/layout/pageTitleArt.css'
 
 const router = useRouter()
 const articleStore = useArticleStore()

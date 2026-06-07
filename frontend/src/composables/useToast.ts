@@ -1,5 +1,5 @@
 // frontend\src\composables\useToast.ts
-import { useToastStore, type ToastType } from '@/views/stores/toastStore'
+import { useToastStore, type ToastType } from '@/stores/toastStore'
 
 /**
  * Toast 提示与确认对话框组合式函数 (Composable)

@@ -47,11 +47,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useActivityStore } from '@/views/stores/activityStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useActivityStore } from '@/stores/activityStore'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const modalStore = useGlobalModalStore()
 const activityStore = useActivityStore()
@@ -60,7 +60,10 @@ const { notify, confirm } = useToast()
 const submitting = ref(false)
 const isEdit = computed(() => !!modalStore.editingPlan)
 
-const form = reactive({
+const form = reactive<{
+  content: string
+  status: 'todo' | 'doing' | 'done'
+}>({
   content: '',
   status: 'todo',
 })

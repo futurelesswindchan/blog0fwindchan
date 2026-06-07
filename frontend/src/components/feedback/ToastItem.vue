@@ -1,4 +1,4 @@
-<!-- frontend\src\components\common\ToastItem.vue -->
+<!-- src/components/feedback/ToastItem.vue -->
 <template>
   <div
     class="toast-item"
@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useToastStore, type ToastType } from '@/views/stores/toastStore'
+import { useToastStore, type ToastType } from '@/stores/toastStore'
 
 const props = defineProps<{
   id: number

@@ -59,7 +59,7 @@
                   <button @click="editArticle(article)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
                   </button>
-                  <button @click="deleteArticle(article)" class="icon-btn del">
+                  <button @click="deleteArticleConfirm(article)" class="icon-btn del">
                     <i class="fas fa-trash"></i>
                   </button>
                 </td>
@@ -96,8 +96,8 @@
                     <span class="text-truncate">{{ friend.name }}</span>
                   </div>
                 </td>
-                <td class="col-url url-col" :title="friend.url">{{ friend.url }}</td>
-                <td class="col-desc" :title="friend.desc">{{ friend.desc }}</td>
+                <td class="col-url url-col" :title="friend.url ?? ''">{{ friend.url }}</td>
+                <td class="col-desc" :title="friend.desc ?? ''">{{ friend.desc }}</td>
                 <td class="action-cell col-action">
                   <button @click="modalStore.openFriendModal(friend)" class="icon-btn edit">
                     <i class="fas fa-pen"></i>
@@ -122,7 +122,7 @@
           <div v-if="artworkStore.loading" class="loading">加载中...</div>
           <div v-else-if="paginatedGallery.length > 0" class="gallery-grid">
             <div v-for="work in paginatedGallery" :key="work.id" class="gallery-item">
-              <img :src="work.thumbnail" loading="lazy" />
+              <img :src="work.thumbnail ?? ''" loading="lazy" />
               <div class="gallery-info">
                 <h4>{{ work.title }}</h4>
                 <div class="gallery-actions">
@@ -214,7 +214,7 @@
                     <span class="text-truncate" :title="sponsor.name">{{ sponsor.name }}</span>
                   </div>
                 </td>
-                <td class="col-content" :title="sponsor.message">
+                <td class="col-content" :title="sponsor.message ?? ''">
                   <span class="text-truncate">{{ sponsor.message || '（留下一抹星光...）' }}</span>
                 </td>
                 <td class="col-date">{{ sponsor.date }}</td>
@@ -263,7 +263,11 @@
                   >
                     <i class="fas fa-pen"></i>
                   </button>
-                  <button @click="deleteCollection(col.id)" class="icon-btn del" title="解散合集">
+                  <button
+                    @click="deleteCollectionConfirm(col.id)"
+                    class="icon-btn del"
+                    title="解散合集"
+                  >
                     <i class="fas fa-trash"></i>
                   </button>
                 </td>
@@ -284,16 +288,18 @@
  * @description 后台管理核心主控台逻辑。包含文章、合集、画廊、友链、投喂、计划的增删改查与分页搜索。
  */
 
-import { useArticleStore, type ArticleSummary } from '@/views/stores/articleStore'
-import { PlanItem, useActivityStore } from '@/views/stores/activityStore'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
+import { useArticleStore } from '@/stores/articleStore'
+import { useActivityStore } from '@/stores/activityStore'
+import type { ArticleSummary } from '@/types/article'
+import type { PlanItem } from '@/types/activity'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
 import { useArticleContent } from '@/composables/useArticleContent'
-import { useSettingsStore } from '@/views/stores/useSettingsStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSearchAndSort } from '@/composables/useSearchAndSort'
-import { useSponsorStore } from '@/views/stores/sponsorStore'
-import { useArtworkStore } from '@/views/stores/artworkStore'
+import { useSponsorStore } from '@/stores/sponsorStore'
+import { useArtworkStore } from '@/stores/artworkStore'
 import { useAllArticles } from '@/composables/useAllArticles'
-import { useFriendStore } from '@/views/stores/friendStore'
+import { useFriendStore } from '@/stores/friendStore'
 import { useToast } from '@/composables/useToast'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -301,9 +307,10 @@ import { useRouter } from 'vue-router'
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
-import api from '@/api'
+import { deleteArticle } from '@/api/article'
+import { deleteCollection } from '@/api/collection'
 
-import '@/styles/pageTitleArt.css'
+import '@/styles/layout/pageTitleArt.css'
 
 /**
  * @typedef {ArticleSummary & { category: string }} ArticleWithCategory
@@ -566,14 +573,14 @@ const editArticle = (article: ArticleWithCategory) => {
  * @async
  * @param {ArticleWithCategory} article - 要删除的文章对象
  */
-const deleteArticle = async (article: ArticleWithCategory) => {
+const deleteArticleConfirm = async (article: ArticleWithCategory) => {
   const isConfirmed = await confirm(
     '确定删除吗OAO？将会永久消失哦（真的很久！）',
     `${article.title}`,
   )
 
   if (isConfirmed) {
-    await api.delete(`/articles/${article.id}`)
+    await deleteArticle(article.id)
     await refreshArticles() // 确保合集内的文章也同步被刷新
     notifyDeleteSuccess()
   }
@@ -695,10 +702,10 @@ const deleteSponsor = async (id: number) => {
  * @async
  * @param {string} id - 合集唯一 ID (slug)
  */
-const deleteCollection = async (id: string) => {
+const deleteCollectionConfirm = async (id: string) => {
   const isConfirmed = await confirm('将会永久消失！（真的很久！）', '确定要删除这个合集吗OAO？')
   if (isConfirmed) {
-    await api.delete(`/admin/collections/${id}`)
+    await deleteCollection(id)
     await refreshArticles() // 刷新全部文章，确保连载文章变成散篇或者被正确移除
     notifyDeleteSuccess()
   }
@@ -1271,3 +1278,4 @@ const deleteCollection = async (id: string) => {
   }
 }
 </style>
+tyle>

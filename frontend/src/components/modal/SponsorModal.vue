@@ -54,11 +54,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useSponsorStore } from '@/views/stores/sponsorStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useSponsorStore } from '@/stores/sponsorStore'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import ImageUploader from '@/components/admin/ImageUploader.vue'
 
 const modalStore = useGlobalModalStore()

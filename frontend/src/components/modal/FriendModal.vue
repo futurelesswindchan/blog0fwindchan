@@ -57,11 +57,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { useGlobalModalStore } from '@/views/stores/globalModalStore'
-import { useFriendStore } from '@/views/stores/friendStore'
+import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { useFriendStore } from '@/stores/friendStore'
 import { useToast } from '@/composables/useToast'
 
-import BaseModal from '../common/BaseModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import ImageUploader from '@/components/admin/ImageUploader.vue'
 
 const modalStore = useGlobalModalStore()
@@ -86,9 +86,9 @@ watch(
   (newVal) => {
     if (newVal) {
       form.name = newVal.name
-      form.url = newVal.url
-      form.avatar = newVal.avatar || ''
-      form.desc = newVal.desc || ''
+      form.url = newVal.url ?? ''
+      form.avatar = newVal.avatar ?? ''
+      form.desc = newVal.desc ?? ''
       tagsInput.value = (newVal.tags || []).join(', ')
     } else {
       // 重置表单
