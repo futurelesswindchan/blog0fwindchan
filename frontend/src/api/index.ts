@@ -1,5 +1,9 @@
 // src/api/index.ts
 
+/**
+ * 定义核心 Axios 请求实例并配置统一拦截器（包含对 JWT 刷新的自动化处理）。
+ */
+
 import axios from 'axios'
 import { useAdminStore } from '@/stores/adminStore'
 
@@ -15,7 +19,6 @@ api.interceptors.request.use(
     const adminStore = useAdminStore()
 
     // 判断当前请求是否是刷新 Token 的接口
-    // 注意：根据你的后端路由，这里是 '/admin/refresh'
     // 也可以判断 config.url?.endsWith('/refresh')
     const isRefreshRequest = config.url?.includes('/refresh')
 
