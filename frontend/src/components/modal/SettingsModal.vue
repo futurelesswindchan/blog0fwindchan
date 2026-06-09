@@ -391,7 +391,6 @@ const reset = async () => {
   margin: 0 0 1rem 0;
   font-family: 'FleurDeLeah', cursive;
   font-size: 2.2rem;
-  color: var(--accent-color);
 }
 
 .settings-nav {

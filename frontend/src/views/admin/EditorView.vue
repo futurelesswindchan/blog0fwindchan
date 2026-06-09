@@ -618,7 +618,6 @@ const goBack = async () => {
   flex: 1;
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--accent-color);
   background: transparent;
   border: none;
   outline: none;
@@ -928,7 +927,6 @@ const goBack = async () => {
   border: none;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.3);
-  color: var(--accent-color);
   font-weight: 600;
   font-size: 1.05rem;
   letter-spacing: 1px;

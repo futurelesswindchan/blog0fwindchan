@@ -279,7 +279,6 @@ hr {
 
 .nav-item svg,
 .theme-toggle i {
-  color: var(--accent-color);
   opacity: 0.9;
 }
 .dark-theme .nav-item svg,
