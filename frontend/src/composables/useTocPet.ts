@@ -190,9 +190,9 @@ export function useTocPet() {
 
   /** 逃跑算法常量配置 */
   const ESCAPE_CONFIG = {
-    ALERT_RADIUS: 120, // 警戒半径 (px)，鼠标进入此范围触发逃跑
-    ESCAPE_DISTANCE_MIN: 120, // 最小逃跑距离 (px)
-    ESCAPE_DISTANCE_MAX: 220, // 最大逃跑距离 (px)
+    ALERT_RADIUS: 30, // 警戒距离 (px)，鼠标距矩形边缘此距离内触发逃跑
+    ESCAPE_DISTANCE_MIN: 50, // 最小逃跑距离 (px)
+    ESCAPE_DISTANCE_MAX: 300, // 最大逃跑距离 (px)
     COOLDOWN_MS: 280, // 冷却时间 (ms)，防止高频 mousemove 抽搐
     PET_WIDTH: 400, // 宠物组件宽度 (px)，用于坐标换算
     PET_HEIGHT: 60, // 宠物组件头部高度 (px)，用于坐标换算
@@ -306,8 +306,37 @@ export function useTocPet() {
   }
 
   /**
+   * 计算点到矩形边缘的最短距离
+   * @description 将圆形警戒区域替换为"矩形等厚护盾"，
+   *              使检测范围贴合宠物的实际长条形状。
+   * @param px - 鼠标屏幕 X
+   * @param py - 鼠标屏幕 Y
+   * @param cx - 矩形中心 X
+   * @param cy - 矩形中心 Y
+   * @param halfW - 矩形半宽
+   * @param halfH - 矩形半高
+   * @returns 鼠标到矩形边缘的最短距离（在矩形内部时返回 0）
+   */
+  const distToRectEdge = (
+    px: number,
+    py: number,
+    cx: number,
+    cy: number,
+    halfW: number,
+    halfH: number,
+  ): number => {
+    // 取鼠标相对于矩形中心的绝对距离
+    const dx = Math.abs(px - cx)
+    const dy = Math.abs(py - cy)
+    // 超出矩形的部分（在矩形内则为 0）
+    const overX = Math.max(0, dx - halfW)
+    const overY = Math.max(0, dy - halfH)
+    return Math.sqrt(overX * overX + overY * overY)
+  }
+
+  /**
    * document 级别的鼠标监听处理函数
-   * @description 持续监听鼠标位置，当鼠标进入宠物的警戒半径时触发逃跑。
+   * @description 持续监听鼠标位置，当鼠标进入宠物矩形外围的警戒区域时触发逃跑。
    */
   const handleShockMouseMove = (e: MouseEvent) => {
     if (isEscapeCooldown || !shockPosition.value) return
@@ -315,12 +344,17 @@ export function useTocPet() {
     // 获取宠物的屏幕中心坐标
     const petScreen = toScreenCoords(shockPosition.value.right, shockPosition.value.bottom)
 
-    // 勾股定理测距
-    const dx = e.clientX - petScreen.x
-    const dy = e.clientY - petScreen.y
-    const distance = Math.sqrt(dx * dx + dy * dy)
+    // 计算鼠标到宠物矩形边缘的最短距离
+    const distance = distToRectEdge(
+      e.clientX,
+      e.clientY,
+      petScreen.x,
+      petScreen.y,
+      ESCAPE_CONFIG.PET_WIDTH / 2,
+      ESCAPE_CONFIG.PET_HEIGHT / 2,
+    )
 
-    // 进入警戒半径 → 触发逃跑！
+    // 进入警戒区域（矩形外围 ALERT_RADIUS 范围内）→ 触发逃跑！
     if (distance < ESCAPE_CONFIG.ALERT_RADIUS) {
       executeEscape(e.clientX, e.clientY)
 
