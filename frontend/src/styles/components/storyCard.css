@@ -32,7 +32,6 @@
 
 .chapter-info h3 {
   margin: 0;
-  color: var(--accent-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

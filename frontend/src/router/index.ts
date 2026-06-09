@@ -247,7 +247,7 @@ router.beforeEach(async (to, from, next) => {
         title: '次元跃迁准备中...',
         message: `正在为您搬运${to.meta.title}的数据，请稍候~`,
         type: 'info',
-        duration: 0, // 设置为 0 使其常驻，直到我们在 afterEach 中手动移除
+        duration: 5000,
       })
 
       // 针对特定的重度强依赖页面，执行前置的异步数据拉取
