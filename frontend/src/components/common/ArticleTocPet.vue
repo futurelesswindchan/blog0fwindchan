@@ -38,12 +38,7 @@
           </div>
 
           <!-- 假的关闭按钮 -->
-          <button
-            class="fake-close-btn"
-            @click.stop="triggerShock($event)"
-            :disabled="currentMood === 'shocked'"
-            title="关闭"
-          >
+          <button class="fake-close-btn" @click.stop="handleCloseClick($event)" title="关闭">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -122,6 +117,110 @@ const {
 } = useTocPet()
 
 const { globalProgress, isTypingMode, unlockedHeadingIds } = useReadingProgress()
+
+/** 受惊模式下的"核爆"惩罚台词 */
+const nukeMessages = [
+  '都怪你 QAQ！！',
+  '你太过分了！呜呜呜...页面碎掉了！',
+  '警告：由于暴力操作，页面已自毁OAO',
+  '这就是代价！哼！谁让你追我！',
+  '你赢了...但代价是整个世界的毁灭 QwQ',
+]
+
+/**
+ * 页面核爆：清空所有 HTML，只留一个惩罚菜单
+ * @description 在受惊模式下被二次点击关闭按钮时触发。
+ *              清空 document.body 并渲染一个极简的"都怪你"页面。
+ */
+const nukeThePage = () => {
+  const message = nukeMessages[Math.floor(Math.random() * nukeMessages.length)]
+
+  // 清空整个页面内容
+  document.documentElement.innerHTML = `
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>页面已自毁</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          min-height: 100vh;
+          display: flex; justify-content: center; align-items: center;
+          background: #0a0a0f;
+          font-family: 'Segoe UI', sans-serif;
+          overflow: hidden;
+        }
+        .nuke-container {
+          text-align: center;
+          animation: fadeIn 1s ease;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .nuke-icon {
+          font-size: 80px;
+          margin-bottom: 30px;
+          animation: shake 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes shake {
+          from { transform: rotate(-5deg); }
+          to { transform: rotate(5deg); }
+        }
+        .nuke-message {
+          color: #ff6b6b;
+          font-size: 1.5rem;
+          font-weight: bold;
+          max-width: 500px;
+          line-height: 1.6;
+          margin-bottom: 40px;
+        }
+        .nuke-btn {
+          padding: 14px 40px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-radius: 30px;
+          background: transparent;
+          color: rgba(255,255,255,0.7);
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        .nuke-btn:hover {
+          background: rgba(255,255,255,0.1);
+          border-color: rgba(255,255,255,0.6);
+          color: #fff;
+        }
+        .nuke-hint {
+          margin-top: 20px;
+          color: rgba(255,255,255,0.3);
+          font-size: 0.8rem;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="nuke-container">
+        <div class="nuke-icon">💀</div>
+        <p class="nuke-message">${message}</p>
+        <button class="nuke-btn" onclick="location.reload()">我错了，求求让我回去 QwQ</button>
+        <p class="nuke-hint">点击上方按钮刷新页面</p>
+      </div>
+    </body>
+  `
+}
+
+/**
+ * 关闭按钮点击处理：区分首次点击（触发受惊）与二次点击（页面核爆）
+ * @param event - 原生鼠标事件
+ */
+const handleCloseClick = (event: MouseEvent) => {
+  if (currentMood.value === 'shocked') {
+    // 已经在逃跑了还被抓到？页面核爆！
+    nukeThePage()
+  } else {
+    // 首次点击：触发受惊逃跑
+    triggerShock(event)
+  }
+}
 
 /**
  * 计算属性：根据打字机模式动态过滤目录项
