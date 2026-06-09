@@ -67,60 +67,77 @@
       <h2 class="section-title"><i class="fas fa-bolt"></i> 最新动态</h2>
 
       <div class="dynamic-grid">
-        <!-- 1. 最新文章卡片 (2篇) -->
-        <div
-          v-for="article in latestArticles"
-          :key="article.id"
-          class="dynamic-card article-card glass-container"
-          @click="navigateToArticle(article)"
-        >
-          <div class="card-badge">New Article</div>
-          <div class="card-content">
-            <h3 class="card-title">{{ article.title }}</h3>
-            <div class="card-meta">
-              <i class="far fa-calendar-alt"></i>
-              {{ article.date }}
-            </div>
-            <p class="card-desc">点击阅读全文...</p>
-          </div>
-          <div class="card-icon">
-            <i class="fas fa-file-alt"></i>
-          </div>
-        </div>
-
-        <!-- 2. 最新画作卡片 (1幅) -->
-        <div
-          v-if="latestArtwork"
-          class="dynamic-card artwork-card glass-container"
-          @click="navigateToGallery"
-        >
-          <div class="card-badge">New Art</div>
-          <!-- 背景图 -->
-          <LazyImage
-            :src="latestArtwork.thumbnail ?? ''"
-            :alt="latestArtwork.title ?? ''"
-            className="artwork-bg"
-            :containerStyle="{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 0,
-              opacity: 0.6,
-            }"
-          />
-          <div class="card-content artwork-content">
-            <h3 class="card-title">{{ latestArtwork.title }}</h3>
-            <div class="card-meta">
-              <i class="fas fa-palette"></i>
-              {{ latestArtwork.date }}
+        <!-- 加载态：骨架屏占位 -->
+        <template v-if="isLoading">
+          <!-- 文章骨架卡 ×2 -->
+          <div
+            v-for="n in 2"
+            :key="'skeleton-article-' + n"
+            class="dynamic-card glass-container skeleton-card"
+          >
+            <div class="card-content">
+              <SkeletonBlock width="70%" height="1.3rem" />
+              <SkeletonBlock width="40%" height="0.9rem" style="margin-top: 0.6rem" />
+              <SkeletonBlock width="55%" height="0.9rem" style="margin-top: 0.5rem" />
             </div>
           </div>
-        </div>
+          <!-- 画作骨架卡 ×1 -->
+          <div class="dynamic-card glass-container skeleton-card">
+            <SkeletonBlock width="100%" height="100%" radius="8px" />
+          </div>
+        </template>
 
-        <!-- 骨架屏/加载占位 (当数据未加载时) -->
-        <div v-if="isLoading" class="dynamic-card glass-container loading-card">
-          <i class="fas fa-circle-notch fa-spin"></i>
-          <span>Loading...</span>
-        </div>
+        <!-- 加载完成：真实内容 -->
+        <template v-else>
+          <!-- 1. 最新文章卡片 (2篇) -->
+          <div
+            v-for="article in latestArticles"
+            :key="article.id"
+            class="dynamic-card article-card glass-container"
+            @click="navigateToArticle(article)"
+          >
+            <div class="card-badge">New Article</div>
+            <div class="card-content">
+              <h3 class="card-title">{{ article.title }}</h3>
+              <div class="card-meta">
+                <i class="far fa-calendar-alt"></i>
+                {{ article.date }}
+              </div>
+              <p class="card-desc">点击阅读全文...</p>
+            </div>
+            <div class="card-icon">
+              <i class="fas fa-file-alt"></i>
+            </div>
+          </div>
+
+          <!-- 2. 最新画作卡片 (1幅) -->
+          <div
+            v-if="latestArtwork"
+            class="dynamic-card artwork-card glass-container"
+            @click="navigateToGallery"
+          >
+            <div class="card-badge">New Art</div>
+            <!-- 背景图 -->
+            <LazyImage
+              :src="latestArtwork.thumbnail ?? ''"
+              :alt="latestArtwork.title ?? ''"
+              className="artwork-bg"
+              :containerStyle="{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 0,
+                opacity: 0.6,
+              }"
+            />
+            <div class="card-content artwork-content">
+              <h3 class="card-title">{{ latestArtwork.title }}</h3>
+              <div class="card-meta">
+                <i class="fas fa-palette"></i>
+                {{ latestArtwork.date }}
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </section>
 
@@ -168,6 +185,7 @@ import { useRouter } from 'vue-router'
 
 import ContributionHeatmap from '@/components/home/ContributionHeatmap.vue'
 import TypeWriter from '@/components/common/TypeWriter.vue'
+import SkeletonBlock from '@/components/common/SkeletonBlock.vue'
 import LazyImage from '@/components/common/LazyImage.vue'
 import PlanBoard from '@/components/home/PlanBoard.vue'
 
@@ -725,6 +743,17 @@ const features = [
 
 :deep(.dark-theme) .card-icon {
   opacity: 0.1; /* 深色模式下图标稍微明显一点 */
+}
+
+/* --- 骨架卡样式 --- */
+.skeleton-card {
+  cursor: default;
+  pointer-events: none;
+}
+
+.skeleton-card:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 /* --- D区 --- */
