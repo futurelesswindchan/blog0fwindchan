@@ -4,7 +4,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>风风博客</title>
-    <!-- 添加字体预加载 -->
+    <!-- 添加字体预加载，提升排版稳定性 -->
     <link
       rel="preload"
       href="/fonts/QingNingYouYuan-2.ttf"
@@ -26,8 +26,232 @@
       type="font/woff2"
       crossorigin="anonymous"
     />
+
+    <!--
+      开屏页首屏加载样式
+    -->
+    <style>
+      /* 基础重置，确保全屏填充并拦截滚动 */
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        background-color: #e6f7ff;
+        overflow: hidden;
+      }
+
+      /* 开屏容器：固定占满全屏，居中内容 */
+      #feng-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #e6f7ff; /* 淡淡的天蓝色 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1919810;
+        transition:
+          opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+          transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+
+      /* 离场动画：淡出并稍微放大，营造梦幻般散开的效果 */
+      #feng-splash.fade-out {
+        opacity: 0;
+        transform: scale(1.05);
+        pointer-events: none;
+      }
+
+      /*
+       * 背景流体色块 (CSS Blob) 
+       * 利用不规则圆角与无限旋转，模拟云朵变幻
+       */
+      .bg-blob {
+        position: absolute;
+        border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+        background: rgba(255, 255, 255, 0.6);
+        filter: blur(8px);
+        animation: morph 8s ease-in-out infinite alternate;
+        z-index: 0;
+      }
+      .blob-1 {
+        width: 300px;
+        height: 300px;
+        top: 10%;
+        left: 15%;
+        animation-delay: 0s;
+      }
+      .blob-2 {
+        width: 400px;
+        height: 400px;
+        bottom: 10%;
+        right: 10%;
+        animation-delay: -3s;
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      @keyframes morph {
+        0% {
+          border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+          transform: rotate(0deg) scale(1);
+        }
+        100% {
+          border-radius: 60% 40% 30% 70% / 50% 60% 40% 50%;
+          transform: rotate(45deg) scale(1.1);
+        }
+      }
+
+      /*
+       * 纸飞机与悬浮动画 
+       * 使用原生的正弦运动营造漂浮感
+       */
+      .plane-wrapper {
+        position: relative;
+        z-index: 1;
+        animation: float 3s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-15px);
+        }
+      }
+      /* 纯 CSS 组合三角形构成的纸飞机主体 */
+      .paper-plane {
+        width: 0;
+        height: 0;
+        border-left: 25px solid transparent;
+        border-right: 25px solid transparent;
+        border-bottom: 60px solid #ffffff;
+        position: relative;
+        transform: rotate(45deg);
+        filter: drop-shadow(0 4px 6px rgba(30, 58, 138, 0.15));
+      }
+      /* 侧翼产生的叠层立体感 */
+      .paper-plane::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 25px solid transparent;
+        border-right: 0px solid transparent;
+        border-bottom: 50px solid rgba(220, 235, 255, 0.8);
+        top: 10px;
+        left: -25px;
+      }
+
+      /* 加载文案与排列 */
+      .splash-text-container {
+        position: relative;
+        z-index: 1;
+        margin-top: 40px;
+        text-align: center;
+        color: #1e3a8a; /* 深蓝色 */
+      }
+      .kaomoji {
+        font-size: 1.5rem;
+        font-weight: bold;
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+      }
+      .cute-quote {
+        font-size: 0.95rem;
+        opacity: 0.8;
+      }
+      /* CSS 驱动的省略号律动，无需 JS 处理状态 */
+      .loading-dots {
+        display: inline-block;
+        width: 24px;
+        text-align: left;
+        animation: dots 1.5s steps(4, end) infinite;
+      }
+      @keyframes dots {
+        0% {
+          content: '';
+        }
+        25% {
+          content: '.';
+        }
+        50% {
+          content: '..';
+        }
+        75% {
+          content: '...';
+        }
+        100% {
+          content: '';
+        }
+      }
+    </style>
   </head>
+
   <body>
+    <!-- 风风定制版极速开屏页模板 -->
+    <div id="feng-splash">
+      <div class="bg-blob blob-1"></div>
+      <div class="bg-blob blob-2"></div>
+
+      <div class="plane-wrapper">
+        <div class="paper-plane"></div>
+      </div>
+
+      <div class="splash-text-container">
+        <div class="kaomoji" id="splash-kaomoji">( ˘ω˘ ) ｽﾔｧ...</div>
+        <div class="cute-quote">
+          <span id="splash-quote">正在乘着风赶来</span><span class="loading-dots">...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 
+      内联彩蛋抽签逻辑
+      不阻塞解析，瞬间加载并随机挑选打气文案
+    -->
+    <script>
+      ;(function () {
+        const eggs = [
+          { k: '( ˘ω˘ ) ｽﾔｧ...', q: 'Async？醒醒！Await？啊，喂——！' },
+          { k: 'QAQ', q: 'Promise？泼墨诗？破模式！诺言全变成了 Pending 的相思！' },
+          { k: '(/ω＼)', q: '是 Vue？还是 View？难道是深夜和你对视的 Review？' },
+          { k: 'ヽ（≧□≦）ノ', q: '绝对要对 dystopia 说 No！' },
+          { k: 'owo🪄>w<', q: '不如来和我一起兑现魔法少女的契约吧！' },
+          { k: '∑( 口 ||', q: 'Node？漏的！快拿盆来接住漏掉的内存呀！' },
+          { k: '(╯‵□′)╯︵┻━┻', q: '谁来飞踹这个一直 Timeout 的 Fetch 加载！' },
+          { k: 'TwT', q: '泡椒味泡面正在沸腾~ 可是不要喝兑水的可乐啊啊啊！' },
+          { k: '@w@', q: '注入，迷路！Dependency Injection 变成了灵魂的羁绊之路！' },
+          { k: '🍔', q: '闭包，背包，小笼包！抓住那个泄露的汉堡包！' },
+          { k: '🚀', q: '向着和你一起写过代码的时空彼方，起飞！' },
+          { k: '❌', q: '跨域，抗拒，大悲剧！CORS 警告是宇宙法则的拒绝协议！' },
+          { k: '☝️😡', q: 'MUSCLE！筋肉正在闪烁光辉！全力——全开！' },
+          { k: 'OAO', q: '被已读不回了！npm install 怎么一直在发呆！' },
+          { k: '🪄✨', q: '魔杖是一根闪着光的 refactor/frontend-architecture 分支！' },
+          { k: '(=w=)', q: '在意我吧，绕着我吧………梦想就是冰激凌！' },
+          { k: '( ✧Д✧) ｷﾗｰﾝ', q: '泛型，饭行，干饭一定行！T extends Food！' },
+          { k: '✨', q: '深呼吸，挂上代理，再来一次 git push origin main！' },
+          { k: '(✧◡✧)', q: "无论何时何地，心跳都在 notify({ type: 'success' })！" },
+          { k: 'QwQ', q: '路由，鹿游，迷路在奇妙的尽头！' },
+        ]
+        const luckyEgg = eggs[Math.floor(Math.random() * eggs.length)]
+        const kaomojiEl = document.getElementById('splash-kaomoji')
+        const quoteEl = document.getElementById('splash-quote')
+        if (kaomojiEl && quoteEl) {
+          kaomojiEl.innerText = luckyEgg.k
+          quoteEl.innerText = luckyEgg.q
+        }
+      })()
+    </script>
+
+    <!-- 原本的 Vue 挂载容器 -->
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
