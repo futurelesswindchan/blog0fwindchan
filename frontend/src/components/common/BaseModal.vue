@@ -135,7 +135,7 @@ onUnmounted(() => {
 /* 1. 主按钮 */
 .modal-btn-primary {
   padding: 0.6rem 1.5rem;
-  background: var(--accent-color, #0077ff);
+  background: var(--accent-color, var(--accent-color));
   color: white;
   border: none;
   border-radius: 8px;
@@ -147,12 +147,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  box-shadow: 0 4px 12px rgba(0, 119, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(var(--accent-color-rgb), 0.2);
 }
 
 .modal-btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 119, 255, 0.3);
+  box-shadow: 0 6px 16px rgba(var(--accent-color-rgb), 0.3);
   filter: brightness(1.1);
 }
 
@@ -189,7 +189,7 @@ onUnmounted(() => {
 /* 3. 危险按钮 */
 .modal-btn-danger {
   padding: 0.6rem 1.5rem;
-  background: #ff4757;
+  background: var(--danger-color);
   color: white;
   border: none;
   border-radius: 8px;
@@ -225,7 +225,7 @@ onUnmounted(() => {
 .modal-input:focus {
   border-color: var(--accent-color);
   background: white;
-  box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.1);
 }
 .dark-theme .modal-input:focus {
   background: rgba(0, 0, 0, 0.4);
@@ -254,9 +254,9 @@ onUnmounted(() => {
 }
 
 .modal-nav-pill.active {
-  background: #0077ff;
+  background: var(--accent-color);
   color: white;
-  box-shadow: 0 2px 8px rgba(0, 119, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.25);
 }
 
 /* 6. 开关 */
@@ -284,7 +284,7 @@ onUnmounted(() => {
 }
 
 .toggle-switch.active {
-  background: var(--accent-color, #0077ff);
+  background: var(--accent-color, var(--accent-color));
 }
 
 .toggle-switch.active .toggle-knob {
@@ -324,7 +324,7 @@ select:hover {
 select:focus {
   border-color: var(--accent-color);
   background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.15);
 }
 
 /* 8. 滑块容器 */

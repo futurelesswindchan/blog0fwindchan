@@ -284,7 +284,7 @@ const deleteAsset = async (asset: Asset) => {
 .asset-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-  border-color: #0077ff;
+  border-color: var(--accent-color);
 }
 
 .img-wrapper {
@@ -370,7 +370,7 @@ const deleteAsset = async (asset: Asset) => {
   height: 30px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.9);
-  color: #ff4757;
+  color: var(--danger-color);
   border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
   display: flex;
@@ -388,7 +388,7 @@ const deleteAsset = async (asset: Asset) => {
 }
 
 .btn-icon.delete:hover {
-  background: #ff4757;
+  background: var(--danger-color);
   color: white;
   transform: scale(1.1);
   box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);

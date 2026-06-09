@@ -30,7 +30,7 @@
 .search-input:focus {
   outline: none;
   background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 10px rgba(0, 119, 255, 0.2);
+  box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.2);
 }
 
 /* 排序按钮 */
@@ -45,9 +45,9 @@
 
 .sort-button:hover {
   color: white;
-  background: rgb(0, 119, 255);
+  background: var(--accent-color);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 119, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--accent-color-rgb), 0.3);
 }
 
 .sort-button:active {
@@ -61,7 +61,7 @@
 }
 
 .dark-theme .sort-button:hover {
-  background: rgb(0, 119, 255);
+  background: var(--accent-color);
   color: black;
 }
 

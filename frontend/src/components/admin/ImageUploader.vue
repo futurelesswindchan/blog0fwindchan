@@ -126,7 +126,7 @@ const handleRemove = () => {
 .upload-box {
   width: 100%;
   height: 160px;
-  border: 2px dashed rgba(0, 119, 255, 0.3);
+  border: 2px dashed rgba(var(--accent-color-rgb), 0.3);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -146,7 +146,7 @@ const handleRemove = () => {
 
 .upload-box:hover {
   border-color: var(--accent-color);
-  background: rgba(0, 119, 255, 0.05);
+  background: rgba(var(--accent-color-rgb), 0.05);
   color: var(--accent-color);
 }
 
@@ -190,7 +190,7 @@ const handleRemove = () => {
 }
 
 .remove-btn {
-  background: #ff4d4f;
+  background: var(--danger-color);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -204,7 +204,7 @@ const handleRemove = () => {
 }
 
 .error-msg {
-  color: #ff4d4f;
+  color: var(--danger-color);
   font-size: 0.85rem;
   margin-top: 0.5rem;
 }

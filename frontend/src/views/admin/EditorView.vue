@@ -658,7 +658,7 @@ const goBack = async () => {
   border-radius: 8px;
   flex: 1;
   min-width: 150px;
-  box-shadow: 0 0 10px rgba(0, 119, 255, 0.12);
+  box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.12);
   transition: all 0.25s var(--aero-animation);
 }
 
@@ -933,7 +933,7 @@ const goBack = async () => {
   font-size: 1.05rem;
   letter-spacing: 1px;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(0, 119, 255, 0.2);
+  box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.2);
   transition: all 0.3s var(--aero-animation);
 }
 
@@ -944,13 +944,13 @@ const goBack = async () => {
 
 .action-btn:hover {
   color: white;
-  background: rgb(0, 119, 255);
+  background: var(--accent-color);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 119, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--accent-color-rgb), 0.3);
 }
 
 .dark-theme .action-btn:hover {
-  background: rgb(0, 119, 255);
+  background: var(--accent-color);
   color: white;
 }
 

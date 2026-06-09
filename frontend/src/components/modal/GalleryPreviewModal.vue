@@ -168,7 +168,7 @@ const modalStore = useGlobalModalStore()
 /* PC端 Hover 效果 */
 @media (hover: hover) {
   .nav-strip:hover {
-    background: #0077ff6f;
+    background: var(--accent-color) 6f;
   }
 
   .nav-strip:hover .nav-icon-bg {

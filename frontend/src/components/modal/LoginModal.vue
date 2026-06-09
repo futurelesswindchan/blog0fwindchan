@@ -286,7 +286,7 @@ const handleLogin = async () => {
 }
 
 .error-tip {
-  color: #ff4757;
+  color: var(--danger-color);
   font-size: 0.85rem;
   display: flex;
   align-items: center;
@@ -312,7 +312,7 @@ const handleLogin = async () => {
 .login-btn:hover:not(:disabled) {
   background: #0056e0;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 119, 255, 0.25);
+  box-shadow: 0 8px 20px rgba(var(--accent-color-rgb), 0.25);
 }
 
 .login-btn:disabled {

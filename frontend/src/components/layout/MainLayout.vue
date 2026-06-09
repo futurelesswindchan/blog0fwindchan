@@ -434,7 +434,7 @@ const afterEnter = () => {
   font-weight: 500;
   letter-spacing: 1px;
   color: var(--accent-color);
-  text-shadow: 0 0 10px rgba(0, 119, 255, 0.3);
+  text-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.3);
   transition: all 0.3s var(--aero-animation);
 }
 
@@ -468,7 +468,7 @@ const afterEnter = () => {
 @media (hover: hover) {
   .time-display:hover .time {
     transform: scale(1.05);
-    text-shadow: 0 0 15px rgba(0, 119, 255, 0.5);
+    text-shadow: 0 0 15px rgba(var(--accent-color-rgb), 0.5);
   }
 
   .time-display:hover .date {

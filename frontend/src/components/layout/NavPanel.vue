@@ -156,11 +156,11 @@ const isDarkTheme = computed(() => !!props.isDarkTheme)
 }
 
 .nav-item:not(.router-link-exact-active):not(.router-link-active):hover {
-  background: rgba(0, 119, 255, 0.4);
+  background: rgba(var(--accent-color-rgb), 0.4);
   transform: translateY(-2px);
   box-shadow:
-    0 4px 15px rgba(0, 119, 255, 0.2),
-    0 0 15px rgba(0, 119, 255, 0.1);
+    0 4px 15px rgba(var(--accent-color-rgb), 0.2),
+    0 0 15px rgba(var(--accent-color-rgb), 0.1);
 }
 
 .nav-item:hover .icon-container,
@@ -224,11 +224,11 @@ const isDarkTheme = computed(() => !!props.isDarkTheme)
 :deep(.router-link-active),
 .nav-item.router-link-active,
 .nav-item.active {
-  background: rgb(0, 119, 255) !important;
+  background: var(--accent-color) !important;
   color: inherit !important;
   box-shadow:
-    0 4px 15px rgba(0, 119, 255, 0.2),
-    0 0 15px rgba(0, 119, 255, 0.1);
+    0 4px 15px rgba(var(--accent-color-rgb), 0.2),
+    0 0 15px rgba(var(--accent-color-rgb), 0.1);
 }
 
 :deep(.router-link-active:not(.router-link-exact-active)) {
