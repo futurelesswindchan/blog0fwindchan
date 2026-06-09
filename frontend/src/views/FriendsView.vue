@@ -249,13 +249,13 @@ onErrorCaptured((err, instance, info) => {
   height: 100%;
   overflow: hidden;
   position: relative;
-  border-left: 5px solid var(--accent-color, #0077ff); /* 左侧厚边框 */
+  border-left: 5px solid var(--accent-color, var(--accent-color)); /* 左侧厚边框 */
 }
 
 /* 布局翻转时，厚边框自动切换到右侧 */
 .friend-card.reverse-layout .friend-avatar-wrapper {
   border-left: none;
-  border-right: 5px solid var(--accent-color, #0077ff);
+  border-right: 5px solid var(--accent-color, var(--accent-color));
 }
 
 .friend-card:hover :deep(.lazy-image-container img) {
@@ -289,7 +289,7 @@ onErrorCaptured((err, instance, info) => {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--accent-color, #0077ff);
+  color: var(--accent-color, var(--accent-color));
 }
 
 .friend-info .desc {
@@ -318,13 +318,13 @@ onErrorCaptured((err, instance, info) => {
 }
 
 .tag {
-  background: rgba(0, 119, 255, 0.08);
-  color: #0077ff;
+  background: rgba(var(--accent-color-rgb), 0.08);
+  color: var(--accent-color);
   padding: 0.1rem 0.6rem;
   border-radius: 8px;
   font-size: 0.7rem;
   font-weight: 600;
-  border: 1px solid rgba(0, 119, 255, 0.1);
+  border: 1px solid rgba(var(--accent-color-rgb), 0.1);
 }
 
 /* ==========================================================================

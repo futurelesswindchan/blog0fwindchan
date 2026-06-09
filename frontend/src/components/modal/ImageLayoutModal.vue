@@ -195,14 +195,14 @@ const handleConfirm = () => {
 
 .layout-card:hover {
   border-color: rgba(19, 84, 205, 0.3);
-  background: rgba(0, 119, 255, 0.05);
+  background: rgba(var(--accent-color-rgb), 0.05);
 }
 
 /* 选中状态样式 */
 .layout-card.active {
   border-color: rgba(19, 84, 205, 0.8);
   background: rgba(6, 76, 156, 0.15);
-  box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.1);
 }
 
 /* ========================================
@@ -229,7 +229,7 @@ const handleConfirm = () => {
 .preview-img {
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #0077ff, #00d4ff);
+  background: linear-gradient(135deg, var(--accent-color), #00d4ff);
   border-radius: 4px;
   flex-shrink: 0;
 }
@@ -315,15 +315,15 @@ const handleConfirm = () => {
 
 .size-control-area {
   padding: 1.2rem;
-  background: rgba(0, 119, 255, 0.04);
+  background: rgba(var(--accent-color-rgb), 0.04);
   border-radius: 8px;
-  border: 1px solid rgba(0, 119, 255, 0.1);
+  border: 1px solid rgba(var(--accent-color-rgb), 0.1);
   transition: all 0.3s;
 }
 
 .dark-theme .size-control-area {
-  background: rgba(0, 119, 255, 0.08);
-  border-color: rgba(0, 119, 255, 0.15);
+  background: rgba(var(--accent-color-rgb), 0.08);
+  border-color: rgba(var(--accent-color-rgb), 0.15);
 }
 
 /* 全宽显示时的禁用状态 */
@@ -357,7 +357,7 @@ const handleConfirm = () => {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--accent-color);
-  background: rgba(0, 119, 255, 0.1);
+  background: rgba(var(--accent-color-rgb), 0.1);
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
 }
@@ -375,14 +375,14 @@ const handleConfirm = () => {
   width: 100%;
   height: 6px;
   border-radius: 3px;
-  background: rgba(0, 119, 255, 0.15);
+  background: rgba(var(--accent-color-rgb), 0.15);
   outline: none;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .dark-theme .size-slider {
-  background: rgba(0, 119, 255, 0.25);
+  background: rgba(var(--accent-color-rgb), 0.25);
 }
 
 /* 滑条滑块 - Webkit 浏览器 */
@@ -392,15 +392,15 @@ const handleConfirm = () => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--accent-color, #0077ff);
+  background: var(--accent-color, var(--accent-color));
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 119, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.3);
   transition: all 0.2s;
 }
 
 .size-slider::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  box-shadow: 0 3px 12px rgba(0, 119, 255, 0.4);
+  box-shadow: 0 3px 12px rgba(var(--accent-color-rgb), 0.4);
 }
 
 /* 滑条滑块 - Firefox */
@@ -408,21 +408,21 @@ const handleConfirm = () => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--accent-color, #0077ff);
+  background: var(--accent-color, var(--accent-color));
   cursor: pointer;
   border: none;
-  box-shadow: 0 2px 8px rgba(0, 119, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.3);
   transition: all 0.2s;
 }
 
 .size-slider::-moz-range-thumb:hover {
   transform: scale(1.15);
-  box-shadow: 0 3px 12px rgba(0, 119, 255, 0.4);
+  box-shadow: 0 3px 12px rgba(var(--accent-color-rgb), 0.4);
 }
 
 /* 滑条轨道已填充部分 - Firefox */
 .size-slider::-moz-range-progress {
-  background: var(--accent-color, #0077ff);
+  background: var(--accent-color, var(--accent-color));
   border-radius: 3px;
   height: 6px;
 }

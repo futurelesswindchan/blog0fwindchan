@@ -285,7 +285,6 @@ const features = [
 
 .section-title {
   font-size: 1.5rem;
-  color: var(--accent-color);
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -338,7 +337,6 @@ const features = [
   backface-visibility: hidden;
   border-radius: 50%;
   overflow: hidden;
-  border: 4px solid var(--accent-color);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -356,7 +354,6 @@ const features = [
 .nickname {
   font-family: 'FleurDeLeah', cursive;
   font-size: 3.5rem;
-  color: var(--accent-color);
   margin: 0;
   line-height: 1.2;
 }
@@ -404,7 +401,6 @@ const features = [
 .slogan-text {
   font-size: 1.8rem;
   font-weight: bold;
-  color: var(--accent-color);
   margin-bottom: 1rem;
   min-height: 2.4rem; /* 防止打字时高度跳动 */
 }
@@ -478,7 +474,7 @@ const features = [
   left: -5px;
   width: 0%;
   height: 10px;
-  background: rgba(0, 119, 255, 0.75);
+  background: rgba(var(--accent-color-rgb), 0.75);
   box-shadow: 0 -2px 10px var(--accent-color);
   transition: width 0.3s ease-in-out;
   z-index: 10;
@@ -629,7 +625,6 @@ const features = [
 
 .portal-icon {
   font-size: 2.5rem;
-  color: var(--accent-color);
   margin-bottom: 1rem;
   transition: transform 0.3s ease;
 }

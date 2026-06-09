@@ -755,7 +755,7 @@ const deleteCollectionConfirm = async (id: string) => {
 }
 
 .action-area:hover {
-  background-color: rgb(0, 119, 255);
+  background-color: var(--accent-color);
   color: white;
 }
 
@@ -810,7 +810,7 @@ const deleteCollectionConfirm = async (id: string) => {
 
 .tab-btn:hover {
   color: var(--accent-color);
-  background-color: rgba(0, 119, 255, 0.1);
+  background-color: rgba(var(--accent-color-rgb), 0.1);
 }
 
 .dark-theme .tab-btn:hover {
@@ -829,7 +829,7 @@ const deleteCollectionConfirm = async (id: string) => {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgb(0, 119, 255);
+  background: var(--accent-color);
   z-index: -1;
   opacity: 0;
   transform: skewX(-20deg) translateX(-20%);
@@ -901,12 +901,12 @@ const deleteCollectionConfirm = async (id: string) => {
 .data-table th {
   font-weight: 600;
   color: var(--accent-color);
-  background: rgba(0, 119, 255, 0.08);
-  border-bottom: 2px solid rgba(0, 119, 255, 0.2);
+  background: rgba(var(--accent-color-rgb), 0.08);
+  border-bottom: 2px solid rgba(var(--accent-color-rgb), 0.2);
 }
 
 .dark-theme .data-table th {
-  background: rgba(0, 119, 255, 0.15);
+  background: rgba(var(--accent-color-rgb), 0.15);
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -915,7 +915,7 @@ const deleteCollectionConfirm = async (id: string) => {
 }
 
 .data-table tr:hover {
-  background: rgba(0, 119, 255, 0.05);
+  background: rgba(var(--accent-color-rgb), 0.05);
 }
 
 .dark-theme .data-table tr:hover {
@@ -982,9 +982,9 @@ const deleteCollectionConfirm = async (id: string) => {
 
 /* 徽章 */
 .badge {
-  background: rgba(0, 119, 255, 0.1);
-  color: #0077ff;
-  border: 1px solid rgba(0, 119, 255, 0.2);
+  background: rgba(var(--accent-color-rgb), 0.1);
+  color: var(--accent-color);
+  border: 1px solid rgba(var(--accent-color-rgb), 0.2);
   padding: 0.25rem 0.75rem;
   border-radius: 16px;
   font-size: 0.8rem;
@@ -995,8 +995,8 @@ const deleteCollectionConfirm = async (id: string) => {
 
 .dark-theme .badge {
   color: #a0c8ff;
-  background: rgba(0, 119, 255, 0.2);
-  border-color: rgba(0, 119, 255, 0.3);
+  background: rgba(var(--accent-color-rgb), 0.2);
+  border-color: rgba(var(--accent-color-rgb), 0.3);
 }
 
 /* 友链头像与布局 */

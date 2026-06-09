@@ -237,7 +237,7 @@
 .markdown-content del,
 .markdown-content s {
   /* 定义一个局部变量控制涂鸦颜色，方便明暗主题统一修改 */
-  --strike-color: var(--accent-color, #0077ff);
+  --strike-color: var(--accent-color, var(--accent-color));
 
   text-decoration: none;
   position: relative;
@@ -290,7 +290,7 @@
 .markdown-content del:hover,
 .markdown-content s:hover {
   /* 悬浮时，所有划线的颜色变成警示红 */
-  --strike-color: #ff4757;
+  --strike-color: var(--danger-color);
   opacity: 1;
 }
 

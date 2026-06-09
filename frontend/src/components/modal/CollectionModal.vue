@@ -185,7 +185,7 @@ const handleSubmit = async () => {
   color: var(--text-color);
 }
 .required {
-  color: #ff4757;
+  color: var(--danger-color);
   margin-left: 4px;
 }
 .modal-footer {

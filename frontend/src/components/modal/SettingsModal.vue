@@ -421,8 +421,8 @@ const reset = async () => {
   text-transform: uppercase;
   margin-bottom: 1.2rem;
   letter-spacing: 0.5px;
-  border-left: 3px solid #0077ff;
-  background: #0077ff0a;
+  border-left: 3px solid var(--accent-color);
+  background: var(--accent-color) 0a;
   padding-left: 8px;
 }
 

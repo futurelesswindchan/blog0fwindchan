@@ -131,7 +131,7 @@ const goToArticle = (routeName: string) => {
   position: relative;
   padding: 2rem;
   min-height: 360px;
-  border: 1px solid rgba(0, 119, 255, 0.2);
+  border: 1px solid rgba(var(--accent-color-rgb), 0.2);
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
   transition: all 0.3s var(--aero-animation);
@@ -144,17 +144,17 @@ const goToArticle = (routeName: string) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 119, 255, 0.1) 0%, transparent 100%);
+  background: linear-gradient(135deg, rgba(var(--accent-color-rgb), 0.1) 0%, transparent 100%);
   opacity: 0;
   transition: opacity 0.3s;
 }
 
 .article-card:hover {
   transform: translateY(-5px);
-  border-color: rgba(0, 119, 255, 0.5);
+  border-color: rgba(var(--accent-color-rgb), 0.5);
   box-shadow:
-    0 0 20px rgba(0, 119, 255, 0.2),
-    0 0 40px rgba(0, 119, 255, 0.1);
+    0 0 20px rgba(var(--accent-color-rgb), 0.2),
+    0 0 40px rgba(var(--accent-color-rgb), 0.1);
 }
 
 .article-card:hover::before {
@@ -165,7 +165,7 @@ const goToArticle = (routeName: string) => {
   position: relative;
   width: 60px;
   height: 60px;
-  background: rgba(0, 119, 255, 0.1);
+  background: rgba(var(--accent-color-rgb), 0.1);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -176,13 +176,13 @@ const goToArticle = (routeName: string) => {
 
 .article-icon i {
   font-size: 1.8rem;
-  color: rgb(0, 119, 255);
+  color: var(--accent-color);
 }
 
 .article-card:hover .article-icon {
   transform: scale(1.1) rotate(-5deg);
-  background: rgba(0, 119, 255, 0.2);
-  box-shadow: 0 0 20px rgba(0, 119, 255, 0.3);
+  background: rgba(var(--accent-color-rgb), 0.2);
+  box-shadow: 0 0 20px rgba(var(--accent-color-rgb), 0.3);
 }
 
 .card-content h3 {
@@ -231,7 +231,7 @@ const goToArticle = (routeName: string) => {
   content: '';
   position: absolute;
   inset: 1px;
-  background: rgba(0, 119, 255, 0.15);
+  background: rgba(var(--accent-color-rgb), 0.15);
   border-radius: 18px;
   opacity: 0;
   transition: opacity 0.3s var(--aero-animation);
@@ -242,7 +242,7 @@ const goToArticle = (routeName: string) => {
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
   box-shadow:
-    0 5px 15px rgba(0, 119, 255, 0.15),
+    0 5px 15px rgba(var(--accent-color-rgb), 0.15),
     0 0 20px rgba(255, 255, 255, 0.1);
 }
 
@@ -272,13 +272,13 @@ const goToArticle = (routeName: string) => {
 .view-btn:hover i {
   transform: translateX(3px);
   opacity: 1;
-  text-shadow: 0 0 10px rgba(0, 119, 255, 0.5);
+  text-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.5);
 }
 
 .view-btn:active {
   transform: translateY(0);
   box-shadow:
-    0 2px 8px rgba(0, 119, 255, 0.1),
+    0 2px 8px rgba(var(--accent-color-rgb), 0.1),
     0 0 10px rgba(255, 255, 255, 0.05);
 }
 
@@ -298,7 +298,7 @@ const goToArticle = (routeName: string) => {
   right: 20px;
   width: 100px;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(0, 119, 255, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-color-rgb), 0.3), transparent);
 }
 
 .glow-dot {
@@ -307,9 +307,9 @@ const goToArticle = (routeName: string) => {
   right: 70px;
   width: 4px;
   height: 4px;
-  background: rgb(0, 119, 255);
+  background: var(--accent-color);
   border-radius: 50%;
-  box-shadow: 0 0 10px rgb(0, 119, 255);
+  box-shadow: 0 0 10px var(--accent-color);
   animation: pulse 2s infinite;
 }
 

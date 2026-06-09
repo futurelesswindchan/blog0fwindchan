@@ -267,13 +267,13 @@ hr {
 .nav-item.router-link-exact-active,
 .nav-item.router-link-active,
 .nav-item.active {
-  background: rgba(0, 119, 255, 0.5);
+  background: rgba(var(--accent-color-rgb), 0.5);
   color: var(--accent-color);
 }
 .dark-theme .nav-item.router-link-exact-active,
 .dark-theme .nav-item.router-link-active,
 .dark-theme .nav-item.active {
-  background: rgba(0, 119, 255, 0.6);
+  background: rgba(var(--accent-color-rgb), 0.6);
   color: #fff;
 }
 

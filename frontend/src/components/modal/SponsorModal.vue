@@ -179,7 +179,7 @@ const handleSubmit = async () => {
 }
 
 .required {
-  color: #ff4757;
+  color: var(--danger-color);
   margin-left: 4px;
 }
 
