@@ -40,7 +40,7 @@
           <!-- 假的关闭按钮 -->
           <button
             class="fake-close-btn"
-            @click.stop="triggerShock"
+            @click.stop="triggerShock($event)"
             :disabled="currentMood === 'shocked'"
             title="关闭"
           >

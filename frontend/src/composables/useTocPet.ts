@@ -25,7 +25,7 @@ export function useTocPet() {
   const customMessage = ref<string>('')
   const isHovered = ref<boolean>(false)
 
-  // 记录受惊时乱跑的随机坐标
+  // 记录受惊时逃跑的坐标（right/bottom 定位）
   const shockPosition = ref<{ right: number; bottom: number } | null>(null)
 
   // --- 情绪字典配置 ---
@@ -154,8 +154,11 @@ export function useTocPet() {
   /**
    * 退出打瞌睡状态，恢复正常阅读/打字状态
    * @description 当用户与 TOC 宠物互动时，如果它正在睡觉，就把它摇醒！
+   *              受惊状态下不可被唤醒。
    */
   const wakeUpPet = () => {
+    // 受惊状态是最高优先级，不可被唤醒
+    if (currentMood.value === 'shocked') return
     // 如果它正在睡觉，我们就把它摇醒！
     if (currentMood.value === 'sleepy') {
       currentMood.value = isTypingMode.value ? 'typing' : 'reading'
@@ -183,44 +186,179 @@ export function useTocPet() {
     }, IDLE_TIMEOUT)
   }
 
-  // region 受惊逃跑逻辑
-  let shockInterval: number | null = null // 受惊乱跑的瞬移定时器 ID
+  // region 受惊逃跑逻辑（物理弹射 + 沿墙滑行 + 死角传送）
+
+  /** 逃跑算法常量配置 */
+  const ESCAPE_CONFIG = {
+    ALERT_RADIUS: 120, // 警戒半径 (px)，鼠标进入此范围触发逃跑
+    ESCAPE_DISTANCE_MIN: 120, // 最小逃跑距离 (px)
+    ESCAPE_DISTANCE_MAX: 220, // 最大逃跑距离 (px)
+    COOLDOWN_MS: 280, // 冷却时间 (ms)，防止高频 mousemove 抽搐
+    PET_WIDTH: 400, // 宠物组件宽度 (px)，用于坐标换算
+    PET_HEIGHT: 60, // 宠物组件头部高度 (px)，用于坐标换算
+    BOUNDARY_PADDING: 20, // 边界安全边距 (px)
+  } as const
+
+  let isEscapeCooldown = false // 逃跑冷却锁
+  let shockMouseHandler: ((e: MouseEvent) => void) | null = null // 持有监听器引用，方便清理
+
+  /** 死角传送时的特殊台词 */
+  const cornerEscapeMessages = [
+    '逼到死角了？！启动紧急传送！！(╯°□°)╯',
+    '哇啊啊被包围了！量子隧穿！！',
+    '此路不通！瞬移启动！嗖——',
+    '你以为角落就能困住我？天真！✨',
+    '紧急避险程序 OMEGA 启动！消失！',
+    '死角？！不存在的！传送！',
+    '啊啊啊被夹击了！空间折叠！',
+    '你以为我会被困在角落吗？！不存在的！',
+  ]
 
   /**
-   * 触发“假关闭”受惊状态
-   * @description 拦截关闭事件，强制切换为 shocked 情绪，并在 3 秒后平复。
+   * 将 right/bottom 定位坐标转换为屏幕坐标系 (左上角原点)
+   * @param right - CSS right 值
+   * @param bottom - CSS bottom 值
+   * @returns 屏幕坐标 {x, y}（宠物中心点）
    */
-  const triggerShock = () => {
+  const toScreenCoords = (right: number, bottom: number) => {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    return {
+      x: vw - right - ESCAPE_CONFIG.PET_WIDTH / 2,
+      y: vh - bottom - ESCAPE_CONFIG.PET_HEIGHT / 2,
+    }
+  }
+
+  /**
+   * 将屏幕坐标转换回 right/bottom 定位坐标
+   * @param x - 屏幕 X 坐标（宠物中心点）
+   * @param y - 屏幕 Y 坐标（宠物中心点）
+   * @returns CSS 定位 {right, bottom}
+   */
+  const toPositionCoords = (x: number, y: number) => {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    return {
+      right: vw - x - ESCAPE_CONFIG.PET_WIDTH / 2,
+      bottom: vh - y - ESCAPE_CONFIG.PET_HEIGHT / 2,
+    }
+  }
+
+  /**
+   * 核心逃跑算法：物理反向弹射 + 沿墙滑行 + 死角传送
+   * @param mouseX - 鼠标屏幕 X 坐标
+   * @param mouseY - 鼠标屏幕 Y 坐标
+   */
+  const executeEscape = (mouseX: number, mouseY: number) => {
+    if (!shockPosition.value) return
+
+    // 1. 获取宠物当前的屏幕坐标
+    const petScreen = toScreenCoords(shockPosition.value.right, shockPosition.value.bottom)
+
+    // 2. 计算鼠标→宠物的向量角度，取反方向作为逃跑方向
+    const dx = mouseX - petScreen.x
+    const dy = mouseY - petScreen.y
+    const angle = Math.atan2(dy, dx)
+
+    // 3. 随机逃跑距离（在 min~max 范围内）
+    const escapeDist =
+      ESCAPE_CONFIG.ESCAPE_DISTANCE_MIN +
+      Math.random() * (ESCAPE_CONFIG.ESCAPE_DISTANCE_MAX - ESCAPE_CONFIG.ESCAPE_DISTANCE_MIN)
+
+    // 4. 计算理想逃跑目标点（反方向）
+    let newX = petScreen.x + -Math.cos(angle) * escapeDist
+    let newY = petScreen.y + -Math.sin(angle) * escapeDist
+
+    // 5. 边界计算
+    const pad = ESCAPE_CONFIG.BOUNDARY_PADDING
+    const minX = pad + ESCAPE_CONFIG.PET_WIDTH / 2
+    const maxX = window.innerWidth - pad - ESCAPE_CONFIG.PET_WIDTH / 2
+    const minY = pad + ESCAPE_CONFIG.PET_HEIGHT / 2
+    const maxY = window.innerHeight - pad - ESCAPE_CONFIG.PET_HEIGHT / 2
+
+    // 6. 沿墙滑行：钳制超出的轴，保留另一轴的分量
+    const hitLeft = newX < minX
+    const hitRight = newX > maxX
+    const hitTop = newY < minY
+    const hitBottom = newY > maxY
+
+    newX = Math.max(minX, Math.min(maxX, newX))
+    newY = Math.max(minY, Math.min(maxY, newY))
+
+    // 7. 死角检测：如果两个轴都撞墙了，说明被逼入绝境 → 传送到对角区域
+    if ((hitLeft || hitRight) && (hitTop || hitBottom)) {
+      newX = hitLeft ? maxX - Math.random() * 100 : minX + Math.random() * 100
+      newY = hitTop ? maxY - Math.random() * 80 : minY + Math.random() * 80
+      // 死角特殊台词
+      customMessage.value =
+        cornerEscapeMessages[Math.floor(Math.random() * cornerEscapeMessages.length)]
+    } else {
+      // 普通逃跑台词（从 shocked 消息库里随机抽）
+      customMessage.value = getRandomMessage()
+    }
+
+    // 8. 转换回 right/bottom 并更新位置
+    const newPos = toPositionCoords(newX, newY)
+    shockPosition.value = {
+      right: Math.round(newPos.right),
+      bottom: Math.round(newPos.bottom),
+    }
+  }
+
+  /**
+   * document 级别的鼠标监听处理函数
+   * @description 持续监听鼠标位置，当鼠标进入宠物的警戒半径时触发逃跑。
+   */
+  const handleShockMouseMove = (e: MouseEvent) => {
+    if (isEscapeCooldown || !shockPosition.value) return
+
+    // 获取宠物的屏幕中心坐标
+    const petScreen = toScreenCoords(shockPosition.value.right, shockPosition.value.bottom)
+
+    // 勾股定理测距
+    const dx = e.clientX - petScreen.x
+    const dy = e.clientY - petScreen.y
+    const distance = Math.sqrt(dx * dx + dy * dy)
+
+    // 进入警戒半径 → 触发逃跑！
+    if (distance < ESCAPE_CONFIG.ALERT_RADIUS) {
+      executeEscape(e.clientX, e.clientY)
+
+      // 启动冷却锁，防止一帧内连续触发
+      isEscapeCooldown = true
+      setTimeout(() => {
+        isEscapeCooldown = false
+      }, ESCAPE_CONFIG.COOLDOWN_MS)
+    }
+  }
+
+  /**
+   * 触发"假关闭"受惊状态
+   * @description 拦截关闭事件，永久切换为 shocked 情绪并开始逃跑行为。
+   *              不会自动恢复，直到组件销毁并重新挂载。
+   */
+  const triggerShock = (event?: MouseEvent) => {
     if (currentMood.value === 'shocked') return
-    const previousMood = currentMood.value
     currentMood.value = 'shocked'
     customMessage.value = getRandomMessage()
     isExpanded.value = false // 受惊时强制收起目录
-    // 随机跑酷动作
-    const runAway = () => {
-      // 预留安全边距，防止跑到屏幕外面去
-      const maxRight = typeof window !== 'undefined' ? window.innerWidth - 360 : 500
-      const maxBottom = typeof window !== 'undefined' ? window.innerHeight - 150 : 500
-      shockPosition.value = {
-        right: Math.max(20, Math.floor(Math.random() * maxRight)),
-        bottom: Math.max(20, Math.floor(Math.random() * maxBottom)),
-      }
+
+    // 设置初始逃跑位置（从当前位置开始）
+    if (!shockPosition.value) {
+      shockPosition.value = { right: 20, bottom: 20 }
     }
-    // 立刻跑第一步！
-    runAway()
-    // 每 500ms 随机瞬移一次 (类似老鼠乱窜)
-    shockInterval = window.setInterval(runAway, 500)
-    // 3秒后冷静下来
-    setTimeout(() => {
-      if (shockInterval) clearInterval(shockInterval)
-      shockPosition.value = null // 乖乖回原位
-      setTimeout(() => {
-        if (currentMood.value === 'shocked') {
-          currentMood.value = previousMood
-          customMessage.value = getRandomMessage()
-        }
-      }, 500)
-    }, 3500)
+
+    // 利用点击事件的鼠标坐标执行第一次弹射
+    if (event) {
+      executeEscape(event.clientX, event.clientY)
+    } else {
+      // 如果没有鼠标事件（兜底），就随机跑一步
+      executeEscape(window.innerWidth / 2, window.innerHeight / 2)
+    }
+
+    // 注册 document 级别的持续逃跑监听
+    shockMouseHandler = handleShockMouseMove
+    document.addEventListener('mousemove', shockMouseHandler, { passive: true })
   }
 
   /**
@@ -250,7 +388,7 @@ export function useTocPet() {
       currentMood.value = 'dizzy'
       customMessage.value = getRandomMessage()
     }
-    // 每次触发晕车，都刷新“康复倒计时”
+    // 每次触发晕车，都刷新"康复倒计时"
     if (dizzyRecoveryTimer) window.clearTimeout(dizzyRecoveryTimer)
 
     // 2秒后如果没再超速，就恢复正常
@@ -325,6 +463,12 @@ export function useTocPet() {
 
     // 卸载测速仪
     window.removeEventListener('scroll', checkScrollSpeed)
+
+    // 卸载受惊逃跑监听器
+    if (shockMouseHandler) {
+      document.removeEventListener('mousemove', shockMouseHandler)
+      shockMouseHandler = null
+    }
   }
 
   // 初始化启动轮播和挂机检测
@@ -334,7 +478,6 @@ export function useTocPet() {
   // 生命周期清理
   onUnmounted(() => {
     if (messageTimer) clearInterval(messageTimer)
-    if (shockInterval) clearInterval(shockInterval)
     destroyGlobalListeners()
   })
 
