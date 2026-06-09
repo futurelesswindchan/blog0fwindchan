@@ -57,9 +57,6 @@ requestAnimationFrame(() => {
     // 延迟 50ms 确保 Vue 构建的真实 DOM 已推入渲染层后再隐去骨架，避免首屏瞬间白屏闪烁
     setTimeout(() => {
       splash.classList.add('fade-out')
-      // 解除开屏期间对 body/html 的滚动锁定，归还页面滚动能力
-      document.documentElement.style.overflow = ''
-      document.body.style.overflow = ''
       // 动画持续时间 800ms，在 850ms 销毁节点避免单页应用内存与 DOM 树冗余
       setTimeout(() => {
         splash.remove()
