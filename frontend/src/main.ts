@@ -20,9 +20,11 @@ import {
   faCog,
   faHome,
   faPenNib,
+  faSun,
+  faMoon,
 } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faBookOpen, faUsers, faCode, faImages, faPaw, faCog, faHome, faPenNib)
+library.add(faBookOpen, faUsers, faCode, faImages, faPaw, faCog, faHome, faPenNib, faSun, faMoon)
 
 /**
  * 此时入口开始初始化。
