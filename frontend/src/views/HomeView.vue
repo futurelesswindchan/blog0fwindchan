@@ -147,7 +147,7 @@
 
       <div class="portal-grid">
         <div
-          v-for="item in features"
+          v-for="item in portalItems"
           :key="item.title"
           class="portal-card glass-container"
           @click="navigateToFeature(item.route)"
@@ -179,6 +179,7 @@
 <script setup lang="ts">
 import { useAllArticles } from '@/composables/useAllArticles'
 import type { ArticleWithCategory } from '@/types/article'
+import { socialLinks, portalItems } from '@/site.config'
 import { useArtworkStore } from '@/stores/artworkStore'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -238,55 +239,6 @@ const navigateToGallery = () => {
 const navigateToFeature = (route: string) => {
   router.push(route)
 }
-
-// --- 静态配置数据 ---
-const socialLinks = [
-  {
-    name: 'GitHub',
-    icon: 'fab fa-github',
-    link: 'https://github.com/futurelesswindchan',
-    color: '#24292e',
-  },
-  {
-    name: 'Bilibili',
-    icon: 'fab fa-bilibili',
-    link: 'https://space.bilibili.com/273245032',
-    color: '#fb7299',
-  },
-  {
-    name: 'Email',
-    icon: 'fas fa-envelope',
-    link: 'mailto:windchan0v0@foxmail.com',
-    color: '#4285f4',
-  },
-]
-
-const features = [
-  {
-    icon: 'fa-laptop-code',
-    title: '技术手札',
-    desc: '代码与Bug的爱恨情仇',
-    route: '/articles/frontend',
-  },
-  {
-    icon: 'fa-coffee',
-    title: '奇怪杂谈',
-    desc: '生活琐事与碎碎念',
-    route: '/articles/topics',
-  },
-  {
-    icon: 'fa-feather-alt',
-    title: '幻想物语',
-    desc: '中二病发作现场',
-    route: '/articles/novels',
-  },
-  {
-    icon: 'fa-palette',
-    title: '绘卷长廊',
-    desc: '黑历史堆放处',
-    route: '/gallery',
-  },
-]
 </script>
 
 <style scoped>

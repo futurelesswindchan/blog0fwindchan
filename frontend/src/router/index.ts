@@ -6,6 +6,7 @@ import { useToastStore } from '@/stores/toastStore'
 import { useFriendStore } from '@/stores/friendStore'
 import { useArtworkStore } from '@/stores/artworkStore'
 import { useAdminStore } from '@/stores/adminStore'
+import { siteConfig } from '@/site.config'
 
 /**
  * @module RouterConfiguration
@@ -198,9 +199,9 @@ let loadingStartTime: number = 0
 router.beforeEach(async (to, from, next) => {
   // 1. 动态挂载浏览器标签页标题
   if (to.meta.title) {
-    document.title = `${to.meta.title} | 风风博客`
+    document.title = `${to.meta.title} | ${siteConfig.title}`
   } else {
-    document.title = '风风博客'
+    document.title = siteConfig.title
   }
 
   // 2. 注入过渡动画钩子类名
