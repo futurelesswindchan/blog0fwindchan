@@ -1,11 +1,6 @@
 <!-- frontend\src\components\layout\NavPanel.vue -->
 <template>
-  <nav
-    class="nav-panel glass-container"
-    :class="{ expanded: isExpanded }"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false"
-  >
+  <nav class="nav-panel glass-container" :class="{ expanded: isExpanded }">
     <button class="toggle-btn" @click="$emit('toggle')">
       <i class="fas" :class="toggleIcon"></i>
     </button>
@@ -24,7 +19,6 @@
           active: item.matchPrefix && $route.path.startsWith(item.path),
         }"
       >
-        <!-- 统一使用 icon 类容器包裹 -->
         <div class="icon-container">
           <font-awesome-icon :icon="item.iconType" fixed-width />
         </div>
@@ -34,7 +28,7 @@
       <!-- 2. 设置按钮 -->
       <button class="nav-item settings-btn" @click="modalStore.openSettings()">
         <div class="icon-container">
-          <i class="fas fa-cog"></i>
+          <font-awesome-icon :icon="['fas', 'cog']" fixed-width />
         </div>
         <span v-show="isExpanded">设置界面</span>
       </button>
@@ -47,7 +41,7 @@
         type="button"
       >
         <div class="icon-container">
-          <i class="fas" :class="isDarkTheme ? 'fa-sun' : 'fa-moon'"></i>
+          <font-awesome-icon :icon="['fas', isDarkTheme ? 'sun' : 'moon']" fixed-width />
         </div>
         <span v-show="isExpanded" class="theme-label">{{
           isDarkTheme ? '亮色主题' : '暗色主题'
@@ -58,8 +52,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { navItems, themeToggleColors } from '@/site.config'
 
 const props = defineProps<{
   isExpanded: boolean
@@ -68,36 +63,15 @@ const props = defineProps<{
 
 defineEmits(['toggle', 'toggle-theme'])
 
-const isHovered = ref(false)
 const modalStore = useGlobalModalStore()
-
-const navItems = [
-  {
-    path: '/home',
-    iconType: ['fas', 'home'],
-    label: '这是首页',
-    exact: true,
-    matchPrefix: true,
-  },
-  { path: '/articles', iconType: ['fas', 'book-open'], label: '文章导航', matchPrefix: true },
-  { path: '/gallery', iconType: ['fas', 'images'], label: '绘画长廊', matchPrefix: true },
-  { path: '/friends', iconType: ['fas', 'paw'], label: '友情链接', matchPrefix: true },
-  {
-    path: '/admin/dashboard',
-    iconType: ['fas', 'pen-nib'],
-    label: '内容管理',
-    matchPrefix: true,
-  },
-]
 
 const toggleIcon = computed(() =>
   props.isExpanded ? 'fa-angle-double-left' : 'fa-angle-double-right',
 )
 
 const themeButtonStyle = computed(() => ({
-  background: props.isDarkTheme ? 'rgba(251, 114, 153, 0.3)' : 'rgba(66, 133, 244, 0.5)',
+  background: props.isDarkTheme ? themeToggleColors.dark : themeToggleColors.light,
 }))
-const isDarkTheme = computed(() => !!props.isDarkTheme)
 </script>
 
 <style scoped>
@@ -220,8 +194,7 @@ const isDarkTheme = computed(() => !!props.isDarkTheme)
   color: black;
 }
 
-:deep(.router-link-exact-active),
-:deep(.router-link-active),
+.nav-item.router-link-exact-active,
 .nav-item.router-link-active,
 .nav-item.active {
   background: var(--accent-color) !important;
@@ -229,15 +202,6 @@ const isDarkTheme = computed(() => !!props.isDarkTheme)
   box-shadow:
     0 4px 15px rgba(var(--accent-color-rgb), 0.2),
     0 0 15px rgba(var(--accent-color-rgb), 0.1);
-}
-
-:deep(.router-link-active:not(.router-link-exact-active)) {
-  background: inherit;
-  color: inherit;
-}
-
-:deep(.router-link-active::after) {
-  display: none;
 }
 
 .theme-toggle {

@@ -1,28 +1,48 @@
 // src/site.config.ts
+
+/**
+ * 站点全局配置
+ * 集中管理博客的核心常量、导航结构与主题色等信息
+ */
+
+// --- 导航项类型定义 ---
+export interface NavItem {
+  path: string
+  iconType: [string, string]
+  label: string
+  exact?: boolean
+  matchPrefix?: boolean
+}
+
+// --- 基础站点信息 ---
 export const siteConfig = {
-  // 基础信息
   title: '风风博客',
   author: 'futurelesswindchan',
   description: '一个基于 Vue 3 + TypeScript + Flask 打造的高颜值全栈个人博客系统',
-  
-  // 个人社交链接
-  socials: {
-    github: 'https://github.com/futurelesswindchan',
-    twitter: '',
+}
+
+// --- 导航菜单配置（桌面端 & 移动端共用） ---
+export const navItems: NavItem[] = [
+  {
+    path: '/home',
+    iconType: ['fas', 'home'],
+    label: '这是首页',
+    exact: true,
+    matchPrefix: true,
   },
+  { path: '/articles', iconType: ['fas', 'book-open'], label: '文章导航', matchPrefix: true },
+  { path: '/gallery', iconType: ['fas', 'images'], label: '绘画长廊', matchPrefix: true },
+  { path: '/friends', iconType: ['fas', 'paw'], label: '友情链接', matchPrefix: true },
+  {
+    path: '/admin/dashboard',
+    iconType: ['fas', 'pen-nib'],
+    label: '内容管理',
+    matchPrefix: true,
+  },
+]
 
-  // 博客分类定义 (需与后端数据库初始化的分类对应)
-  categories: [
-    { key: 'frontend', name: '技术手札', path: '/articles/frontend' },
-    { key: 'topics', name: '杂谈闲聊', path: '/articles/topics' },
-    { key: 'novels', name: '小说故事', path: '/articles/novels' },
-  ],
-
-  // 导航栏菜单
-  navItems: [
-    { name: '首页', path: '/home', icon: 'home' },
-    { name: '文章', path: '/articles', icon: 'book' },
-    { name: '画廊&设定', path: '/gallery', icon: 'image' },
-    { name: '友链&留言', path: '/friends', icon: 'users' },
-  ],
-};
+// --- 主题按钮配色 ---
+export const themeToggleColors = {
+  light: 'rgba(66, 133, 244, 0.5)',
+  dark: 'rgba(251, 114, 153, 0.3)',
+} as const

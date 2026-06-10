@@ -3,7 +3,7 @@
   <nav
     class="mobile-nav"
     :class="{
-      'dark-theme': isDarkTheme,
+      'is-dark': isDarkTheme,
       'sliding-out': isClosing,
     }"
     @animationend="onAnimationEnd"
@@ -30,7 +30,6 @@
         }"
         @click="handleClose"
       >
-        <!-- 统一图标容器 -->
         <div class="icon-container">
           <font-awesome-icon :icon="item.iconType" fixed-width />
         </div>
@@ -49,9 +48,8 @@
 
     <!-- 3. 主题切换 -->
     <button class="nav-item theme-toggle" :style="themeButtonStyle" @click="$emit('toggle-theme')">
-      <!-- 统一图标容器，修复对齐 -->
       <div class="icon-container">
-        <i class="fas" :class="isDarkTheme ? 'fa-sun' : 'fa-moon'"></i>
+        <font-awesome-icon :icon="['fas', isDarkTheme ? 'sun' : 'moon']" fixed-width />
       </div>
       <span>{{ isDarkTheme ? '亮色主题' : '暗色主题' }}</span>
     </button>
@@ -60,6 +58,7 @@
 
 <script setup lang="ts">
 import { useGlobalModalStore } from '@/stores/globalModalStore'
+import { navItems, themeToggleColors } from '@/site.config'
 import { ref, computed } from 'vue'
 
 const { isDarkTheme } = defineProps<{
@@ -71,27 +70,8 @@ const isClosing = ref(false)
 const modalStore = useGlobalModalStore()
 
 const themeButtonStyle = computed(() => ({
-  background: isDarkTheme ? 'rgba(251, 114, 153, 0.3)' : 'rgba(66, 133, 244, 0.5)',
+  background: isDarkTheme ? themeToggleColors.dark : themeToggleColors.light,
 }))
-
-const navItems = [
-  {
-    path: '/home',
-    iconType: ['fas', 'home'],
-    label: '这是首页',
-    exact: true,
-    matchPrefix: true,
-  },
-  { path: '/articles', iconType: ['fas', 'book-open'], label: '文章导航', matchPrefix: true },
-  { path: '/gallery', iconType: ['fas', 'images'], label: '绘画长廊', matchPrefix: true },
-  { path: '/friends', iconType: ['fas', 'paw'], label: '友情链接', matchPrefix: true },
-  {
-    path: '/admin/dashboard',
-    iconType: ['fas', 'pen-nib'],
-    label: '内容管理',
-    matchPrefix: true,
-  },
-]
 
 const openSettings = () => {
   modalStore.openSettings()
@@ -120,7 +100,6 @@ const onAnimationEnd = () => {
   display: flex;
   flex-direction: column;
   transform: translateX(0);
-  transition: none;
   transform-origin: unset;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -131,12 +110,16 @@ const onAnimationEnd = () => {
   background-color: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   color: rgba(0, 0, 0, 0.9);
-  transition: all 0.3s ease;
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.dark-theme .mobile-nav {
+.mobile-nav.is-dark {
   background-color: rgba(0, 0, 0, 0.9);
   color: rgba(255, 255, 255, 0.9);
+}
+
+.mobile-nav.sliding-out {
+  animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes slideIn {
@@ -155,13 +138,6 @@ const onAnimationEnd = () => {
   100% {
     transform: translateX(-100%);
   }
-}
-
-.mobile-nav {
-  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-.mobile-nav.sliding-out {
-  animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .nav-item,
@@ -186,12 +162,14 @@ const onAnimationEnd = () => {
   border-radius: 8px;
   padding: 0px 16px;
 }
+
 .nav-header h2 {
   margin: 0;
   font-size: 1.2rem;
   color: inherit;
   opacity: 0.9;
 }
+
 .close-btn {
   background: none;
   border: none;
@@ -206,10 +184,11 @@ hr {
   border: none;
   height: 1px;
   background-color: rgba(0, 0, 0, 1);
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease;
   margin: 12px 0;
 }
-.dark-theme hr {
+
+.mobile-nav.is-dark hr {
   background-color: rgba(255, 255, 255, 1);
 }
 
@@ -221,9 +200,11 @@ hr {
   align-items: stretch;
   padding: 0 2px;
 }
+
 .nav-items-grid hr {
   grid-column: 1 / -1;
 }
+
 .nav-items-grid .nav-item {
   width: 95%;
   min-width: 0;
@@ -259,7 +240,7 @@ hr {
   font-size: 1.1em;
 }
 
-.dark-theme .nav-item {
+.mobile-nav.is-dark .nav-item {
   color: rgba(255, 255, 255, 0.85);
   background: rgba(255, 255, 255, 0.1);
 }
@@ -270,9 +251,10 @@ hr {
   background: rgba(var(--accent-color-rgb), 0.5);
   color: var(--accent-color);
 }
-.dark-theme .nav-item.router-link-exact-active,
-.dark-theme .nav-item.router-link-active,
-.dark-theme .nav-item.active {
+
+.mobile-nav.is-dark .nav-item.router-link-exact-active,
+.mobile-nav.is-dark .nav-item.router-link-active,
+.mobile-nav.is-dark .nav-item.active {
   background: rgba(var(--accent-color-rgb), 0.6);
   color: #fff;
 }
@@ -281,8 +263,9 @@ hr {
 .theme-toggle i {
   opacity: 0.9;
 }
-.dark-theme .nav-item svg,
-.dark-theme .theme-toggle i {
+
+.mobile-nav.is-dark .nav-item svg,
+.mobile-nav.is-dark .theme-toggle i {
   opacity: 1;
 }
 
@@ -291,9 +274,6 @@ hr {
 }
 
 @media (hover: none) {
-  .mobile-overlay {
-    backdrop-filter: none;
-  }
   .mobile-nav {
     will-change: auto;
     backface-visibility: visible;
@@ -309,7 +289,7 @@ hr {
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  transition: 0.3s ease;
+  transition: all 0.3s ease;
   margin-bottom: 8px;
 }
 </style>
