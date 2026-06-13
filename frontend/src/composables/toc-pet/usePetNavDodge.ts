@@ -1,5 +1,5 @@
 // frontend/src/composables/toc-pet/usePetNavDodge.ts
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 // 全局导航躲避偏移量 (暴露出供其他组件修改)
 export const globalNavOffset = ref<number>(0)
