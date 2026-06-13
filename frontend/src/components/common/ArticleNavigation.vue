@@ -57,7 +57,7 @@
  * 依赖于 `ArticleWithCategory` 接口以实现基于分类的自动路由映射。
  */
 
-import { globalNavOffset } from '@/composables/useTocPet'
+import { globalNavOffset } from '@/composables/toc-pet'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
