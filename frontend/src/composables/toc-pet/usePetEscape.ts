@@ -12,7 +12,7 @@ import { ESCAPE_CONFIG } from './types'
  * @param currentMood 宠物当前情绪状态引用
  * @param setMood 修改情绪的受控方法
  * @param isExpanded 目录展开状态引用（受惊时强制折叠）
- * @param customMessage 宠物台词引用（用于渲染受惊或逃生文案）
+ * @param setUrgentMsg 写入紧急通道的方法
  * @param getRandomMessage 抽取常规受惊文案的工厂方法
  * @param getRandomCornerEscapeMessage 抽取死角瞬移特有文案的工厂方法
  * @returns 包含位置追踪坐标、触发受惊拦截方法以及清除事件的钩子集合
@@ -21,7 +21,7 @@ export function usePetEscape(
   currentMood: Ref<PetMood>,
   setMood: (mood: PetMood) => void,
   isExpanded: Ref<boolean>,
-  customMessage: Ref<string>,
+  setUrgentMsg: (msg: string) => void,
   getRandomMessage: () => string,
   getRandomCornerEscapeMessage: () => string,
 ) {
@@ -100,9 +100,9 @@ export function usePetEscape(
     if ((hitLeft || hitRight) && (hitTop || hitBottom)) {
       newX = hitLeft ? maxX - Math.random() * 100 : minX + Math.random() * 100
       newY = hitTop ? maxY - Math.random() * 80 : minY + Math.random() * 80
-      customMessage.value = getRandomCornerEscapeMessage()
+      setUrgentMsg(getRandomCornerEscapeMessage())
     } else {
-      customMessage.value = getRandomMessage()
+      setUrgentMsg(getRandomMessage())
     }
 
     const newPos = toPositionCoords(newX, newY)
@@ -150,7 +150,7 @@ export function usePetEscape(
   const triggerShock = (event?: MouseEvent) => {
     if (currentMood.value === 'shocked') return
     setMood('shocked')
-    customMessage.value = getRandomMessage()
+    setUrgentMsg(getRandomMessage())
     isExpanded.value = false // 受惊时强制收起目录
 
     if (!shockPosition.value) {

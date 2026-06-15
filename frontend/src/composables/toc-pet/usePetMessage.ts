@@ -1,26 +1,39 @@
 // frontend/src/composables/toc-pet/usePetMessage.ts
 import { ref, computed, type Ref } from 'vue'
-import type { PetMood } from './types'
+import type { PetMood, MessageChannel, MessageOutput } from './types'
+import { usePetGreeting } from './usePetGreeting'
 
 /**
- * 宠物消息轮播与台词抽奖系统。
+ * 宠物消息仲裁系统（重构版）。
  *
- * 负责内置不同情绪下的话术文案库。内部包含一个定时事件循环，
- * 当处于常规情绪时，定期（通常10秒）翻新当前话术，为宠物注入灵活生命力。
+ * 将消息来源拆分为三个独立通道，通过优先级仲裁器统一输出最终显示内容。
+ * 各通道互不抢写，边界清晰。
  *
- * @param currentMood 宠物当前情绪引用，用于匹配不同语录字典
- * @param isExpanded 目录展开状态引用（展开时不进行闲聊切换）
- * @param isHovered 用户交互触发标记
- * @returns 响应式显示文字内容以及启停轮播的方法
+ * 通道优先级（从高到低）：
+ * 1. urgent  — 紧急事件消息（shocked 逃跑、dizzy 晕车）
+ * 2. interact — 主动交互响应（hover 回应、expand 引导）
+ * 3. idle    — 被动轮播（情绪闲聊 + 时间感知氛围）
+ *
+ * @param currentMood 宠物当前情绪引用
+ * @param isExpanded 目录展开状态引用
+ * @param isHovered 鼠标悬浮状态引用
+ * @returns 仲裁器输出 + 各通道写入接口 + 文案工具方法
  */
 export function usePetMessage(
   currentMood: Ref<PetMood>,
   isExpanded: Ref<boolean>,
   isHovered: Ref<boolean>,
 ) {
-  const customMessage = ref<string>('')
+  // === 三个独立通道 ===
+  const urgentMsg = ref<string>('')
+  const idleMsg = ref<string>('')
+
+  // 时间感知引擎
+  const { getGreeting } = usePetGreeting()
+
   let messageTimer: number | null = null
 
+  // --- 情绪文案库 ---
   const defaultMessages: Record<PetMood, string[]> = {
     typing: [
       '正在疯狂敲击键盘生成文章中...',
@@ -89,31 +102,92 @@ export function usePetMessage(
     '逼到死角了？！启动紧急传送！！(╯°□°)╯',
     '哇啊啊被包围了！量子隧穿！！',
     '此路不通！瞬移启动！嗖——',
-    '你以为角落就能困住我？天真！✨',
+    '你以为角落就能困住我？天真！',
     '紧急避险程序 OMEGA 启动！消失！',
     '死角？！不存在的！传送！',
     '啊啊啊被夹击了！空间折叠！',
     '你以为我会被困在角落吗？！不存在的！',
   ]
 
+  // --- 文案工具方法 ---
+
+  /**
+   * 从当前情绪对应的文案池中随机抽取一条
+   */
   const getRandomMessage = (): string => {
     const messages = defaultMessages[currentMood.value]
-    const randomIndex = Math.floor(Math.random() * messages.length)
-    return messages[randomIndex]
+    return messages[Math.floor(Math.random() * messages.length)]
   }
 
+  /**
+   * 从死角逃生专用文案池中随机抽取一条
+   */
   const getRandomCornerEscapeMessage = (): string => {
-    const randomIndex = Math.floor(Math.random() * cornerEscapeMessages.length)
-    return cornerEscapeMessages[randomIndex]
+    return cornerEscapeMessages[Math.floor(Math.random() * cornerEscapeMessages.length)]
   }
 
+  // --- 通道写入方法 ---
+
+  /**
+   * 写入紧急通道（供 escape/dizzy 模块调用）
+   */
+  const setUrgentMsg = (msg: string) => {
+    urgentMsg.value = msg
+  }
+
+  /**
+   * 清空紧急通道（事件结束后调用）
+   */
+  const clearUrgentMsg = () => {
+    urgentMsg.value = ''
+  }
+
+  /**
+   * 写入闲聊通道（供 idle/mood 切换调用）
+   */
+  const setIdleMsg = (msg: string) => {
+    idleMsg.value = msg
+  }
+
+  // --- 交互通道（computed 派生，无需手动写入） ---
+  const interactMsg = computed<string>(() => {
+    if (isExpanded.value) {
+      return getGreeting().expandedTitle
+    }
+    if (isHovered.value) {
+      return getGreeting().hoverHint
+    }
+    return ''
+  })
+
+  // --- 仲裁器：按优先级输出最终消息 ---
+  const messageOutput = computed<MessageOutput>(() => {
+    // 优先级 1：紧急通道
+    if (urgentMsg.value) {
+      return { text: urgentMsg.value, channel: 'urgent' }
+    }
+    // 优先级 2：交互通道
+    if (interactMsg.value) {
+      return { text: interactMsg.value, channel: 'interact' }
+    }
+    // 优先级 3：闲聊通道
+    return { text: idleMsg.value || '正在努力阅读中...', channel: 'idle' }
+  })
+
+  /** 最终显示文案（兼容旧接口） */
+  const displayMessage = computed(() => messageOutput.value.text)
+
+  /** 当前激活通道标识（供模板层选择动画） */
+  const activeChannel = computed(() => messageOutput.value.channel)
+
+  // --- 闲聊轮播定时器 ---
   const startMessageLoop = () => {
     if (messageTimer) clearInterval(messageTimer)
-    customMessage.value = getRandomMessage()
+    idleMsg.value = getRandomMessage()
     messageTimer = window.setInterval(() => {
-      // 震惊状态或展开状态下不轮播闲聊
+      // 紧急状态或展开状态下不轮播闲聊
       if (currentMood.value === 'shocked' || isExpanded.value) return
-      customMessage.value = getRandomMessage()
+      idleMsg.value = getRandomMessage()
     }, 10000)
   }
 
@@ -124,24 +198,21 @@ export function usePetMessage(
     }
   }
 
-  const displayMessage = computed(() => {
-    if (currentMood.value === 'shocked') {
-      return customMessage.value
-    }
-    if (isExpanded.value) {
-      return '文章目录导航'
-    }
-    if (isHovered.value) {
-      return '点击查看文章目录'
-    }
-    return customMessage.value || '正在努力阅读中...'
-  })
-
   return {
-    customMessage,
+    // 仲裁器输出
     displayMessage,
+    activeChannel,
+
+    // 通道写入接口（供其他模块使用）
+    setUrgentMsg,
+    clearUrgentMsg,
+    setIdleMsg,
+
+    // 文案工具
     getRandomMessage,
     getRandomCornerEscapeMessage,
+
+    // 轮播控制
     startMessageLoop,
     stopMessageLoop,
   }

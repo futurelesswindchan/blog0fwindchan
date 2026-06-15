@@ -12,7 +12,8 @@ import type { PetMood } from './types'
  * @param setMood 修改情绪的方法
  * @param isTypingMode 打字模式标记（非强制，用于晕车恢复后的状态回撤）
  * @param getRandomMessage 抽取晕车相关吐槽语的随机发生器
- * @param customMessage 外部响应式台词槽
+ * @param setUrgentMsg 写入紧急通道的方法
+ * @param clearUrgentMsg 清空紧急通道的方法
  * @returns 启停滚动速率监听器的控制钩子
  */
 export function usePetDizzy(
@@ -20,7 +21,8 @@ export function usePetDizzy(
   setMood: (mood: PetMood) => void,
   isTypingMode: Ref<boolean>,
   getRandomMessage: () => string,
-  customMessage: Ref<string>,
+  setUrgentMsg: (msg: string) => void,
+  clearUrgentMsg: () => void,
 ) {
   let lastScrollTop = 0
   let lastScrollTime = 0
@@ -30,10 +32,10 @@ export function usePetDizzy(
   const triggerDizzy = () => {
     // 保护机制：如果正在受惊，最高优先级不能被打断
     if (currentMood.value === 'shocked') return
-    
+
     if (currentMood.value !== 'dizzy') {
       setMood('dizzy')
-      customMessage.value = getRandomMessage()
+      setUrgentMsg(getRandomMessage())
     }
 
     if (dizzyRecoveryTimer) window.clearTimeout(dizzyRecoveryTimer)
@@ -42,7 +44,7 @@ export function usePetDizzy(
     dizzyRecoveryTimer = window.setTimeout(() => {
       if (currentMood.value === 'dizzy') {
         setMood(isTypingMode.value ? 'typing' : 'reading')
-        customMessage.value = getRandomMessage()
+        clearUrgentMsg()
       }
     }, 2000)
   }

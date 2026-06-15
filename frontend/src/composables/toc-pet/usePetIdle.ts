@@ -12,7 +12,7 @@ import type { PetMood } from './types'
  * @param setMood 修改情绪的受控方法
  * @param isTypingMode 是否处于流水打字文章渲染模式
  * @param getRandomMessage 抽取闲聊消息的随机发生器
- * @param customMessage 外部响应式台词槽
+ * @param setIdleMsg 写入闲聊通道的方法
  * @returns 闲置状态挂载、刷新及销毁的触发钩子
  */
 export function usePetIdle(
@@ -20,7 +20,7 @@ export function usePetIdle(
   setMood: (mood: PetMood) => void,
   isTypingMode: Ref<boolean>,
   getRandomMessage: () => string,
-  customMessage: Ref<string>,
+  setIdleMsg: (msg: string) => void,
 ) {
   let idleTimer: number | null = null
   const IDLE_TIMEOUT = 30000 // 设定 30 秒无操作就打瞌睡
@@ -34,7 +34,7 @@ export function usePetIdle(
     // 如果它正在睡觉，我们就把它摇醒！
     if (currentMood.value === 'sleepy') {
       setMood(isTypingMode.value ? 'typing' : 'reading')
-      customMessage.value = getRandomMessage()
+      setIdleMsg(getRandomMessage())
     }
   }
 
@@ -50,7 +50,7 @@ export function usePetIdle(
       // 设计意图：typing 表示正在生成内容，属于"活跃"状态，不应入睡
       if (currentMood.value === 'reading') {
         setMood('sleepy')
-        customMessage.value = getRandomMessage()
+        setIdleMsg(getRandomMessage())
       }
     }, IDLE_TIMEOUT)
   }

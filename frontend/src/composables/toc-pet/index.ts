@@ -9,7 +9,7 @@ import { usePetNavDodge } from './usePetNavDodge'
 
 // 重导出全局防撞偏移量与类型
 export { globalNavOffset } from './usePetNavDodge'
-export type { PetMood } from './types'
+export type { PetMood, MessageChannel } from './types'
 
 /**
  * TOC 伴读宠物状态机主组合式函数（架构重构版）。
@@ -21,7 +21,7 @@ export type { PetMood } from './types'
  * @returns 包含宠物所有响应式状态、计算属性以及外部交互方法的闭包对象
  * @example
  * ```ts
- * const { currentMood, toggleExpand, triggerShock } = useTocPet();
+ * const { currentMood, toggleExpand, triggerShock, activeChannel } = useTocPet();
  * ```
  */
 export function useTocPet() {
@@ -31,10 +31,13 @@ export function useTocPet() {
   // 1. 获取情绪管理器
   const { currentMood, currentIcon, setMood, isTypingMode } = usePetMood()
 
-  // 2. 获取消息系统
+  // 2. 获取消息仲裁系统
   const {
-    customMessage,
     displayMessage,
+    activeChannel,
+    setUrgentMsg,
+    clearUrgentMsg,
+    setIdleMsg,
     getRandomMessage,
     getRandomCornerEscapeMessage,
     startMessageLoop,
@@ -47,7 +50,7 @@ export function useTocPet() {
     setMood,
     isTypingMode,
     getRandomMessage,
-    customMessage,
+    setIdleMsg,
   )
 
   // 4. 获取晕车系统
@@ -56,7 +59,8 @@ export function useTocPet() {
     setMood,
     isTypingMode,
     getRandomMessage,
-    customMessage,
+    setUrgentMsg,
+    clearUrgentMsg,
   )
 
   // 5. 获取受惊逃走物理系统
@@ -64,7 +68,7 @@ export function useTocPet() {
     currentMood,
     setMood,
     isExpanded,
-    customMessage,
+    setUrgentMsg,
     getRandomMessage,
     getRandomCornerEscapeMessage,
   )
@@ -88,7 +92,7 @@ export function useTocPet() {
       // 保护最高优先级状态
       if (currentMood.value === 'shocked') return
       setMood(isTyping ? 'typing' : 'reading')
-      customMessage.value = getRandomMessage()
+      setIdleMsg(getRandomMessage())
       resetIdleTimer() // 模式切换算互动，重置
     },
     { immediate: true },
@@ -130,11 +134,11 @@ export function useTocPet() {
     isHovered,
     currentIcon,
     displayMessage,
+    activeChannel,    // 当前激活通道标识（供模板层动画分发）
     shockPosition,
-    dodgeOffset,      // 从子系统引出
+    dodgeOffset,
     triggerShock,
     toggleExpand,
-    wakeUpPet,        // 手动唤醒 (非必需，用于自定义交互)
-    customMessage,    // 如果外部需要强插播
+    wakeUpPet,
   }
 }
