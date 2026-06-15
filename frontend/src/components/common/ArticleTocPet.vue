@@ -16,6 +16,7 @@
         <PetHeader
           :currentIcon="currentIcon"
           :displayMessage="displayMessage"
+          :activeChannel="activeChannel"
           :isExpanded="isExpanded"
           @toggle-expand="toggleExpand"
           @update-hover="isHovered = $event"
@@ -76,6 +77,7 @@ const {
   isHovered,
   currentIcon,
   displayMessage,
+  activeChannel,
   shockPosition,
   triggerShock,
   toggleExpand,

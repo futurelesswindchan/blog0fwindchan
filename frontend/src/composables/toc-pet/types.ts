@@ -7,6 +7,27 @@
 export type PetMood = 'typing' | 'reading' | 'sleepy' | 'dizzy' | 'shocked'
 
 /**
+ * 消息通道标识枚举。
+ * 仲裁器依据优先级选取当前激活通道，模板层据此分发切换动画。
+ *
+ * - `urgent`   紧急事件（逃跑、晕车等不可打断状态）
+ * - `interact` 主动交互（hover 回应、expand 引导）
+ * - `idle`     被动闲聊（情绪轮播 + 时间感知氛围）
+ */
+export type MessageChannel = 'urgent' | 'interact' | 'idle'
+
+/**
+ * 消息仲裁器最终输出结构。
+ * 模板层根据 `channel` 选择对应 CSS 切换动画。
+ */
+export interface MessageOutput {
+  /** 最终显示文案 */
+  text: string
+  /** 当前激活的通道标识 */
+  channel: MessageChannel
+}
+
+/**
  * 逃跑算法常量配置模型
  */
 export interface EscapeConfigType {
