@@ -22,9 +22,9 @@ from werkzeug.security import (
 
 from flask_jwt_extended import (
     JWTManager,
-    create_access_token,
-    create_refresh_token,
-    jwt_required,
+    create_access_token,  # type: ignore[reportUnknownVariableType]
+    create_refresh_token,  # type: ignore[reportUnknownVariableType]
+    jwt_required,  # type: ignore[reportUnknownVariableType]
 )
 
 from sqlalchemy import JSON, ForeignKey, Integer, String, Text
@@ -89,7 +89,11 @@ jwt = JWTManager(app)
 db = SQLAlchemy(app)
 
 # 辅助函数：检查文件扩展名
-def allowed_file(filename):
+def allowed_file(filename: str | None) -> bool:
+    if filename is None:
+
+        return False
+
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -466,7 +470,9 @@ def upload_file():
             upload_type = 'misc'
             
         # 2. 构建保存路径: static/uploads/<type>/
-        save_dir = os.path.join(app.config['UPLOAD_FOLDER'], upload_type)
+        upload_folder = cast(str, app.config['UPLOAD_FOLDER'])
+
+        save_dir = os.path.join(upload_folder, upload_type)
         
         # 确保目录存在
         if not os.path.exists(save_dir):
@@ -654,7 +660,7 @@ def get_plans() -> Response:
 
     # 增加排序逻辑：按照 sort_order 升序获取数据
     all_plans = db.session.execute(db.select(Plan).order_by(Plan.sort_order.asc())).scalars().all()
-    filtered_plans = []
+    filtered_plans: list[dict[str, Any]] = []
     
     # 计算 7 天前的截止日期
     cutoff_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
@@ -680,13 +686,13 @@ def admin_login():
     - 请求体 JSON 需包含 `username` 和 `password`。
     """
 
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     username = data.get("username")
     password = data.get("password")
 
-    user = User.query.filter_by(username=username).first()
+    user = cast(Optional[User], User.query.filter_by(username=username).first())
 
-    if user and user.check_password(password):
+    if user and password and user.check_password(password):
         # 注意：flask-jwt-extended 的 identity 建议使用字符串，所以这里使用 str(user.id)，不然报错422咧awa
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))
@@ -737,7 +743,7 @@ def create_admin():
     if password != password2:
         print("两次密码不一致！")
         sys.exit(1)
-    user = User.query.filter_by(username=username).first()
+    user = cast(Optional[User], User.query.filter_by(username=username).first())
     if user:
         print(f"用户 '{username}' 已存在。")
         sys.exit(1)
@@ -766,7 +772,7 @@ def save_article():
     - date, content: 可选
     """
 
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     is_new = data.get("isNew", False)
 
     # 初始化默认分类数据
@@ -778,16 +784,16 @@ def save_article():
 
     try:
         # 根据前端传入的 category slug 查询分类
-        category = Category.query.filter_by(slug=data["category"]).first()
+        category = cast(Optional[Category], Category.query.filter_by(slug=data["category"]).first())
         if not category:
             return jsonify({"error": "Invalid category"}), 400
         
         # 处理连载合集逻辑
         collection_slug = data.get("collection_id")
-        real_collection_id = None
+        real_collection_id: Optional[int] = None
         if collection_slug:
             # 根据 slug 查出真正的合集 ID
-            col = Collection.query.filter_by(slug=collection_slug).first()
+            col = cast(Optional[Collection], Collection.query.filter_by(slug=collection_slug).first())
             if col:
                 real_collection_id = col.id
 
@@ -810,12 +816,12 @@ def save_article():
 
         else:
             # 更新已有文章
-            article = Article.query.filter_by(slug=data["slug"]).first()
+            article = cast(Optional[Article], Article.query.filter_by(slug=data["slug"]).first())
             if not article:
                 return jsonify({"error": "Article not found"}), 404
 
             article.title = data["title"]
-            article.date = data.get("date", article.date)
+            article.date = str(data.get("date", article.date))
             article.content = data.get("content", "")
             article.category_id = category.id
             article.collection_id = real_collection_id
@@ -823,7 +829,7 @@ def save_article():
         # --- 更新每日贡献热力图 ---
         today_str = datetime.now().strftime("%Y-%m-%d")
         # 尝试获取今天的贡献记录
-        contrib = Contribution.query.filter_by(date=today_str).first()
+        contrib = cast(Optional["Contribution"], Contribution.query.filter_by(date=today_str).first())
 
         if contrib:
             contrib.count += 1  # 已经肝过了，计数累加 awa
@@ -847,7 +853,7 @@ def save_article():
 def delete_article(slug: str):
     """删除文章（需要 access_token）。"""
 
-    article = Article.query.filter_by(slug=slug).first()
+    article = cast(Optional[Article], Article.query.filter_by(slug=slug).first())
     if article:
         db.session.delete(article)
         db.session.commit()
@@ -864,13 +870,15 @@ def get_article_assets():
     扫描 static/uploads/article 目录下的所有图片，按修改时间倒序排列。
     """
     # 目标目录
-    assets_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'article')
+    upload_folder_str = cast(str, app.config['UPLOAD_FOLDER'])
+
+    assets_dir = os.path.join(upload_folder_str, 'article')
     
     # 如果目录不存在，返回空列表
     if not os.path.exists(assets_dir):
         return jsonify({"assets": []})
         
-    assets = []
+    assets: list[dict[str, Any]] = []
     
     # 遍历目录
     with os.scandir(assets_dir) as entries:
@@ -890,7 +898,7 @@ def get_article_assets():
                 })
     
     # 按时间倒序排序 (最新的在前面)
-    assets.sort(key=lambda x: x['mtime'], reverse=True)
+    assets.sort(key=lambda x: float(x['mtime']), reverse=True)
     
     return jsonify({"assets": assets})
 
@@ -910,7 +918,9 @@ def delete_article_asset():
     safe_filename = os.path.basename(filename)
     
     # 目标路径
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'article', safe_filename)
+    upload_folder_del = cast(str, app.config['UPLOAD_FOLDER'])
+
+    file_path = os.path.join(upload_folder_del, 'article', safe_filename)
     
     if os.path.exists(file_path):
         try:
@@ -932,10 +942,10 @@ def delete_article_asset():
 @jwt_required()
 def add_collection():
     """新增合集"""
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     category_slug = data.get("category")
     
-    category = Category.query.filter_by(slug=category_slug).first()
+    category = cast(Optional[Category], Category.query.filter_by(slug=category_slug).first())
     if not category or not data.get("slug") or not data.get("name"):
         return jsonify({"error": "Missing required fields (category, slug, name)"}), 400
         
@@ -955,9 +965,9 @@ def add_collection():
 
 @app.route("/api/admin/collections/<slug>", methods=["DELETE"])
 @jwt_required()
-def delete_collection(slug):
+def delete_collection(slug: str):
     """删除合集，并温柔地遣散文章"""
-    col = Collection.query.filter_by(slug=slug).first()
+    col = cast(Optional[Collection], Collection.query.filter_by(slug=slug).first())
     if not col:
         return jsonify({"error": "Collection not found"}), 404
         
@@ -973,10 +983,10 @@ def delete_collection(slug):
 
 @app.route("/api/admin/collections/<slug>", methods=["PUT"])
 @jwt_required()
-def update_collection(slug):
+def update_collection(slug: str):
     """更新连载合集信息"""
-    data = request.json or {}
-    col = Collection.query.filter_by(slug=slug).first()
+    data: dict[str, Any] = request.json or {}
+    col = cast(Optional[Collection], Collection.query.filter_by(slug=slug).first())
     if not col:
         return jsonify({"error": "Collection not found"}), 404
         
@@ -998,7 +1008,7 @@ def update_collection(slug):
 @jwt_required()
 def add_friend():
     """添加友链（需要 access_token）。"""
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     if not data.get("name") or not data.get("url"):
         return jsonify({"error": "Name and URL are required"}), 400
     
@@ -1016,9 +1026,9 @@ def add_friend():
 
 @app.route("/api/friends/<int:id>", methods=["PUT"])
 @jwt_required()
-def update_friend(id):
+def update_friend(id: int):
     """更新友链（需要 access_token）。"""
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     friend = db.session.get(Friend, id)
     if not friend:
         return jsonify({"error": "Friend not found"}), 404
@@ -1035,7 +1045,7 @@ def update_friend(id):
 
 @app.route("/api/friends/<int:id>", methods=["DELETE"])
 @jwt_required()
-def delete_friend(id):
+def delete_friend(id: int):
     """删除友链（需要 access_token）。"""
     friend = db.session.get(Friend, id)
     if not friend:
@@ -1056,7 +1066,7 @@ def delete_friend(id):
 @jwt_required()
 def add_artwork():
     """添加插画 / 作品（需要 access_token）。"""
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     # 假设目前图片是填 URL 的形式
     if not data.get("thumbnail") or not data.get("fullsize"):
         return jsonify({"error": "Images are required"}), 400
@@ -1075,9 +1085,9 @@ def add_artwork():
 
 @app.route("/api/artworks/<int:id>", methods=["PUT"])
 @jwt_required()
-def update_artwork(id):
+def update_artwork(id: int):
     """更新插画 / 作品（需要 access_token）。"""
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     work = db.session.get(Artwork, id)
     if not work:
         return jsonify({"error": "Artwork not found"}), 404
@@ -1094,7 +1104,7 @@ def update_artwork(id):
 
 @app.route("/api/artworks/<int:id>", methods=["DELETE"])
 @jwt_required()
-def delete_artwork(id):
+def delete_artwork(id: int):
     """删除插画 / 作品（需要 access_token）。"""
     work = db.session.get(Artwork, id)
     if not work:
@@ -1119,7 +1129,7 @@ def add_plan():
         成功创建的计划项字典。
 
     """
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     if not data.get("content"):
         return jsonify({"error": "Content is required"}), 400
     
@@ -1146,7 +1156,7 @@ def update_plan(id: int):
         更新后的计划项字典。
 
     """
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     plan = db.session.get(Plan, id)
     if not plan:
         return jsonify({"error": "Plan not found"}), 404
@@ -1192,7 +1202,7 @@ def reorder_plans() -> Response:
         操作成功的提示信息响应。
 
     """
-    data = request.json or []
+    data: list[dict[str, Any]] = request.json or []
     for item in data:
         plan_id = item.get("id")
         sort_order = item.get("sort_order")
@@ -1219,7 +1229,7 @@ def add_sponsor():
         成功创建的投喂记录字典。
 
     """
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     if not data.get("name"):
         return jsonify({"message": "Name is Required"}), 400
     
@@ -1247,7 +1257,7 @@ def update_sponsor(id: int):
         更新后的投喂记录字典。
 
     """
-    data = request.json or {}
+    data: dict[str, Any] = request.json or {}
     sponsor = db.session.get(Sponsor, id)
     if not sponsor:
         return jsonify({"message": "Sponsor not found"}), 404
@@ -1298,7 +1308,7 @@ def init_default_data():
     
     for slug, name in default_categories:
         # 检查分类是否已存在
-        cat = Category.query.filter_by(slug=slug).first()
+        cat = cast(Optional[Category], Category.query.filter_by(slug=slug).first())
         if not cat:
             print(f"🛠️ 正在初始化缺失的分类: {name} ({slug})...")
             new_cat = Category(slug=slug, name=name)
