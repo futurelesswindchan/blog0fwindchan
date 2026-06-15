@@ -10,5 +10,6 @@
   },
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "python.analysis.typeCheckingMode": "standard"
+  "python.analysis.typeCheckingMode": "strict",
+  "python-envs.defaultEnvManager": "ms-python.python:conda"
 }
