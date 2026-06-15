@@ -1,14 +1,41 @@
 // frontend/src/composables/toc-pet/usePetGreeting.ts
 import { computed } from 'vue'
+import { Solar, Lunar } from 'lunar-javascript'
 
 /**
- * 节日条目定义
+ * 节日条目定义（公历固定日期）
  */
-interface FestivalEntry {
+interface SolarFestivalEntry {
   /** 月份 (1-12) */
   month: number
   /** 日期 (1-31) */
   day: number
+  /** 展开状态下的标题文案 */
+  expandedTitle: string
+  /** hover 状态下的引导文案 */
+  hoverHint: string
+}
+
+/**
+ * 农历节日条目定义
+ */
+interface LunarFestivalEntry {
+  /** 农历月份 (1-12) */
+  month: number
+  /** 农历日期 (1-30) */
+  day: number
+  /** 展开状态下的标题文案 */
+  expandedTitle: string
+  /** hover 状态下的引导文案 */
+  hoverHint: string
+}
+
+/**
+ * 节气节日条目定义（如清明）
+ */
+interface JieQiFestivalEntry {
+  /** 节气名称 */
+  name: string
   /** 展开状态下的标题文案 */
   expandedTitle: string
   /** hover 状态下的引导文案 */
@@ -39,8 +66,10 @@ export interface GreetingResult {
   hoverHint: string
 }
 
-// --- 节日文案库（公历，优先级最高） ---
-const festivals: FestivalEntry[] = [
+// ============================================================
+// 公历固定节日文案库
+// ============================================================
+const solarFestivals: SolarFestivalEntry[] = [
   // 元旦
   {
     month: 1,
@@ -120,7 +149,82 @@ const festivals: FestivalEntry[] = [
   },
 ]
 
-// --- 时段问候库 ---
+// ============================================================
+// 农历节日文案库（由 lunar-javascript 动态计算公历日期）
+// ============================================================
+const lunarFestivals: LunarFestivalEntry[] = [
+  // 除夕（腊月三十，若无三十则廿九）
+  {
+    month: 12,
+    day: 30,
+    expandedTitle: '除夕快乐！今晚有饺子吃吗~',
+    hoverHint: '旧岁将尽，新年将至，看看目录跨年？',
+  },
+  // 春节（正月初一）
+  {
+    month: 1,
+    day: 1,
+    expandedTitle: '新春快乐！万事如意~',
+    hoverHint: '过年也来看文章？给你发个红包 owo',
+  },
+  // 元宵节（正月十五）
+  {
+    month: 1,
+    day: 15,
+    expandedTitle: '元宵节快乐！汤圆甜不甜？',
+    hoverHint: '猜个灯谜：点开目录有惊喜~',
+  },
+  // 端午节（五月初五）
+  {
+    month: 5,
+    day: 5,
+    expandedTitle: '端午安康！粽子咸甜都好吃~',
+    hoverHint: '划龙舟之余，点开看看目录？',
+  },
+  // 七夕（七月初七）
+  {
+    month: 7,
+    day: 7,
+    expandedTitle: '七夕快乐！今夜星河灿烂~',
+    hoverHint: '牛郎织女都在看文章呢 -w-',
+  },
+  // 中秋节（八月十五）
+  {
+    month: 8,
+    day: 15,
+    expandedTitle: '中秋快乐！月饼是什么馅的？',
+    hoverHint: '月圆人团圆，目录也团圆~',
+  },
+  // 重阳节（九月初九）
+  {
+    month: 9,
+    day: 9,
+    expandedTitle: '重阳安康！登高望远好时节~',
+    hoverHint: '秋高气爽，适合阅读长文章 owo',
+  },
+  // 腊八节（腊月初八）
+  {
+    month: 12,
+    day: 8,
+    expandedTitle: '腊八节快乐！喝碗腊八粥暖暖~',
+    hoverHint: '过了腊八就是年，先看看目录？',
+  },
+]
+
+// ============================================================
+// 节气节日文案库
+// ============================================================
+const jieQiFestivals: JieQiFestivalEntry[] = [
+  {
+    name: '清明',
+    expandedTitle: '清明时节，万物清朗~',
+    hoverHint: '春光正好，适合静心阅读 qwq',
+  },
+]
+
+// ============================================================
+// 时段问候库
+// ============================================================
 const timeSlots: TimeSlotEntry[] = [
   {
     // 深夜 0:00 - 5:00
@@ -193,6 +297,10 @@ const timeSlots: TimeSlotEntry[] = [
   },
 ]
 
+// ============================================================
+// 工具函数
+// ============================================================
+
 /**
  * 从数组中随机取一项
  */
@@ -201,12 +309,55 @@ function pickRandom<T>(arr: T[]): T {
 }
 
 /**
- * 检查今天是否命中节日文案
+ * 检查今天是否命中公历固定节日
  */
-function matchFestival(now: Date): FestivalEntry | null {
+function matchSolarFestival(now: Date): SolarFestivalEntry | null {
   const month = now.getMonth() + 1
   const day = now.getDate()
-  return festivals.find((f) => f.month === month && f.day === day) || null
+  return solarFestivals.find((f) => f.month === month && f.day === day) || null
+}
+
+/**
+ * 检查今天是否命中农历节日。
+ * 使用 lunar-javascript 将当前公历日期转换为农历，再匹配节日库。
+ *
+ * 特殊处理：除夕——若农历腊月无三十（小月），则腊月廿九视为除夕。
+ */
+function matchLunarFestival(now: Date): LunarFestivalEntry | null {
+  const solar = Solar.fromDate(now)
+  const lunar = solar.getLunar()
+  const lunarMonth = lunar.getMonth()
+  const lunarDay = lunar.getDay()
+
+  // 除夕特殊处理：腊月的最后一天
+  const chuxi = lunarFestivals.find((f) => f.month === 12 && f.day === 30)
+  if (chuxi && lunarMonth === 12) {
+    // 获取当年农历腊月的天数，判断今天是否为最后一天
+    const daysInMonth = Lunar.fromYmd(lunar.getYear(), 12, 1).getMonthDayCount()
+    if (lunarDay === daysInMonth) {
+      return chuxi
+    }
+  }
+
+  // 常规匹配（排除除夕的重复匹配）
+  return (
+    lunarFestivals.find(
+      (f) => f.month === lunarMonth && f.day === lunarDay && !(f.month === 12 && f.day === 30),
+    ) || null
+  )
+}
+
+/**
+ * 检查今天是否命中节气节日（如清明）。
+ * 通过 lunar-javascript 获取当天所属节气进行判断。
+ */
+function matchJieQiFestival(now: Date): JieQiFestivalEntry | null {
+  const solar = Solar.fromDate(now)
+  const lunar = solar.getLunar()
+  const jieQi = lunar.getJieQi()
+
+  if (!jieQi) return null
+  return jieQiFestivals.find((f) => f.name === jieQi) || null
 }
 
 /**
@@ -217,15 +368,18 @@ function matchTimeSlot(now: Date): TimeSlotEntry {
   return timeSlots.find((s) => hour >= s.from && hour < s.to) || timeSlots[0]
 }
 
+// ============================================================
+// 导出组合式函数
+// ============================================================
+
 /**
  * 时间/节日感知文案引擎。
  *
  * 根据当前日期和时间，输出适合展示的问候文案。
- * 优先级：节日特殊文案 > 时段问候。
+ * 优先级：农历节日 > 节气节日 > 公历节日 > 时段问候。
  *
- * 返回一个 computed，每次访问时基于实时时间计算。
- * 注意：由于 computed 会缓存，如需在跨时段后更新，
- * 建议由调用方按需重新取值（如消息轮播时调用 getGreeting()）。
+ * 使用 lunar-javascript 实现农历/节气的精确计算，
+ * 无需手动维护每年的公历对照表。
  *
  * @returns 提供 getGreeting 方法，每次调用返回当前时间语境下的文案
  */
@@ -237,16 +391,34 @@ export function usePetGreeting() {
   const getGreeting = (): GreetingResult => {
     const now = new Date()
 
-    // 优先匹配节日
-    const festival = matchFestival(now)
-    if (festival) {
+    // 优先级 1：农历节日（传统大节，优先级最高）
+    const lunarFestival = matchLunarFestival(now)
+    if (lunarFestival) {
       return {
-        expandedTitle: festival.expandedTitle,
-        hoverHint: festival.hoverHint,
+        expandedTitle: lunarFestival.expandedTitle,
+        hoverHint: lunarFestival.hoverHint,
       }
     }
 
-    // 回退到时段问候
+    // 优先级 2：节气节日（清明等）
+    const jieQiFestival = matchJieQiFestival(now)
+    if (jieQiFestival) {
+      return {
+        expandedTitle: jieQiFestival.expandedTitle,
+        hoverHint: jieQiFestival.hoverHint,
+      }
+    }
+
+    // 优先级 3：公历固定节日
+    const solarFestival = matchSolarFestival(now)
+    if (solarFestival) {
+      return {
+        expandedTitle: solarFestival.expandedTitle,
+        hoverHint: solarFestival.hoverHint,
+      }
+    }
+
+    // 优先级 4：时段问候
     const slot = matchTimeSlot(now)
     return {
       expandedTitle: pickRandom(slot.expandedTitles),
