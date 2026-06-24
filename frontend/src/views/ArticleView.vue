@@ -1,65 +1,25 @@
-<!-- ArticleView.vue (renamed from TechView.vue) -->
+<!-- ArticleView.vue -->
 <template>
   <div class="article-view-container">
     <h2 class="page-title-art">Articles</h2>
     <section class="article-view">
       <div class="article-categories">
-        <!-- 技术手札 -->
-        <div class="article-card glass-container frontend" @click="goToArticle('FrontEnd')">
+        <!-- 动态渲染分类卡片，数据源已解耦至全局配置 -->
+        <div
+          v-for="item in ARTICLE_CATEGORIES"
+          :key="item.id"
+          class="article-card glass-container"
+          :class="item.className"
+          @click="goToArticle(item.routeName)"
+        >
           <div class="article-icon">
-            <i class="fas fa-laptop-code"></i>
+            <i :class="item.icon"></i>
           </div>
           <div class="card-content">
-            <h3>技术手札</h3>
-            <p class="description">这里是咱的开发笔记与心得，以及各种实用技术分享0w0！</p>
+            <h3>{{ item.title }}</h3>
+            <p class="description">{{ item.desc }}</p>
             <div class="article-stats">
-              <span class="article-count">{{ frontendStatsText }}</span>
-              <button class="view-btn">
-                查看文章
-                <i class="fas fa-arrow-right"></i>
-              </button>
-            </div>
-          </div>
-          <div class="article-decorations">
-            <div class="circuit-line"></div>
-            <div class="glow-dot"></div>
-          </div>
-        </div>
-
-        <!-- 幻想物语（连载小说） -->
-        <div class="article-card glass-container novels" @click="goToArticle('Novels')">
-          <div class="article-icon">
-            <i class="fas fa-feather"></i>
-          </div>
-          <div class="card-content">
-            <h3>幻想物语</h3>
-            <p class="description">非常非常神秘的连载与短篇故事？！（随缘更新中—v—）</p>
-            <div class="article-stats">
-              <span class="article-count">{{ novelsStatsText }}</span>
-              <button class="view-btn">
-                查看文章
-                <i class="fas fa-arrow-right"></i>
-              </button>
-            </div>
-          </div>
-          <div class="article-decorations">
-            <div class="circuit-line"></div>
-            <div class="glow-dot"></div>
-          </div>
-        </div>
-
-        <!-- 奇怪杂谈（topics） -->
-        <div class="article-card glass-container topics" @click="goToArticle('Topics')">
-          <div class="article-icon">
-            <i class="fas fa-user-astronaut"></i>
-          </div>
-          <div class="card-content">
-            <h3>奇怪杂谈</h3>
-            <p class="description">
-              关于生活、兴趣与日常的随笔... 总之就是各种奇奇怪怪的东西啦OAO！
-            </p>
-            <div class="article-stats">
-              <span class="article-count">{{ topicsStatsText }}</span>
+              <span class="article-count">{{ getStatsText(item.id) }}</span>
               <button class="view-btn">
                 查看文章
                 <i class="fas fa-arrow-right"></i>
@@ -78,40 +38,49 @@
 
 <script setup lang="ts">
 import { useArticleStore } from '@/stores/articleStore'
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ARTICLE_CATEGORIES } from '@/site.config'
 
 import '@/styles/layout/pageTitleArt.css'
 
 const router = useRouter()
 const articleStore = useArticleStore()
 
-// 全能统计文本生成器
+/**
+ * 动态生成分类的统计文案。
+ *
+ * 遍历并汇总散篇文章与连载合集中的文章数量。将所有合集内的文章数也计入总数，
+ * 确保向用户展示真实的产出总量。抽离此方法以配合 v-for 进行动态渲染，
+ * 避免在模板中硬编码多个独立的 computed 属性。
+ *
+ * @param category 当前卡片的分类标识符
+ * @returns 包含总数与合集数量（如有）的多行提示文本
+ */
 const getStatsText = (category: string) => {
   const looseArticles = articleStore.getArticleList(category) || []
   const collections = articleStore.getCollectionList(category) || []
 
-  // 1. 计算总文章数 = 散篇文章数 + 所有合集里的文章数
   const totalArticles =
     looseArticles.length + collections.reduce((sum, col) => sum + col.article_count, 0)
 
-  // 2. 动态生成优雅的文案
   if (collections.length > 0) {
     return `目前共有 ${totalArticles} 篇文章\n包含 ${collections.length} 个连载合集`
-  } else {
-    return `目前共有 ${totalArticles} 篇文章`
   }
+
+  return `目前共有 ${totalArticles} 篇文章`
 }
 
-// 分别计算三个分类的统计文案
-const frontendStatsText = computed(() => getStatsText('frontend'))
-const topicsStatsText = computed(() => getStatsText('topics'))
-const novelsStatsText = computed(() => getStatsText('novels'))
-
 onMounted(async () => {
+  // NOTE: 在挂载时预检索引数据，确保子组件或路由跳转后数据不为空
   await articleStore.fetchArticleIndex()
 })
 
+/**
+ * 触发分类路由跳转。
+ *
+ * @param routeName 目标路由名称（需与 router 配置中的 name 保持一致）
+ */
 const goToArticle = (routeName: string) => {
   router.push({ name: routeName })
 }
@@ -207,7 +176,7 @@ const goToArticle = (routeName: string) => {
 .article-count {
   font-size: 0.9rem;
   opacity: 0.7;
-  white-space: pre-line; /* 允许换行显示统计信息 */
+  white-space: pre-line;
 }
 
 .view-btn {
