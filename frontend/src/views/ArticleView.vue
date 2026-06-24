@@ -8,7 +8,7 @@
         <div
           v-for="item in ARTICLE_CATEGORIES"
           :key="item.id"
-          class="article-card glass-container"
+          class="article-card"
           :class="item.className"
           @click="goToArticle(item.routeName)"
         >
@@ -100,20 +100,52 @@ const goToArticle = (routeName: string) => {
   position: relative;
   padding: 2rem;
   min-height: 360px;
-  border: 1px solid rgba(var(--accent-color-rgb), 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  background-color: var(--light-content-bg, rgba(255, 255, 255, 0.05));
+  border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s var(--aero-animation);
+
+  border: 1px solid rgba(var(--accent-color-rgb), 0.15);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 0 20px rgba(var(--accent-color-rgb), 0.05);
+}
+
+.article-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .article-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(var(--accent-color-rgb), 0.1) 0%, transparent 100%);
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.05) 30%,
+      transparent 50%
+    ),
+    radial-gradient(circle at 90% 90%, rgba(var(--accent-color-rgb), 0.1) 0%, transparent 60%),
+    linear-gradient(rgba(var(--accent-color-rgb), 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--accent-color-rgb), 0.04) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    24px 24px,
+    24px 24px;
+}
+
+.article-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(135deg, rgba(var(--accent-color-rgb), 0.15) 0%, transparent 100%);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -122,12 +154,48 @@ const goToArticle = (routeName: string) => {
   transform: translateY(-5px);
   border-color: rgba(var(--accent-color-rgb), 0.5);
   box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.6),
     0 0 20px rgba(var(--accent-color-rgb), 0.2),
     0 0 40px rgba(var(--accent-color-rgb), 0.1);
 }
 
-.article-card:hover::before {
+.article-card:hover::after {
   opacity: 1;
+}
+
+/* ==========================================
+   暗色主题适配 (Dark Theme)
+   ========================================== */
+.dark-theme .article-card {
+  background-color: var(--dark-content-bg, rgba(0, 0, 0, 0.2));
+  border-color: rgba(var(--dark-accent-color-rgb), 0.2);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 20px rgba(var(--dark-accent-color-rgb), 0.05);
+}
+
+.dark-theme .article-card::before {
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(var(--dark-accent-color-rgb), 0.15) 0%,
+      transparent 60%
+    ),
+    linear-gradient(rgba(var(--dark-accent-color-rgb), 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--dark-accent-color-rgb), 0.06) 1px, transparent 1px);
+}
+
+.dark-theme .article-card::after {
+  background: linear-gradient(135deg, rgba(var(--dark-accent-color-rgb), 0.2) 0%, transparent 100%);
+}
+
+.dark-theme .article-card:hover {
+  border-color: rgba(var(--dark-accent-color-rgb), 0.6);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    0 0 20px rgba(var(--dark-accent-color-rgb), 0.25),
+    0 0 40px rgba(var(--dark-accent-color-rgb), 0.15);
 }
 
 .article-icon {
