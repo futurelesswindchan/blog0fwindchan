@@ -63,14 +63,22 @@ onMounted(() => {
   align-items: flex-start;
   gap: 1rem;
   padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--accent-color-rgb), 0.08);
   border-radius: 8px;
   transition: all 0.3s;
 }
 
 .plan-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--accent-color-rgb), 0.2);
   transform: translateX(5px);
+}
+
+.dark-theme .plan-item {
+  background: rgba(var(--dark-accent-color-rgb), 0.2);
+}
+
+.dark-theme .plan-item:hover {
+  background: rgba(var(--dark-accent-color-rgb), 0.45);
 }
 
 @keyframes breathe {
