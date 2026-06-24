@@ -6,14 +6,29 @@
   padding: 1rem;
 }
 
-/* 文章内容区域样式 */
+/* =========================================
+   文章正文容器
+   ========================================= */
 .article-content {
   margin: 2rem 0;
-  padding: 2rem;
-  line-height: 1.8;
-  font-size: 1.1rem;
-  background: var(--light-content-bg);
+  padding: 2.5rem;
+  line-height: 1.7;
+  font-size: 1.2rem;
+  background: var(--light-content-bg, rgba(255, 255, 255, 0.05));
   border-radius: 6px;
+
+  border: 1px solid rgba(var(--accent-color-rgb), 0.15);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 0 30px rgba(var(--accent-color-rgb), 0.02);
+}
+
+.dark-theme .article-content {
+  background: var(--dark-content-bg, rgba(0, 0, 0, 0.2));
+  border-color: rgba(var(--dark-accent-color-rgb), 0.2);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 30px rgba(var(--dark-accent-color-rgb), 0.02);
 }
 
 /* 加载状态样式 */
