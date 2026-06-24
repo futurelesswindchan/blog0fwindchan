@@ -14,12 +14,14 @@
   --light-bg-base: rgba(255, 255, 255, 0.1);
   --light-bg-hover: rgba(255, 255, 255, 0.15);
   --light-text: rgba(0, 0, 0, 0.75);
+  --light-content-bg: rgba(255, 255, 255, 0.75);
   --light-border: var(--aero-border-color);
 
   /* 暗色主题变量 */
   --dark-bg-base: rgba(0, 0, 0, 0.4);
   --dark-bg-hover: rgba(0, 0, 0, 0.4);
   --dark-text: rgba(255, 255, 255, 0.9);
+  --dark-content-bg: rgba(0, 0, 0, 0.75);
   --dark-border: rgba(255, 255, 255, 0.2);
 
   /* --- 页面过渡动画 --- */
@@ -198,7 +200,11 @@ hr {
   border: 1px solid var(--aero-border-color);
   box-shadow:
     var(--aero-glow),
-    0 6px 30px rgba(0, 0, 0, 0.15); /* 双层阴影 */
+    0 2px 4px rgba(0, 0, 0, 0.02),
+    0 4px 8px rgba(0, 0, 0, 0.02),
+    0 8px 16px rgba(0, 0, 0, 0.03),
+    0 16px 32px rgba(0, 0, 0, 0.04),
+    0 32px 64px rgba(0, 0, 0, 0.05); /* 多层弥散体积阴影，重塑空间感 */
   transition: all 0.3s var(--aero-animation);
   border-radius: 6px; /* 圆角边框 */
   transform: translateZ(0);
@@ -235,7 +241,11 @@ hr {
     transform: translateY(-2px);
     box-shadow:
       0 0 30px rgba(255, 255, 255, 0.3),
-      0 8px 40px rgba(0, 0, 0, 0.2);
+      0 4px 8px rgba(0, 0, 0, 0.03),
+      0 8px 16px rgba(0, 0, 0, 0.04),
+      0 16px 32px rgba(0, 0, 0, 0.05),
+      0 32px 64px rgba(0, 0, 0, 0.06),
+      0 64px 100px rgba(0, 0, 0, 0.08); /* 悬停时加深且更扩散的体积阴影 */
   }
 }
 
@@ -255,6 +265,75 @@ hr {
   }
 }
 
+/* 内容区域基础样式 */
+.glass-content {
+  position: relative;
+  background-color: var(--light-content-bg);
+  border-radius: 8px;
+  overflow: hidden;
+
+  /* 微弱的外部轮廓线和内部顶部高光 */
+  border: 1px solid rgba(var(--accent-color-rgb), 0.15);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 0 20px rgba(var(--accent-color-rgb), 0.05);
+}
+
+/* 伪元素做 Aero 质感与网格 */
+.glass-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+
+  /* 多层背景叠加（对角线高光 + 渐隐网格） */
+  background-image:
+    /* 第一层：对角线白色/亮色反光 */
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.05) 30%,
+      transparent 50%
+    ),
+    /* 第二层：右下角的主题色晕影） */
+      radial-gradient(circle at 90% 90%, rgba(var(--accent-color-rgb), 0.1) 0%, transparent 60%),
+    /* 第三层：网格 */ linear-gradient(rgba(var(--accent-color-rgb), 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--accent-color-rgb), 0.04) 1px, transparent 1px);
+
+  background-size:
+    100% 100%,
+    100% 100%,
+    24px 24px,
+    24px 24px;
+}
+
+/* 保证内容区在花纹和高光上方 */
+.glass-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 暗色主题适配 */
+.dark-theme .glass-content {
+  background-color: var(--dark-content-bg);
+  border-color: rgba(var(--dark-accent-color-rgb), 0.2);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 20px rgba(var(--dark-accent-color-rgb), 0.05);
+}
+
+.dark-theme .glass-content::before {
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(var(--dark-accent-color-rgb), 0.15) 0%,
+      transparent 60%
+    ),
+    linear-gradient(rgba(var(--dark-accent-color-rgb), 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--dark-accent-color-rgb), 0.06) 1px, transparent 1px);
+}
 /* =========================================
    4. 特殊组件样式
    ========================================= */
@@ -447,10 +526,19 @@ hr {
 }
 
 .dark-theme .glass-container::after {
+  /* 暗色模式下减弱迎光面，保持低调的冷色高光，右下角加深暗影 */
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.15),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.3),
+    inset 0 0 20px rgba(255, 255, 255, 0.02);
+
   background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.01) 100%
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 20%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.1) 80%,
+    rgba(0, 0, 0, 0.2) 100%
   );
 }
 

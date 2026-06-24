@@ -1,178 +1,181 @@
 <!-- src/views/HomeView.vue -->
 <template>
-  <div class="home-dashboard">
-    <!-- Hero: 个人信息展示区 -->
-    <section class="hero-section glass-container">
-      <div class="hero-content">
-        <!-- 左侧：头像（点击翻转显示二维码）+ 状态 -->
-        <div class="profile-group">
-          <div class="avatar-wrapper" @click="toggleAvatarFlip">
-            <div class="avatar-inner" :class="{ 'is-flipped': isAvatarFlipped }">
-              <div class="avatar-front">
-                <LazyImage
-                  :src="avatarUrl"
-                  alt="Avatar"
-                  className="avatar-img"
-                  :containerStyle="{ width: '100%', height: '100%' }"
-                />
+  <div class="home-view-container">
+    <h2 class="page-title-art">Blog Of Windchan</h2>
+    <div class="home-dashboard">
+      <!-- Hero: 个人信息展示区 -->
+      <section class="hero-section glass-content">
+        <div class="hero-content">
+          <!-- 左侧：头像（点击翻转显示二维码）+ 状态 -->
+          <div class="profile-group">
+            <div class="avatar-wrapper" @click="toggleAvatarFlip">
+              <div class="avatar-inner" :class="{ 'is-flipped': isAvatarFlipped }">
+                <div class="avatar-front">
+                  <LazyImage
+                    :src="avatarUrl"
+                    alt="Avatar"
+                    className="avatar-img"
+                    :containerStyle="{ width: '100%', height: '100%' }"
+                  />
+                </div>
+                <div class="avatar-back">
+                  <LazyImage
+                    :src="qrCodeUrl"
+                    alt="QRCode"
+                    className="qrcode-img"
+                    :containerStyle="{ width: '100%', height: '100%' }"
+                  />
+                </div>
               </div>
-              <div class="avatar-back">
-                <LazyImage
-                  :src="qrCodeUrl"
-                  alt="QRCode"
-                  className="qrcode-img"
-                  :containerStyle="{ width: '100%', height: '100%' }"
-                />
+            </div>
+
+            <div class="profile-info">
+              <h1 class="nickname">Wind Chan</h1>
+              <div class="status-badge">
+                <span class="status-dot"></span>
+                <span class="status-text">正在摸鱼中awa...</span>
               </div>
             </div>
           </div>
 
-          <div class="profile-info">
-            <h1 class="nickname">Wind Chan</h1>
-            <div class="status-badge">
-              <span class="status-dot"></span>
-              <span class="status-text">正在摸鱼中awa...</span>
+          <!-- 右侧：Slogan 打字机 + 社交链接 -->
+          <div class="slogan-group">
+            <TypeWriter :text="sloganText" :speed="80" :delay="500" class="slogan-text" />
+            <p class="slogan-sub">
+              欢迎来到风风的赛博小屋 ~\(≧▽≦)/~<br />
+              这里记录着代码、故事和...忘了还有什么了！QAQ
+            </p>
+
+            <div class="social-links">
+              <a
+                v-for="link in socialLinks"
+                :key="link.name"
+                :href="link.link"
+                target="_blank"
+                class="social-btn"
+                :title="link.name"
+                :style="{ '--hover-color': link.color }"
+              >
+                <i :class="link.icon"></i>
+              </a>
             </div>
+            <p class="slogan-sub">⬆️联系方式⬆️ 欢迎交流哦ov0</p>
           </div>
         </div>
+      </section>
 
-        <!-- 右侧：Slogan 打字机 + 社交链接 -->
-        <div class="slogan-group">
-          <TypeWriter :text="sloganText" :speed="80" :delay="500" class="slogan-text" />
-          <p class="slogan-sub">
-            欢迎来到风风的赛博小屋 ~\(≧▽≦)/~<br />
-            这里记录着代码、故事和...忘了还有什么了！QAQ
-          </p>
+      <!-- B区: Dynamic Stream (动态内容) -->
+      <section class="dynamic-section">
+        <h2 class="section-title"><i class="fas fa-bolt"></i> 最新动态</h2>
 
-          <div class="social-links">
-            <a
-              v-for="link in socialLinks"
-              :key="link.name"
-              :href="link.link"
-              target="_blank"
-              class="social-btn"
-              :title="link.name"
-              :style="{ '--hover-color': link.color }"
+        <div class="dynamic-grid">
+          <!-- 加载态：骨架屏占位 -->
+          <template v-if="isLoading">
+            <!-- 文章骨架卡 ×2 -->
+            <div
+              v-for="n in 2"
+              :key="'skeleton-article-' + n"
+              class="dynamic-card glass-container skeleton-card"
             >
-              <i :class="link.icon"></i>
-            </a>
-          </div>
-          <p class="slogan-sub">⬆️联系方式⬆️ 欢迎交流哦ov0</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- B区: Dynamic Stream (动态内容) -->
-    <section class="dynamic-section">
-      <h2 class="section-title"><i class="fas fa-bolt"></i> 最新动态</h2>
-
-      <div class="dynamic-grid">
-        <!-- 加载态：骨架屏占位 -->
-        <template v-if="isLoading">
-          <!-- 文章骨架卡 ×2 -->
-          <div
-            v-for="n in 2"
-            :key="'skeleton-article-' + n"
-            class="dynamic-card glass-container skeleton-card"
-          >
-            <div class="card-content">
-              <SkeletonBlock width="70%" height="1.3rem" />
-              <SkeletonBlock width="40%" height="0.9rem" style="margin-top: 0.6rem" />
-              <SkeletonBlock width="55%" height="0.9rem" style="margin-top: 0.5rem" />
-            </div>
-          </div>
-          <!-- 画作骨架卡 ×1 -->
-          <div class="dynamic-card glass-container skeleton-card">
-            <SkeletonBlock width="100%" height="100%" radius="8px" />
-          </div>
-        </template>
-
-        <!-- 加载完成：真实内容 -->
-        <template v-else>
-          <!-- 1. 最新文章卡片 (2篇) -->
-          <div
-            v-for="article in latestArticles"
-            :key="article.id"
-            class="dynamic-card article-card glass-container"
-            @click="navigateToArticle(article)"
-          >
-            <div class="card-badge">New Article</div>
-            <div class="card-content">
-              <h3 class="card-title">{{ article.title }}</h3>
-              <div class="card-meta">
-                <i class="far fa-calendar-alt"></i>
-                {{ article.date }}
-              </div>
-              <p class="card-desc">点击阅读全文...</p>
-            </div>
-            <div class="card-icon">
-              <i class="fas fa-file-alt"></i>
-            </div>
-          </div>
-
-          <!-- 2. 最新画作卡片 (1幅) -->
-          <div
-            v-if="latestArtwork"
-            class="dynamic-card artwork-card glass-container"
-            @click="navigateToGallery"
-          >
-            <div class="card-badge">New Art</div>
-            <!-- 背景图 -->
-            <LazyImage
-              :src="latestArtwork.thumbnail ?? ''"
-              :alt="latestArtwork.title ?? ''"
-              className="artwork-bg"
-              :containerStyle="{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 0,
-                opacity: 0.6,
-              }"
-            />
-            <div class="card-content artwork-content">
-              <h3 class="card-title">{{ latestArtwork.title }}</h3>
-              <div class="card-meta">
-                <i class="fas fa-palette"></i>
-                {{ latestArtwork.date }}
+              <div class="card-content">
+                <SkeletonBlock width="70%" height="1.3rem" />
+                <SkeletonBlock width="40%" height="0.9rem" style="margin-top: 0.6rem" />
+                <SkeletonBlock width="55%" height="0.9rem" style="margin-top: 0.5rem" />
               </div>
             </div>
-          </div>
-        </template>
-      </div>
-    </section>
+            <!-- 画作骨架卡 ×1 -->
+            <div class="dynamic-card glass-container skeleton-card">
+              <SkeletonBlock width="100%" height="100%" radius="8px" />
+            </div>
+          </template>
 
-    <!-- C区: Navigation Portals (传送门) -->
-    <section class="portal-section">
-      <h2 class="section-title"><i class="fas fa-compass"></i> 快捷导航</h2>
+          <!-- 加载完成：真实内容 -->
+          <template v-else>
+            <!-- 1. 最新文章卡片 (2篇) -->
+            <div
+              v-for="article in latestArticles"
+              :key="article.id"
+              class="dynamic-card article-card glass-content"
+              @click="navigateToArticle(article)"
+            >
+              <div class="card-badge">New Article</div>
+              <div class="card-content">
+                <h3 class="card-title">{{ article.title }}</h3>
+                <div class="card-meta">
+                  <i class="far fa-calendar-alt"></i>
+                  {{ article.date }}
+                </div>
+                <p class="card-desc">点击阅读全文...</p>
+              </div>
+              <div class="card-icon">
+                <i class="fas fa-file-alt"></i>
+              </div>
+            </div>
 
-      <div class="portal-grid">
-        <div
-          v-for="item in portalItems"
-          :key="item.title"
-          class="portal-card glass-container"
-          @click="navigateToFeature(item.route)"
-        >
-          <div class="portal-icon">
-            <i :class="['fas', item.icon]"></i>
-          </div>
-          <div class="portal-info">
-            <h3>{{ item.title }}</h3>
-            <p>{{ item.desc }}</p>
-          </div>
-          <!-- 悬停时的背景装饰 -->
-          <div class="portal-glow"></div>
+            <!-- 2. 最新画作卡片 (1幅) -->
+            <div
+              v-if="latestArtwork"
+              class="dynamic-card artwork-card glass-container"
+              @click="navigateToGallery"
+            >
+              <div class="card-badge">New Art</div>
+              <!-- 背景图 -->
+              <LazyImage
+                :src="latestArtwork.thumbnail ?? ''"
+                :alt="latestArtwork.title ?? ''"
+                className="artwork-bg"
+                :containerStyle="{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 0,
+                  opacity: 0.6,
+                }"
+              />
+              <div class="card-content artwork-content">
+                <h3 class="card-title">{{ latestArtwork.title }}</h3>
+                <div class="card-meta">
+                  <i class="fas fa-palette"></i>
+                  {{ latestArtwork.date }}
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- D区: Stats & Plans (轨迹与未来awa) -->
-    <section class="stats-plan-section">
-      <h2 class="section-title"><i class="fas fa-chart-line"></i> 轨迹与未来</h2>
-      <div class="stats-grid">
-        <ContributionHeatmap class="glass-container heatmap-container" />
-        <PlanBoard class="glass-container plan-container" />
-      </div>
-    </section>
+      <!-- C区: Navigation Portals (传送门) -->
+      <section class="portal-section">
+        <h2 class="section-title"><i class="fas fa-compass"></i> 快捷导航</h2>
+
+        <div class="portal-grid">
+          <div
+            v-for="item in portalItems"
+            :key="item.title"
+            class="portal-card glass-content"
+            @click="navigateToFeature(item.route)"
+          >
+            <div class="portal-icon">
+              <i :class="['fas', item.icon]"></i>
+            </div>
+            <div class="portal-info">
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.desc }}</p>
+            </div>
+            <!-- 悬停时的背景装饰 -->
+            <div class="portal-glow"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- D区: Stats & Plans (轨迹与未来awa) -->
+      <section class="stats-plan-section">
+        <h2 class="section-title"><i class="fas fa-chart-line"></i> 轨迹与未来</h2>
+        <div class="stats-grid">
+          <ContributionHeatmap class="glass-content heatmap-container" />
+          <PlanBoard class="glass-content plan-container" />
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -189,6 +192,8 @@ import TypeWriter from '@/components/common/TypeWriter.vue'
 import SkeletonBlock from '@/components/common/SkeletonBlock.vue'
 import LazyImage from '@/components/common/LazyImage.vue'
 import PlanBoard from '@/components/home/PlanBoard.vue'
+
+import '@/styles/layout/pageTitleArt.css'
 
 // --- 资源路径 ---
 const avatarUrl = '/assets/images/logo.webp'
@@ -431,36 +436,6 @@ const navigateToFeature = (route: string) => {
 
 .dynamic-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  background-color: rgba(255, 255, 255, 0.15);
-}
-
-/* 底部能量条 (默认宽度0，hover时展开) */
-.dynamic-card::after {
-  content: '';
-  position: absolute;
-  top: 95%;
-  bottom: 0;
-  left: -5px;
-  width: 0%;
-  height: 10px;
-  background: rgba(var(--accent-color-rgb), 0.75);
-  box-shadow: 0 -2px 10px var(--accent-color);
-  transition: width 0.3s ease-in-out;
-  z-index: 10;
-}
-
-.dynamic-card:hover::after {
-  width: 120%; /* 能量条充满 */
-}
-
-/* 深色模式适配 */
-.dark-theme .dynamic-card:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-.dark-theme .dynamic-card::after {
-  background: rgba(26, 133, 255, 0.95);
 }
 
 .card-badge {
@@ -516,7 +491,6 @@ const navigateToFeature = (route: string) => {
 }
 
 .article-card:hover .card-icon {
-  opacity: 0.1;
   transform: rotate(0deg) scale(1.1);
 }
 
@@ -551,34 +525,11 @@ const navigateToFeature = (route: string) => {
   border: 1px solid transparent;
 }
 
-/* 扫光层 */
-.portal-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -150%; /* 初始位置在左侧外部 */
-  width: 100%;
-  height: 100%;
-  /* 制作一道倾斜的亮光 */
-  background: linear-gradient(
-    120deg,
-    transparent 0%,
-    transparent 40%,
-    rgba(255, 255, 255, 0.4) 50%,
-    transparent 60%,
-    transparent 100%
-  );
-  transform: skewX(-25deg);
-  transition: none; /* 默认无过渡，防止鼠标移出时倒着播 */
-  pointer-events: none; /* 确保不挡住点击 */
-  z-index: 1;
-}
-
 /* 悬停状态 */
 .portal-card:hover {
   /* 边框亮起 */
   border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(var(--accent-color-rgb), 0.15); /* 假设你有RGB变量，没有的话用普通阴影 */
+  box-shadow: 0 8px 32px rgba(var(--accent-color), 0.15);
 }
 
 .portal-card:hover::before {

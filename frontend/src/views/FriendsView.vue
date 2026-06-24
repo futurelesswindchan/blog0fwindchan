@@ -22,7 +22,7 @@
                 v-if="item.type === 'friend'"
                 :href="item.data.url ?? undefined"
                 target="_blank"
-                class="bento-item friend-card glass-container"
+                class="bento-item friend-card glass-content"
                 :class="{ 'reverse-layout': item.isReversed }"
               >
                 <div class="friend-avatar-wrapper">
@@ -49,7 +49,7 @@
                 v-else-if="item.type === 'sponsor'"
                 :href="item.data.url || '#'"
                 :target="item.data.url ? '_blank' : '_self'"
-                class="bento-item sponsor-shard glass-container"
+                class="bento-item sponsor-shard glass-content"
                 :class="{ 'reverse-layout': item.isReversed }"
               >
                 <div class="sponsor-avatar-wrapper">
@@ -188,48 +188,72 @@ onErrorCaptured((err, instance, info) => {
    1. 布局容器基础
    ========================================================================== */
 
-/*
- * 核心便当盒网格 (Bento Grid)
- * grid-auto-rows: 80px 是实现“两个小碎块=一个大卡片”的关键基准属性。
- * grid-auto-flow: dense 确保浏览器会尝试寻找最小的空隙填补 Sponsor Shard。
- */
 .bento-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  grid-auto-rows: 80px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-auto-rows: 85px;
   grid-auto-flow: dense;
   gap: 1.5rem;
-  max-width: 1300px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem 0;
 }
 
 /* ==========================================================================
-   2. 便当盒通用项 (Bento Item)
+   2. 便当盒通用项
    ========================================================================== */
 
 .bento-item {
   text-decoration: none;
   color: inherit;
-  overflow: hidden;
   position: relative;
-  transition:
-    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.3s ease !important;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--accent-color-rgb), 0.15);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 0 20px rgba(var(--accent-color-rgb), 0.02);
+
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.bento-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(var(--accent-color-rgb), 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 0;
 }
 
 .bento-item:hover {
-  transform: translateY(-4px) scale(1.01) !important;
-  z-index: 2; /* 悬浮时确保阴影不被遮挡 */
+  transform: translateY(-4px);
+  border-color: rgba(var(--accent-color-rgb), 0.4);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.6),
+    0 8px 20px rgba(0, 0, 0, 0.05),
+    0 0 30px rgba(var(--accent-color-rgb), 0.1);
+  z-index: 2;
+}
+
+.bento-item:hover::after {
+  opacity: 1;
+}
+
+.bento-item > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ==========================================================================
-   3. 友链大卡片 (Friend Card) - 跨 2 行 2 列
+   3. 友链大卡片
    ========================================================================== */
 
 .friend-card {
   grid-column: span 2;
-  grid-row: span 2; /* 占据两行高度 (80*2 + gap) */
+  grid-row: span 2;
   display: flex;
   flex-direction: row;
   align-items: stretch;
@@ -240,133 +264,148 @@ onErrorCaptured((err, instance, info) => {
   flex-direction: row-reverse;
 }
 
-/*
- * 头像容器：完全占满一侧空间。
- * 通过 border-left/right 为侧边添加垂直厚度边框。
- */
 .friend-avatar-wrapper {
-  flex: 0 0 span 2;
+  flex: 0 0 35%;
   height: 100%;
   overflow: hidden;
   position: relative;
-  border-left: 5px solid var(--accent-color, var(--accent-color)); /* 左侧厚边框 */
 }
 
-/* 布局翻转时，厚边框自动切换到右侧 */
-.friend-card.reverse-layout .friend-avatar-wrapper {
-  border-left: none;
-  border-right: 5px solid var(--accent-color, var(--accent-color));
+/* 用半透明遮罩让图片和右侧内容平滑过渡 */
+.friend-avatar-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    transparent 80%,
+    var(--light-content-bg, rgba(255, 255, 255, 0.05)) 100%
+  );
+  pointer-events: none;
+}
+.friend-card.reverse-layout .friend-avatar-wrapper::after {
+  background: linear-gradient(
+    to left,
+    transparent 80%,
+    var(--light-content-bg, rgba(255, 255, 255, 0.05)) 100%
+  );
 }
 
 .friend-card:hover :deep(.lazy-image-container img) {
   transform: scale(1.08) rotate(2deg);
 }
 
-.dark-theme .friend-avatar-wrapper {
-  border-color: #55aaff; /* 暗色模式下稍微提亮边框色 */
-}
-
 :deep(.lazy-image-container img) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s ease;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/*
- * 信息区：保留内边距以保证文本呼吸感。
- */
 .friend-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-width: 0;
-  padding: 1.2rem; /* 内部 Padding */
+  padding: 1.5rem;
+  position: relative;
+}
+
+.friend-info::before {
+  content: '';
+  position: absolute;
+  top: 1.5rem;
+  bottom: 1.5rem;
+  left: 0;
+  width: 3px;
+  background: var(--accent-color);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.4);
+}
+.friend-card.reverse-layout .friend-info::before {
+  left: auto;
+  right: 0;
 }
 
 .friend-info h3 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  color: var(--accent-color, var(--accent-color));
+  color: var(--text-color);
+  padding-left: 0.8rem;
+}
+.friend-card.reverse-layout .friend-info h3 {
+  padding-left: 0;
+  padding-right: 0.8rem;
 }
 
 .friend-info .desc {
-  margin: 0.5rem 0;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--light-text);
+  margin: 0.8rem 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-color);
+  opacity: 0.8;
   display: -webkit-box;
   line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  opacity: 0.9;
-}
-
-.dark-theme .friend-info .desc {
-  color: var(--dark-text);
 }
 
 .tags {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  height: 22px;
+  height: 24px;
   overflow: hidden;
 }
 
 .tag {
-  background: rgba(var(--accent-color-rgb), 0.08);
+  background: rgba(var(--accent-color-rgb), 0.1);
   color: var(--accent-color);
-  padding: 0.1rem 0.6rem;
-  border-radius: 8px;
-  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px; /* 扁平风圆角 */
+  font-size: 0.75rem;
   font-weight: 600;
-  border: 1px solid rgba(var(--accent-color-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-color-rgb), 0.15);
 }
 
 /* ==========================================================================
-   4. 投喂小碎块 (Sponsor Shard) - 跨 1 行 1 列
+   4. 投喂小碎块
    ========================================================================== */
 
 .sponsor-shard {
   grid-column: span 1;
-  grid-row: span 1; /* 仅占一行 (80px) */
+  grid-row: span 1;
   display: flex;
   flex-direction: row;
   align-items: stretch;
   padding: 0;
-  background: rgba(255, 255, 255, 0.05);
 }
 
-/* 随机翻转布局：头像去右边 */
 .sponsor-shard.reverse-layout {
   flex-direction: row-reverse;
 }
 
-/* 小碎块头像容器：正方形，不加厚边框 */
 .sponsor-avatar-wrapper {
-  flex: 0 0 80px; /* 高度是80px，所以宽度也给80px变成正方形 */
+  flex: 0 0 85px;
   height: 100%;
   overflow: hidden;
   position: relative;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .sponsor-shard:hover :deep(.lazy-image-container img) {
-  transform: scale(1.15) rotate(-2deg);
+  transform: scale(1.15) rotate(-4deg);
 }
 
-/* 小碎块信息区 */
 .shard-content {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0.5rem 0.8rem; /* 单独给文字区加内边距 */
+  padding: 0.5rem 1rem;
 }
 
 .shard-header {
@@ -374,41 +413,31 @@ onErrorCaptured((err, instance, info) => {
   justify-content: space-between;
   align-items: baseline;
   gap: 0.5rem;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.4rem;
 }
 
 .shard-name {
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--light-text);
+  color: var(--accent-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.dark-theme .shard-name {
-  color: var(--dark-text);
-}
-
 .shard-date {
-  font-size: 0.65rem;
-  font-family: 'JetBrainsMono', monospace; /* 日期用等宽字体更有极客感 */
-  color: var(--light-text);
+  font-size: 0.7rem;
+  font-family: 'JetBrainsMono', monospace;
   opacity: 0.5;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.dark-theme .shard-date {
-  color: var(--dark-text);
-}
-
 .shard-message {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-style: italic;
   line-height: 1.4;
-  color: var(--light-text);
-  opacity: 0.75;
+  opacity: 0.85;
   display: -webkit-box;
   line-clamp: 2;
   -webkit-line-clamp: 2;
@@ -416,44 +445,115 @@ onErrorCaptured((err, instance, info) => {
   overflow: hidden;
 }
 
-.dark-theme .shard-message {
-  color: var(--dark-text);
-  opacity: 0.65;
+/* ==========================================================================
+   5. 暗色模式适配
+   ========================================================================== */
+
+.dark-theme .bento-item {
+  background-color: var(--dark-content-bg, rgba(0, 0, 0, 0.2));
+  border-color: rgba(var(--dark-accent-color-rgb), 0.2);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 20px rgba(var(--dark-accent-color-rgb), 0.05);
+}
+.dark-theme .bento-item::after {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--dark-accent-color-rgb), 0.15) 0%,
+    transparent 100%
+  );
+}
+.dark-theme .bento-item:hover {
+  border-color: rgba(var(--dark-accent-color-rgb), 0.5);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    0 8px 20px rgba(0, 0, 0, 0.2),
+    0 0 30px rgba(var(--dark-accent-color-rgb), 0.15);
+}
+.dark-theme .friend-info::before {
+  background: var(--dark-accent-color);
+  box-shadow: 0 0 8px rgba(var(--dark-accent-color-rgb), 0.4);
+}
+.dark-theme .tag {
+  background: rgba(var(--dark-accent-color-rgb), 0.15);
+  color: var(--dark-accent-color);
+  border-color: rgba(var(--dark-accent-color-rgb), 0.2);
+}
+.dark-theme .shard-name {
+  color: var(--dark-accent-color);
+}
+.dark-theme .friend-avatar-wrapper::after {
+  background: linear-gradient(
+    to right,
+    transparent 80%,
+    var(--dark-content-bg, rgba(0, 0, 0, 0.2)) 100%
+  );
+}
+.dark-theme .friend-card.reverse-layout .friend-avatar-wrapper::after {
+  background: linear-gradient(
+    to left,
+    transparent 80%,
+    var(--dark-content-bg, rgba(0, 0, 0, 0.2)) 100%
+  );
 }
 
 /* ==========================================================================
-   5. 响应式布局 (Mobile Adaptation)
+   6. 响应式布局
    ========================================================================== */
 
 @media (max-width: 768px) {
   .bento-grid {
     grid-template-columns: 1fr;
-    grid-auto-rows: auto; /* 移动端回归自动高度 */
+    grid-auto-rows: auto;
     gap: 1rem;
   }
-
   .bento-item {
     grid-column: span 1 !important;
     grid-row: span 1 !important;
     height: auto;
   }
-
-  .friend-card {
+  .friend-card,
+  .friend-card.reverse-layout {
     flex-direction: column !important;
   }
-
   .friend-avatar-wrapper {
     flex: none;
     width: 100%;
-    height: 140px;
-    border-left: none !important;
-    border-right: none !important;
-    border-bottom: 4px solid var(--accent-color); /* 移动端边框改到底部 */
+    height: 160px;
   }
-
-  .sponsor-shard {
-    padding: 1rem;
+  /* 移动端图片遮罩改为从下往上 */
+  .friend-avatar-wrapper::after,
+  .friend-card.reverse-layout .friend-avatar-wrapper::after {
+    background: linear-gradient(
+      to bottom,
+      transparent 70%,
+      var(--light-content-bg, rgba(255, 255, 255, 0.05)) 100%
+    );
+  }
+  .dark-theme .friend-avatar-wrapper::after,
+  .dark-theme .friend-card.reverse-layout .friend-avatar-wrapper::after {
+    background: linear-gradient(
+      to bottom,
+      transparent 70%,
+      var(--dark-content-bg, rgba(0, 0, 0, 0.2)) 100%
+    );
+  }
+  .friend-info {
+    padding: 1.2rem;
+  }
+  .friend-info::before,
+  .friend-card.reverse-layout .friend-info::before {
+    top: 0;
+    left: 1.5rem;
+    bottom: auto;
+    width: 30px;
+    height: 3px;
+  }
+  .friend-info h3,
+  .friend-card.reverse-layout .friend-info h3 {
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: 0.5rem;
   }
 }
 </style>
-style>

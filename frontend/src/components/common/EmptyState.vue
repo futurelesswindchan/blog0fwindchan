@@ -1,6 +1,6 @@
 <!-- src/components/common/EmptyState.vue -->
 <template>
-  <div class="empty-state glass-container">
+  <div class="empty-state glass-content">
     <i :class="['fas', icon]" class="empty-icon"></i>
     <p class="empty-message">{{ message }}</p>
 

@@ -29,7 +29,9 @@
         <!-- ==========================================
              1. 合集简介卡片 (书籍封面区)
              ========================================== -->
-        <div class="collection-info-card glass-container">
+        <div class="collection-info-card glass-content">
+          <div class="accent-indicator"></div>
+
           <div class="info-header">
             <i class="fas fa-book-open info-icon"></i>
             <div>
@@ -143,7 +145,7 @@ const { currentMeta } = useCategoryMeta()
 // 绑定全局状态里的当前合集数据
 const currentCollection = computed(() => articleStore.currentCollection)
 
-// 如果上一级页面传了主题色，我们就接住它，否则用默认的紫罗兰色调
+// 如果上一级页面传了主题色，我们就接住它，否则用默认的主题色调
 const themeClass = computed(() => (route.query.themeClass as string) || 'theme-collection')
 
 // 组件挂载时，根据路由参数拉取合集详情
@@ -186,15 +188,28 @@ const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
 </script>
 
 <style scoped>
-/* =========================================
-   合集专属样式补丁
-   ========================================= */
-
 .collection-info-card {
-  padding: 1.5rem;
+  position: relative;
+  padding: 1.5rem 1.5rem 1.5rem 2.5rem;
   margin-bottom: 2rem;
-  border-left: 4px solid var(--accent-color); /* 增加一点书本装订线的质感 */
   animation: fadeInDown 0.6s var(--aero-animation) both;
+}
+
+.accent-indicator {
+  position: absolute;
+  top: 1.5rem;
+  bottom: 1.5rem;
+  left: 1rem;
+  width: 4px;
+  background: var(--accent-color);
+  border-radius: 4px;
+  z-index: 2;
+  box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.3);
+}
+
+.dark-theme .accent-indicator {
+  background: var(--dark-accent-color);
+  box-shadow: 0 0 12px rgba(var(--dark-accent-color-rgb), 0.4);
 }
 
 .info-header {
@@ -282,12 +297,16 @@ const { searchText, filteredItems, sortButton, pagination } = useSearchAndSort({
   font-size: 0.85rem;
   opacity: 0.6;
 }
-/* 默认的合集主题光效 (如果没传主题过来，就用神秘紫罗兰色) */
+/* 默认的合集主题光效 (如果没传主题过来，就用主题色) */
 .theme-collection .chapter-item::before {
-  background: radial-gradient(circle at top right, rgba(156, 39, 176, 0.9), transparent);
+  background: radial-gradient(circle at top right, rgba(var(--accent-color-rgb), 0.7), transparent);
 }
 .dark-theme .theme-collection .chapter-item::before {
-  background: radial-gradient(circle at top right, rgba(123, 31, 162, 0.9), transparent);
+  background: radial-gradient(
+    circle at top right,
+    rgba(var(--dark-accent-color-rgb), 0.7),
+    transparent
+  );
 }
 /* 基础动画 */
 @keyframes fadeInDown {
