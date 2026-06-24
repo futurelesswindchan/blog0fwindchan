@@ -12,8 +12,8 @@
   padding: 2rem;
   line-height: 1.8;
   font-size: 1.1rem;
-  background: rgba(255, 255, 255, 0.75);
-  border-radius: 8px;
+  background: var(--light-content-bg);
+  border-radius: 6px;
 }
 
 /* 加载状态样式 */
@@ -44,7 +44,7 @@
 }
 
 .dark-theme .article-content {
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--dark-content-bg);
 }
 
 /* 响应式调整 */

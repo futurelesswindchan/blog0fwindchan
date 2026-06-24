@@ -14,12 +14,14 @@
   --light-bg-base: rgba(255, 255, 255, 0.1);
   --light-bg-hover: rgba(255, 255, 255, 0.15);
   --light-text: rgba(0, 0, 0, 0.75);
+  --light-content-bg: rgba(255, 255, 255, 0.75);
   --light-border: var(--aero-border-color);
 
   /* 暗色主题变量 */
   --dark-bg-base: rgba(0, 0, 0, 0.4);
   --dark-bg-hover: rgba(0, 0, 0, 0.4);
   --dark-text: rgba(255, 255, 255, 0.9);
+  --dark-content-bg: rgba(0, 0, 0, 0.75);
   --dark-border: rgba(255, 255, 255, 0.2);
 
   /* --- 页面过渡动画 --- */
@@ -198,7 +200,11 @@ hr {
   border: 1px solid var(--aero-border-color);
   box-shadow:
     var(--aero-glow),
-    0 6px 30px rgba(0, 0, 0, 0.15); /* 双层阴影 */
+    0 2px 4px rgba(0, 0, 0, 0.02),
+    0 4px 8px rgba(0, 0, 0, 0.02),
+    0 8px 16px rgba(0, 0, 0, 0.03),
+    0 16px 32px rgba(0, 0, 0, 0.04),
+    0 32px 64px rgba(0, 0, 0, 0.05); /* 多层弥散体积阴影，重塑空间感 */
   transition: all 0.3s var(--aero-animation);
   border-radius: 6px; /* 圆角边框 */
   transform: translateZ(0);
@@ -235,7 +241,11 @@ hr {
     transform: translateY(-2px);
     box-shadow:
       0 0 30px rgba(255, 255, 255, 0.3),
-      0 8px 40px rgba(0, 0, 0, 0.2);
+      0 4px 8px rgba(0, 0, 0, 0.03),
+      0 8px 16px rgba(0, 0, 0, 0.04),
+      0 16px 32px rgba(0, 0, 0, 0.05),
+      0 32px 64px rgba(0, 0, 0, 0.06),
+      0 64px 100px rgba(0, 0, 0, 0.08); /* 悬停时加深且更扩散的体积阴影 */
   }
 }
 
@@ -253,6 +263,15 @@ hr {
     opacity: 0.9;
     transform: scale(0.995);
   }
+}
+
+/* 内容区域样式 */
+.glass-content {
+  background: var(--light-content-bg);
+  border-radius: 6px;
+}
+.dark-theme .glass-content {
+  background: var(--dark-content-bg);
 }
 
 /* =========================================
@@ -447,10 +466,19 @@ hr {
 }
 
 .dark-theme .glass-container::after {
+  /* 暗色模式下减弱迎光面，保持低调的冷色高光，右下角加深暗影 */
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.15),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.3),
+    inset 0 0 20px rgba(255, 255, 255, 0.02);
+
   background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.01) 100%
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 20%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.1) 80%,
+    rgba(0, 0, 0, 0.2) 100%
   );
 }
 
