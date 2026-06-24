@@ -110,3 +110,41 @@ export const portalItems: PortalItem[] = [
     route: '/gallery',
   },
 ]
+
+// --- 文章分类类型定义 ---
+export interface ArticleCategory {
+  id: 'frontend' | 'novels' | 'topics' | string // 保留 string 以便未来扩展
+  title: string
+  desc: string
+  icon: string
+  className: string
+  routeName: string
+}
+
+// --- 文章分类数据导出 ---
+export const ARTICLE_CATEGORIES: ArticleCategory[] = [
+  {
+    id: 'frontend',
+    title: '技术手札',
+    desc: '这里是咱的开发笔记与心得，以及各种实用技术分享0w0！',
+    icon: 'fas fa-laptop-code',
+    className: 'frontend',
+    routeName: 'FrontEnd',
+  },
+  {
+    id: 'novels',
+    title: '幻想物语',
+    desc: '非常非常神秘的连载与短篇故事？！（随缘更新中—v—）',
+    icon: 'fas fa-feather',
+    className: 'novels',
+    routeName: 'Novels',
+  },
+  {
+    id: 'topics',
+    title: '奇怪杂谈',
+    desc: '关于生活、兴趣与日常的随笔... 总之就是各种奇奇怪怪的东西啦OAO！',
+    icon: 'fas fa-user-astronaut',
+    className: 'topics',
+    routeName: 'Topics',
+  },
+]
