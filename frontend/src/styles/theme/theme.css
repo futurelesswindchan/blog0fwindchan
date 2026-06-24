@@ -265,15 +265,75 @@ hr {
   }
 }
 
-/* 内容区域样式 */
+/* 内容区域基础样式 */
 .glass-content {
-  background: var(--light-content-bg);
-  border-radius: 6px;
-}
-.dark-theme .glass-content {
-  background: var(--dark-content-bg);
+  position: relative;
+  background-color: var(--light-content-bg);
+  border-radius: 8px;
+  overflow: hidden;
+
+  /* 微弱的外部轮廓线和内部顶部高光 */
+  border: 1px solid rgba(var(--accent-color-rgb), 0.15);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 0 20px rgba(var(--accent-color-rgb), 0.05);
 }
 
+/* 伪元素做 Aero 质感与网格 */
+.glass-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+
+  /* 多层背景叠加（对角线高光 + 渐隐网格） */
+  background-image:
+    /* 第一层：对角线白色/亮色反光 */
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.05) 30%,
+      transparent 50%
+    ),
+    /* 第二层：右下角的主题色晕影） */
+      radial-gradient(circle at 90% 90%, rgba(var(--accent-color-rgb), 0.1) 0%, transparent 60%),
+    /* 第三层：网格 */ linear-gradient(rgba(var(--accent-color-rgb), 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--accent-color-rgb), 0.04) 1px, transparent 1px);
+
+  background-size:
+    100% 100%,
+    100% 100%,
+    24px 24px,
+    24px 24px;
+}
+
+/* 保证内容区在花纹和高光上方 */
+.glass-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 暗色主题适配 */
+.dark-theme .glass-content {
+  background-color: var(--dark-content-bg);
+  border-color: rgba(var(--dark-accent-color-rgb), 0.2);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 20px rgba(var(--dark-accent-color-rgb), 0.05);
+}
+
+.dark-theme .glass-content::before {
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(var(--dark-accent-color-rgb), 0.15) 0%,
+      transparent 60%
+    ),
+    linear-gradient(rgba(var(--dark-accent-color-rgb), 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--dark-accent-color-rgb), 0.06) 1px, transparent 1px);
+}
 /* =========================================
    4. 特殊组件样式
    ========================================= */
