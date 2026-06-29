@@ -10,8 +10,75 @@
       />
 
       <section class="friend-content">
-        <div v-if="isLoading" class="loading">加载星海中...</div>
-        <div v-else-if="hasError" class="error">数据加载失败了 QAQ</div>
+        <!-- 骨架屏状态 -->
+        <div v-if="isLoading && mixedData.length === 0" class="skeleton-container bento-grid">
+          <!-- 模拟渲染几个大卡片和小碎块的骨架，保持和真实数据一样的瀑布流排布感 -->
+          
+          <!-- 大卡片骨架 1 -->
+          <div class="bento-item friend-card glass-content" style="pointer-events: none;">
+            <SkeletonBlock width="40%" height="100%" radius="0" />
+            <div class="friend-info" style="flex: 1; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;">
+              <SkeletonBlock width="60%" height="1.5rem" />
+              <SkeletonBlock width="90%" height="1rem" />
+              <SkeletonBlock width="70%" height="1rem" />
+              <div class="tags" style="margin-top: auto; display: flex; gap: 0.5rem;">
+                <SkeletonBlock width="40px" height="24px" radius="12px" />
+                <SkeletonBlock width="50px" height="24px" radius="12px" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 小碎块骨架 1 -->
+          <div class="bento-item sponsor-shard glass-content" style="pointer-events: none;">
+            <SkeletonBlock width="60px" height="100%" radius="0" />
+            <div class="shard-content" style="flex: 1; padding: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <div class="shard-header" style="display: flex; justify-content: space-between;">
+                <SkeletonBlock width="40%" height="1.2rem" />
+                <SkeletonBlock width="30%" height="1rem" />
+              </div>
+              <SkeletonBlock width="80%" height="1rem" />
+            </div>
+          </div>
+
+          <!-- 大卡片骨架 2 (反向) -->
+          <div class="bento-item friend-card glass-content reverse-layout" style="pointer-events: none;">
+            <div class="friend-info" style="flex: 1; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;">
+              <SkeletonBlock width="50%" height="1.5rem" />
+              <SkeletonBlock width="95%" height="1rem" />
+              <SkeletonBlock width="60%" height="1rem" />
+              <div class="tags" style="margin-top: auto; display: flex; gap: 0.5rem;">
+                <SkeletonBlock width="45px" height="24px" radius="12px" />
+              </div>
+            </div>
+            <SkeletonBlock width="40%" height="100%" radius="0" />
+          </div>
+
+          <!-- 小碎块骨架 2 -->
+          <div class="bento-item sponsor-shard glass-content reverse-layout" style="pointer-events: none;">
+            <div class="shard-content" style="flex: 1; padding: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <div class="shard-header" style="display: flex; justify-content: space-between;">
+                <SkeletonBlock width="50%" height="1.2rem" />
+                <SkeletonBlock width="25%" height="1rem" />
+              </div>
+              <SkeletonBlock width="70%" height="1rem" />
+            </div>
+            <SkeletonBlock width="60px" height="100%" radius="0" />
+          </div>
+          
+          <!-- 小碎块骨架 3 -->
+          <div class="bento-item sponsor-shard glass-content" style="pointer-events: none;">
+            <SkeletonBlock width="60px" height="100%" radius="0" />
+            <div class="shard-content" style="flex: 1; padding: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <div class="shard-header" style="display: flex; justify-content: space-between;">
+                <SkeletonBlock width="35%" height="1.2rem" />
+                <SkeletonBlock width="35%" height="1rem" />
+              </div>
+              <SkeletonBlock width="90%" height="1rem" />
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="hasError" class="error-message glass-container">数据加载失败了 QAQ</div>
 
         <div v-else>
           <!-- 核心：便当盒瀑布流网格 -->
@@ -101,6 +168,7 @@ import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
 import LazyImage from '@/components/common/LazyImage.vue'
+import SkeletonBlock from '@/components/common/SkeletonBlock.vue'
 
 import '@/styles/layout/correctContentMargin.css'
 import '@/styles/layout/pageTitleArt.css'
