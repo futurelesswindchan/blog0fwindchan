@@ -2,9 +2,17 @@
   <div class="plan-board">
     <h3 class="box-title"><i class="fas fa-list-check"></i> 近期计划</h3>
 
-    <div v-if="activityStore.isLoadingPlans" class="loading-state">
-      <i class="fas fa-circle-notch fa-spin"></i> 读取计划中...
-    </div>
+    <ul v-if="activityStore.isLoadingPlans && activityStore.plans.length === 0" class="plan-list skeleton-container">
+      <li v-for="i in 3" :key="i" class="plan-item" style="pointer-events: none;">
+        <div class="status-indicator" style="margin-top: 0.2rem;">
+          <SkeletonBlock width="65px" height="1.2rem" radius="4px" />
+        </div>
+        <div class="plan-content" style="flex: 1;">
+          <SkeletonBlock width="85%" height="1.2rem" style="margin-bottom: 0.4rem;" />
+          <SkeletonBlock width="35%" height="0.8rem" />
+        </div>
+      </li>
+    </ul>
 
     <ul v-else class="plan-list">
       <li
@@ -36,6 +44,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useActivityStore } from '@/stores/activityStore'
+import SkeletonBlock from '@/components/common/SkeletonBlock.vue'
 
 const activityStore = useActivityStore()
 
