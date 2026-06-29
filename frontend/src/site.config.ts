@@ -17,8 +17,16 @@ export interface NavItem {
 // --- 基础站点信息 ---
 export const siteConfig = {
   title: '风风博客',
-  author: 'futurelesswindchan',
-  description: '一个基于 Vue 3 + TypeScript + Flask 打造的高颜值全栈个人博客系统',
+}
+
+// --- 首页展示信息 (Hero区域) ---
+export const homeInfo = {
+  pageTitle: 'Blog Of Windchan',
+  nickname: '没有未来的小风酱',
+  statusText: '正在摸鱼中awa...',
+  sloganText: '唔...这都被你发现啦？(*/ω＼*)',
+  sloganSub1: '欢迎来到风风的赛博小屋 ~\\(≧▽≦)/~<br />这里记录着代码、故事和...忘了还有什么了！QAQ',
+  sloganSub2: '⬆️联系方式⬆️ 欢迎交流哦ov0',
 }
 
 // --- 导航菜单配置（桌面端 & 移动端共用） ---

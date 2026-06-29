@@ -1,7 +1,7 @@
 <!-- src/views/HomeView.vue -->
 <template>
   <div class="home-view-container">
-    <h2 class="page-title-art">Blog Of Windchan</h2>
+    <h2 class="page-title-art">{{ homeInfo.pageTitle }}</h2>
     <div class="home-dashboard">
       <!-- Hero: 个人信息展示区 -->
       <section class="hero-section glass-content">
@@ -30,21 +30,18 @@
             </div>
 
             <div class="profile-info">
-              <h1 class="nickname">Wind Chan</h1>
+              <h1 class="nickname">{{ homeInfo.nickname }}</h1>
               <div class="status-badge">
                 <span class="status-dot"></span>
-                <span class="status-text">正在摸鱼中awa...</span>
+                <span class="status-text">{{ homeInfo.statusText }}</span>
               </div>
             </div>
           </div>
 
           <!-- 右侧：Slogan 打字机 + 社交链接 -->
           <div class="slogan-group">
-            <TypeWriter :text="sloganText" :speed="80" :delay="500" class="slogan-text" />
-            <p class="slogan-sub">
-              欢迎来到风风的赛博小屋 ~\(≧▽≦)/~<br />
-              这里记录着代码、故事和...忘了还有什么了！QAQ
-            </p>
+            <TypeWriter :text="homeInfo.sloganText" :speed="80" :delay="500" class="slogan-text" />
+            <p class="slogan-sub" v-html="homeInfo.sloganSub1"></p>
 
             <div class="social-links">
               <a
@@ -59,7 +56,7 @@
                 <i :class="link.icon"></i>
               </a>
             </div>
-            <p class="slogan-sub">⬆️联系方式⬆️ 欢迎交流哦ov0</p>
+            <p class="slogan-sub">{{ homeInfo.sloganSub2 }}</p>
           </div>
         </div>
       </section>
@@ -182,7 +179,7 @@
 <script setup lang="ts">
 import { useAllArticles } from '@/composables/useAllArticles'
 import type { ArticleWithCategory } from '@/types/article'
-import { socialLinks, portalItems } from '@/site.config'
+import { socialLinks, portalItems, homeInfo } from '@/site.config'
 import { useArtworkStore } from '@/stores/artworkStore'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -204,7 +201,6 @@ const router = useRouter()
 const artworkStore = useArtworkStore()
 const { fetchAllArticles, sortedArticles, isFetchingGlobal } = useAllArticles()
 const isAvatarFlipped = ref(false)
-const sloganText = '唔...这都被你发现啦？(*/ω＼*)'
 
 // --- 数据获取 ---
 const isLoading = computed(() => isFetchingGlobal.value || artworkStore.loading)
@@ -327,8 +323,8 @@ const navigateToFeature = (route: string) => {
 }
 
 .nickname {
-  font-family: 'FleurDeLeah', cursive;
-  font-size: 3.5rem;
+  font-family: 'ZiYanShiFanXingShouJi-2', cursive;
+  font-size: 2rem;
   margin: 0;
   line-height: 1.2;
 }
