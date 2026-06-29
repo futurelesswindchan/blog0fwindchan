@@ -51,9 +51,54 @@
       <!-- ==========================================
            2. 全局状态区：加载中 & 错误提示
            ========================================== -->
-      <div v-if="articleStore.isLoading" class="loading-wrapper glass-container">
-        <i class="fas fa-circle-notch fa-spin"></i>
-        <span>加载中...</span>
+      <div v-if="articleStore.isLoading && collections.length === 0 && articles.length === 0" class="skeleton-container">
+        <!-- 骨架屏：置顶合集区 -->
+        <div class="collections-area">
+          <div class="section-header">
+            <SkeletonBlock width="20px" height="20px" radius="50%" />
+            <SkeletonBlock width="120px" height="1.5rem" />
+          </div>
+          <div class="collections-grid">
+            <div v-for="i in 2" :key="i" class="collection-card glass-container" style="pointer-events: none;">
+              <div class="card-icon-wrapper" style="background: transparent;">
+                <SkeletonBlock width="40px" height="40px" radius="12px" />
+              </div>
+              <div class="card-content" style="flex: 1;">
+                <SkeletonBlock width="70%" height="1.4rem" style="margin-bottom: 0.5rem;" />
+                <div class="card-meta">
+                  <SkeletonBlock width="80px" height="1.2rem" radius="20px" />
+                </div>
+              </div>
+              <div class="card-action">
+                <SkeletonBlock width="16px" height="16px" radius="50%" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- 骨架屏：散篇文章区 -->
+        <div class="individual-articles-area">
+          <div class="section-header">
+            <SkeletonBlock width="20px" height="20px" radius="50%" />
+            <SkeletonBlock width="120px" height="1.5rem" />
+          </div>
+          
+          <!-- 搜索栏占位 -->
+          <SkeletonBlock width="100%" height="3rem" radius="24px" style="margin-bottom: 1.5rem;" />
+          
+          <!-- 散篇文章列表占位 -->
+          <div class="chapter-list">
+            <div v-for="i in 3" :key="i" class="chapter-item glass-container" style="pointer-events: none;">
+              <div class="chapter-info" style="flex: 1;">
+                <SkeletonBlock width="80px" height="1rem" style="margin-bottom: 0.5rem;" />
+                <SkeletonBlock width="60%" height="1.4rem" />
+              </div>
+              <SkeletonBlock width="16px" height="16px" radius="50%" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-else-if="articleStore.error" class="error-message glass-container">
@@ -63,7 +108,7 @@
       <!-- ==========================================
            3. 散篇文章区
            ========================================== -->
-      <div v-else-if="articles.length > 0" class="individual-articles-area">
+      <div v-if="articles.length > 0" class="individual-articles-area">
         <div class="section-header">
           <i class="fa-solid fa-bookmark section-icon"></i>
           <h3>无归属的散篇文章</h3>
@@ -115,7 +160,7 @@
            4. 极致兜底：如果合集和散篇都没有，就显示一个空状态提示
            ========================================== -->
       <EmptyState
-        v-else-if="collections.length === 0"
+        v-if="!articleStore.isLoading && !articleStore.error && collections.length === 0 && articles.length === 0"
         icon="fa-box-open"
         message="这里空空如也，连风声都没有留下呢..."
       />
@@ -145,6 +190,7 @@ import { useRouter } from 'vue-router'
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
+import SkeletonBlock from '@/components/common/SkeletonBlock.vue'
 
 import '@/styles/layout/correctContentMargin.css'
 import '@/styles/layout/pageHeader.css'
