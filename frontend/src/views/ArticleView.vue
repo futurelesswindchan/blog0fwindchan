@@ -19,7 +19,11 @@
             <h3>{{ item.title }}</h3>
             <p class="description">{{ item.desc }}</p>
             <div class="article-stats">
-              <span class="article-count">{{ getStatsText(item.id) }}</span>
+              <div v-if="articleStore.isLoading" class="skeleton-container" style="flex: 1; margin-right: 1rem;">
+                <SkeletonBlock width="80%" height="1rem" style="margin-bottom: 0.4rem;" />
+                <SkeletonBlock width="50%" height="1rem" />
+              </div>
+              <span v-else class="article-count">{{ getStatsText(item.id) }}</span>
               <button class="view-btn">
                 查看文章
                 <i class="fas fa-arrow-right"></i>
@@ -41,6 +45,7 @@ import { useArticleStore } from '@/stores/articleStore'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ARTICLE_CATEGORIES } from '@/site.config'
+import SkeletonBlock from '@/components/common/SkeletonBlock.vue'
 
 import '@/styles/layout/pageTitleArt.css'
 
