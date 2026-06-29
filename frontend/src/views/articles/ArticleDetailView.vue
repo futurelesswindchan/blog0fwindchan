@@ -6,7 +6,10 @@
       <div class="back-area" @click="$router.back()">
         <i class="fas fa-arrow-left"></i>
       </div>
-      <h2 class="page-title">
+      <div v-if="!article && !articleStore.error" class="page-title-skeleton" style="flex: 1; display: flex; align-items: center; padding: 0 1rem;">
+        <SkeletonBlock width="40%" height="2rem" radius="8px" />
+      </div>
+      <h2 v-else class="page-title">
         {{ article?.title }}
         <span v-if="articleStore.error" class="error-message">
           {{ articleStore.error }}
@@ -50,10 +53,35 @@
         />
       </div>
 
-      <!-- 加载状态占位符 -->
-      <div v-else class="loading-wrapper glass-container">
-        <i class="fas fa-circle-notch fa-spin"></i>
-        <span>正在加载文章...</span>
+      <!-- 加载状态占位符 (骨架屏) -->
+      <div v-else-if="!articleStore.error" class="skeleton-container">
+        <!-- 元数据信息栏骨架 -->
+        <div class="article-info glass-container" style="justify-content: flex-start; gap: 2rem;">
+          <SkeletonBlock width="100px" height="1.2rem" />
+          <SkeletonBlock width="80px" height="1.2rem" />
+          <SkeletonBlock width="120px" height="1.2rem" />
+        </div>
+        
+        <!-- 文章正文骨架 -->
+        <div class="article-content glass-container" style="padding: 2rem;">
+          <SkeletonBlock width="60%" height="2.5rem" style="margin-bottom: 2rem;" />
+          
+          <SkeletonBlock width="100%" height="1.2rem" style="margin-bottom: 1rem;" />
+          <SkeletonBlock width="95%" height="1.2rem" style="margin-bottom: 1rem;" />
+          <SkeletonBlock width="98%" height="1.2rem" style="margin-bottom: 2rem;" />
+          
+          <SkeletonBlock width="40%" height="1.8rem" style="margin-bottom: 1.5rem;" />
+          
+          <SkeletonBlock width="100%" height="1.2rem" style="margin-bottom: 1rem;" />
+          <SkeletonBlock width="90%" height="1.2rem" style="margin-bottom: 1rem;" />
+          <SkeletonBlock width="92%" height="1.2rem" style="margin-bottom: 2rem;" />
+          
+          <!-- 假装是个代码块 -->
+          <SkeletonBlock width="100%" height="200px" radius="8px" style="margin-bottom: 2rem;" />
+          
+          <SkeletonBlock width="95%" height="1.2rem" style="margin-bottom: 1rem;" />
+          <SkeletonBlock width="85%" height="1.2rem" style="margin-bottom: 1rem;" />
+        </div>
       </div>
     </div>
 
@@ -90,6 +118,7 @@ import { useRoute } from 'vue-router'
 
 import type { ArticleWithCategory } from '@/types/article'
 
+import SkeletonBlock from '@/components/common/SkeletonBlock.vue'
 import ContentTypeWriter from '@/components/common/ContentTypeWriter.vue'
 import ArticleNavigation from '@/components/common/ArticleNavigation.vue'
 import ArticleTocPet from '@/components/common/ArticleTocPet.vue'
