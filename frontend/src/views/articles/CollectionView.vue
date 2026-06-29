@@ -15,9 +15,63 @@
 
     <div class="story-view">
       <!-- 状态区：加载与错误 -->
-      <div v-if="articleStore.isLoading" class="loading-wrapper glass-container">
-        <i class="fas fa-circle-notch fa-spin"></i>
-        <span>正在从书库中搬运合集数据...</span>
+      <div v-if="articleStore.isLoading" class="skeleton-container">
+        <!-- 骨架屏：合集简介卡片 -->
+        <div class="collection-info-card glass-content">
+          <div
+            class="accent-indicator"
+            style="background: var(--text-color); opacity: 0.1; box-shadow: none"
+          ></div>
+          <div class="info-header">
+            <SkeletonBlock width="40px" height="40px" radius="8px" />
+            <div
+              style="
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                justify-content: center;
+              "
+            >
+              <SkeletonBlock width="40%" height="1.8rem" />
+              <SkeletonBlock width="15%" height="1.2rem" radius="20px" />
+            </div>
+          </div>
+          <div class="info-body">
+            <SkeletonBlock width="90%" height="1rem" style="margin-bottom: 0.5rem" />
+            <SkeletonBlock width="60%" height="1rem" />
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- 骨架屏：正文目录区 -->
+        <div class="section-header">
+          <SkeletonBlock width="20px" height="20px" radius="50%" />
+          <SkeletonBlock width="100px" height="1.5rem" />
+        </div>
+
+        <!-- 搜索栏占位 -->
+        <SkeletonBlock width="100%" height="3rem" radius="24px" style="margin-bottom: 1.5rem" />
+
+        <!-- 章节列表占位 -->
+        <div class="chapter-list">
+          <div
+            v-for="i in 3"
+            :key="i"
+            class="chapter-item glass-container"
+            style="pointer-events: none"
+          >
+            <div class="chapter-info" style="flex: 1">
+              <SkeletonBlock width="60px" height="1rem" style="margin-bottom: 0.5rem" />
+              <SkeletonBlock width="60%" height="1.4rem" />
+            </div>
+            <div class="chapter-right-meta">
+              <SkeletonBlock width="80px" height="1rem" />
+              <SkeletonBlock width="16px" height="16px" radius="50%" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-else-if="articleStore.error" class="error-message glass-container">
@@ -127,6 +181,7 @@ import { onMounted, computed } from 'vue'
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import FilterBar from '@/components/common/FilterBar.vue'
+import SkeletonBlock from '@/components/common/SkeletonBlock.vue'
 
 import '@/styles/layout/correctContentMargin.css'
 import '@/styles/layout/pageHeader.css'
