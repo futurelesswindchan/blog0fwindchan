@@ -191,6 +191,13 @@
   }
 }
 
+@media (max-width: 768px) {
+  .markdown-content img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+
 /* =========================================
    文章内部元素样式修正 (Markdown 渲染后)
    ========================================= */
