@@ -469,19 +469,19 @@ const handleImageLayoutConfirm = (layoutId: string, size: number) => {
   let imageMarkup = ''
   switch (layoutId) {
     case 'auto':
-      imageMarkup = `\n<img class="img-auto" src="${url}" style="max-width: ${size}rem;" />\n`
+      imageMarkup = `\n<img class="img-auto" src="${url}" style="width: ${size}rem; max-width: 100%;" />\n`
       break
     case 'full':
       imageMarkup = `\n<img class="img-full" src="${url}" />\n`
       break
     case 'inline':
-      imageMarkup = `<img class="img-inline" src="${url}" style="max-width: ${size}rem;" />`
+      imageMarkup = `<img class="img-inline" src="${url}" style="width: ${size}rem; max-width: 100%;" />`
       break
     case 'left':
-      imageMarkup = `\n<img class="img-left" src="${url}" style="max-width: ${size}rem;" />\n`
+      imageMarkup = `\n<img class="img-left" src="${url}" style="width: ${size}rem; max-width: 100%;" />\n`
       break
     case 'right':
-      imageMarkup = `\n<img class="img-right" src="${url}" style="max-width: ${size}rem;" />\n`
+      imageMarkup = `\n<img class="img-right" src="${url}" style="width: ${size}rem; max-width: 100%;" />\n`
       break
   }
   form.content = form.content.substring(0, start) + imageMarkup + form.content.substring(end)
