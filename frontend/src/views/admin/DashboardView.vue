@@ -1278,4 +1278,3 @@ const deleteCollectionConfirm = async (id: string) => {
   }
 }
 </style>
-tyle>

@@ -1,6 +1,6 @@
 // frontend/src/composables/toc-pet/usePetMessage.ts
 import { ref, computed, type Ref } from 'vue'
-import type { PetMood, MessageChannel, MessageOutput } from './types'
+import type { PetMood, MessageOutput } from './types'
 import { usePetGreeting } from './usePetGreeting'
 
 /**
