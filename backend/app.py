@@ -717,6 +717,12 @@ def refresh():
 
     return jsonify(access_token=new_access_token)
 
+
+@app.route("/api/admin/verify", methods=["GET"])
+@jwt_required()
+def verify_token():
+    """仅用于验证 access_token 是否有效，不返回敏感信息"""
+    return jsonify({"valid": True})
 # endregion
 
 

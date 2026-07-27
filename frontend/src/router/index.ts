@@ -7,6 +7,7 @@ import { useFriendStore } from '@/stores/friendStore'
 import { useArtworkStore } from '@/stores/artworkStore'
 import { useAdminStore } from '@/stores/adminStore'
 import { siteConfig } from '@/site.config'
+import api from '@/api'
 
 /**
  * @module RouterConfiguration
@@ -208,21 +209,35 @@ router.beforeEach(async (to, from, next) => {
   document.documentElement.classList.add('page-transitioning')
 
   try {
+    // 3. 路由鉴权拦截机制
     const adminStore = useAdminStore()
     const toastStore = useToastStore()
+    const modalStore = useGlobalModalStore()
 
-    // 3. 路由鉴权拦截机制
-    if (to.meta.requiresAuth && !adminStore.isAuthenticated) {
-      const modalStore = useGlobalModalStore()
-      modalStore.openLogin() // 唤醒全局登录模态框
-
-      // 根据来源决定退路：若处在首页则直接阻断，否则重定向退回首页面
-      if (from.name === 'Home') {
-        next(false)
-      } else {
-        next({ name: 'Home' })
+    // 鉴权逻辑
+    if (to.meta.requiresAuth) {
+      // 1. 如果没有本地 token，直接拦
+      if (!adminStore.access_token) {
+        modalStore.openLogin()
+        return from.name === 'Home' ? next(false) : next({ name: 'Home' })
       }
-      return
+
+      // 2. 本地有 token，但要向后端验证真伪
+      try {
+        await api.get('/admin/verify')
+        // 验证通过，安心放行
+      } catch (error: unknown) {
+        // 验证失败一律视为未授权
+        adminStore.logout() // 清除假 token
+        toastStore.add({
+          title: '需要先登录哦~',
+          message: `登录状态已失效，请重新登录${error instanceof Error ? ` (${error.message})` : ''}`,
+          type: 'warning',
+          duration: 3000,
+        })
+        modalStore.openLogin()
+        return from.name === 'Home' ? next(false) : next({ name: 'Home' })
+      }
     }
 
     // 4. 重数据依赖页面的视觉护航与预加载逻辑

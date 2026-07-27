@@ -61,9 +61,8 @@ export const useAdminStore = defineStore('admin', () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
 
-    // 跳转到登录页，确保应用状态完全重置
-    router.push({ name: 'AdminLogin' })
-    // 这里可以根据需要，选择是否通知后端将 token 加入黑名单
+    // 跳转到首页，确保应用状态完全重置
+    router.push({ name: 'Home' })
   }
 
   return {
