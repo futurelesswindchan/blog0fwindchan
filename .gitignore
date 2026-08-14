@@ -72,3 +72,12 @@ backend/.env
 
 # Ignore uploaded files in static folder, but keep the directory structure
 backend/static/*
+
+# ==========================
+# Art Assets (Self-Managed)
+# ==========================
+
+# Wallpapers are NOT version-controlled.
+# Replace with your own before deploying.
+frontend/public/assets/images/wallpaper.webp
+frontend/public/assets/images/dark-theme-wallpaper.webp
