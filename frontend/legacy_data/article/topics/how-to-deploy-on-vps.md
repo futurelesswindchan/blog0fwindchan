@@ -1,110 +1,91 @@
-# 3. 进阶之路：如何将你的博客部署到云服务器（2026 安全加固版）
+# 2. 部署到云服务器：Nginx + Gunicorn 生产部署指南
 
-> **声明**：本教程面向有一定 Linux 命令行基础的朋友。
-> **前置要求**：你已经完成了上一篇的"装修"，并把代码 **Push** 到了你自己的 GitHub 仓库。
-> **系统环境**：教程基于 **Ubuntu 24.04 LTS**，其他版本请自行适配。
-
----
-
-## 零、前言：从"本地玩具"到"线上产品"
-
-恭喜你！能读到这里，说明你已经在本地拥有了一个独一无二的博客。
-
-这篇教程将手把手带你完成从"本地"到"线上"的蜕变。我们将使用 **Nginx** 作为反向代理， **Gunicorn** 作为后端服务，将你的博客部署到一台真正的云服务器（VPS）上！
-
-与旧版教程不同，这一版加入了**完整的安全加固流程**——SSH 密钥认证、防火墙、内核漏洞缓解等。因为在真实的互联网上，你的服务器从上线的那一秒起就会被扫描器盯上。安全不是可选项，是必修课！
-
-**最终目标：** 输入你的域名，全世界都能安全地访问你的博客！
+> **目标读者**：已完成上一篇个性化定制，并将代码推送到自己 Fork 仓库的开发者。
+>
+> **系统环境**：本教程基于 **Ubuntu 24.04 LTS** 编写，其他发行版请自行适配。
+>
+> **安全说明**：本教程包含完整的服务器安全加固流程。在真实的互联网环境中，服务器从上线的第一秒起就会被自动化扫描器持续探测，安全加固是生产部署的必修内容，而非可选项。
 
 ---
 
 ## 一、准备工作
 
-在开始之前，请确保你拥有：
+开始前，请确认已具备以下条件：
 
-1. 一台 **Linux 云服务器**（推荐 Ubuntu 24.04 LTS）。
-2. 服务器的 **公网 IP 地址**。
-3. **root 账户密码**（初始登录用，之后会禁用）。
-4. （推荐）一个域名，并使用 **Cloudflare** 进行 DNS 代理。
+1. 一台运行 Ubuntu 24.04 LTS 的云服务器，并记录其**公网 IP 地址**。
+2. 服务器的 **root 账户密码**（仅用于初始登录，后续将禁用）。
+3. 一个域名（推荐，可选），并通过 **Cloudflare** 进行 DNS 代理。
+4. 本教程的上一篇已完成：代码已推送到你自己的 GitHub Fork 仓库。
 
 ---
 
-## 二、第一步：服务器初始化与安全加固
+## 二、服务器初始化与安全加固
 
-### 1. 连接服务器
-
-打开终端，使用 SSH 连接：
+### 2.1 连接服务器
 
 ```bash
-ssh root@[你的服务器IP]
+ssh root@<你的服务器IP>
 ```
 
-### 2. 更新系统
+### 2.2 更新系统
 
 ```bash
 apt update && apt upgrade -y
 ```
 
-### 3. 创建普通用户（安全第一！）
+### 2.3 创建普通用户
 
-**永远不要直接用 root 跑程序！**
+禁止直接以 root 身份运行应用程序。
 
 ```bash
-adduser [你的用户名]           # 创建用户，按提示设置密码
-usermod -aG sudo [你的用户名]  # 赋予管理员权限
+adduser <你的用户名>
+usermod -aG sudo <你的用户名>
 ```
 
-### 4. 配置 SSH 密钥登录（极其重要！）
+### 2.4 配置 SSH 密钥登录
 
-密码登录容易被暴力破解或被恶意软件窃取。密钥登录则像一把独一无二的钥匙，只有你手里有。
+密码登录易遭暴力破解，密钥登录是更安全的替代方案。
 
-**在你的【本地电脑】上操作：**
+**在本地机器上执行：**
 
 ```bash
-ssh-keygen -t ed25519 -C "[任意备注名]"
+ssh-keygen -t ed25519 -C "<备注>"
 ```
 
-一路回车即可（也可以设置一个 passphrase 作为二次保护）。
+**将公钥上传到服务器：**
 
-**然后将公钥传到服务器：**
-
-Linux/Mac 用户：
-
+Linux / macOS：
 ```bash
-ssh-copy-id [你的用户名]@[你的服务器IP]
+ssh-copy-id <你的用户名>@<你的服务器IP>
 ```
 
-Windows 用户（没有 `ssh-copy-id`）：
-
+Windows（手动操作）：
 ```bash
-# 先在本地查看公钥内容
+# 本地查看公钥内容，复制整行输出
 cat ~/.ssh/id_ed25519.pub
-# 复制输出的那一整行
 ```
 
-然后在服务器上（root 终端）执行：
+然后在服务器的 root 终端执行：
+```bash
+mkdir -p /home/<你的用户名>/.ssh
+nano /home/<你的用户名>/.ssh/authorized_keys
+# 粘贴公钥内容，Ctrl+O 保存，Ctrl+X 退出
+
+chown -R <你的用户名>:<你的用户名> /home/<你的用户名>/.ssh
+chmod 700 /home/<你的用户名>/.ssh
+chmod 600 /home/<你的用户名>/.ssh/authorized_keys
+```
+
+**验证密钥登录（在本地新开一个终端）：**
 
 ```bash
-mkdir -p /home/[你的用户名]/.ssh
-nano /home/[你的用户名]/.ssh/authorized_keys
-# 粘贴公钥内容，保存退出（Ctrl+O 回车，Ctrl+X）
-
-chown -R [你的用户名]:[你的用户名] /home/[你的用户名]/.ssh
-chmod 700 /home/[你的用户名]/.ssh
-chmod 600 /home/[你的用户名]/.ssh/authorized_keys
+ssh <你的用户名>@<你的服务器IP>
+# 不需要输入密码即可登录，则配置成功
 ```
 
-**验证密钥登录：** 在本地新开一个终端窗口：
+### 2.5 禁用密码登录与 root 远程登录
 
-```bash
-ssh [你的用户名]@[你的服务器IP]
-```
-
-如果不需要输入密码就登进去了，说明配置成功！
-
-### 5. 锁死大门：禁用密码登录 & 禁止 root 远程登录
-
-> ⚠️ **确认密钥登录成功后再执行这一步！** 否则会把自己锁在外面！
+> ⚠️ **必须先确认 2.4 的密钥登录成功，再执行此步骤。** 操作失误将导致无法再登录服务器。
 
 ```bash
 sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
@@ -113,9 +94,7 @@ sudo sed -i 's/^#\?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/ss
 sudo systemctl restart sshd
 ```
 
-从此以后，只有持有你私钥的人才能登录这台服务器。
-
-### 6. 配置防火墙
+### 2.6 配置防火墙
 
 ```bash
 sudo apt install -y ufw
@@ -127,41 +106,42 @@ sudo ufw allow 443/tcp
 sudo ufw --force enable
 ```
 
-### 7. 缓解内核提权漏洞（CVE-2026-31431）
+### 2.7 禁用非必要内核模块（CVE-2026-31431）
+
+本博客的生产服务器曾遭受 Ebury/libkeyutils 风格的恶意软件感染。以下步骤可缓解此类利用内核加密模块进行提权的攻击，对正常业务无影响。
 
 ```bash
 echo "install algif_aead /bin/false" | sudo tee /etc/modprobe.d/disable-algif.conf
 sudo rmmod algif_aead 2>/dev/null
 ```
 
-> 这对绝大多数业务没有任何影响，但能防止攻击者利用内核漏洞提权为 root。
-
 ---
 
-## 三、第二步：安装基础环境
+## 三、安装基础环境
 
-**以下操作均使用你的普通用户（非 root）进行。**
+以下操作均以普通用户身份执行（非 root）。
 
-### 1. 安装基础工具
+### 3.1 安装基础工具
 
 ```bash
-sudo apt install -y git python3 python3-pip python3-venv
+sudo apt install -y git python3 python3-pip python3-venv libmagic1
 ```
 
-### 2. 安装 Node.js（构建 Vue3 需要）
+> **注意**：`libmagic1` 是后端文件上传三重校验的系统级依赖。仅安装 Python 包（`python-magic`）而不安装此系统库，文件上传功能将无法正常工作。
+
+### 3.2 安装 Node.js
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 
-# 验证版本（确保 v22+）
-node -v
-npm -v
+# 验证（需要 v22+）
+node -v && npm -v
 ```
 
-### 3. 安装 Nginx（使用官方源获取最新安全版本）
+### 3.3 安装 Nginx（使用官方源）
 
-> ⚠️ Ubuntu 自带的 Nginx 版本通常较旧，可能存在已知漏洞。强烈建议使用 Nginx 官方源。
+Ubuntu 仓库中自带的 Nginx 版本通常较旧，存在已知安全漏洞。强烈建议使用 Nginx 官方源安装最新稳定版（>= 1.30.1）。
 
 ```bash
 curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo gpg --dearmor -o /usr/share/keyrings/nginx-archive-keyring.gpg
@@ -170,19 +150,16 @@ echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx
 
 sudo apt update && sudo apt install -y nginx
 
-# 验证版本（确保 >= 1.30.1）
+# 验证版本
 nginx -v
 ```
 
-> **Nginx 官方包 vs Ubuntu 自带包的区别：**
+> **Nginx 官方包与 Ubuntu 自带包的差异：**
+> - 站点配置目录为 `/etc/nginx/conf.d/`，没有 `sites-available` / `sites-enabled`。
+> - 没有自带 `proxy_params` 文件，需要手动创建。
+> - 默认运行用户为 `nginx`，而非 `www-data`。
 
-```
-- 配置文件放在 `/etc/nginx/conf.d/`（没有 `sites-available/sites-enabled` 目录）
-- 没有自带 `proxy_params` 文件，需要手动创建
-- 运行用户是 `nginx` 而不是 `www-data`
-```
-
-**创建 proxy_params 文件：**
+**手动创建 proxy_params 文件：**
 
 ```bash
 sudo tee /etc/nginx/proxy_params << 'EOF'
@@ -193,7 +170,12 @@ proxy_set_header X-Forwarded-Proto $scheme;
 EOF
 ```
 
-**解决 Socket 权限问题（关键！）：**
+> **为什么需要这些请求头？**
+> 后端的 `ProxyFix(x_for=1)` 依赖 `X-Forwarded-For` 头来获取真实客户端 IP。如果缺少此头，限流器会将所有访客视为同一个 IP（`127.0.0.1`），导致正常用户被误伤限流。
+>
+> 如果在 Nginx 前方还套了一层 CDN（如 Cloudflare），需要将 `app.py` 中的 `ProxyFix` 参数改为 `x_for=2`。
+
+**将 nginx 用户加入 www-data 组（解决 Socket 权限问题）：**
 
 ```bash
 sudo usermod -aG www-data nginx
@@ -201,72 +183,82 @@ sudo usermod -aG www-data nginx
 
 ---
 
-## 四、第三步：代码部署与构建
+## 四、代码部署与构建
 
-### 1. 拉取代码
+### 4.1 拉取代码
 
 ```bash
 cd ~
-git clone https://github.com/[你的GitHub用户名]/[你的仓库名].git
-cd [项目文件夹名]
+git clone https://github.com/<你的GitHub用户名>/<你的Fork仓库名>.git
+cd <项目文件夹名>
 ```
 
-### 2. 前端构建（Vue3）
+### 4.2 构建前端
 
 ```bash
 cd frontend
 npm install
 npm run build
+# 构建产物位于 frontend/dist/
 ```
 
-构建完成后， `frontend` 目录下会生成一个 `dist` 文件夹，这就是我们要发布的网站。
-
-### 3. 后端环境（Flask）
+### 4.3 配置后端环境
 
 ```bash
 cd ../backend
 
-# 创建并激活虚拟环境
 python3 -m venv venv
 source venv/bin/activate
 
-# 安装依赖
+# 安装依赖（requirements.txt 中已包含 gunicorn）
 pip install -r requirements.txt
-pip install gunicorn
+```
 
-# 配置环境变量
+创建 `.env` 文件：
+
+```bash
 nano .env
 ```
 
-`.env` 文件内容：
+写入以下内容：
 
 ```properties
 FLASK_DEBUG=False
-JWT_SECRET_KEY=[用键盘随机敲一串足够长且复杂的字符]
-CORS_ORIGINS=https://[你的域名]
+JWT_SECRET_KEY=<用下方命令生成的随机字符串>
+CORS_ORIGINS=https://<你的域名>
 ```
 
-> 如果你还没有域名， `CORS_ORIGINS` 先填 `http://[你的服务器IP]`，之后绑定域名时再改。
+生成安全密钥：
 
 ```bash
-# 创建管理员账号
-flask create-admin
+python -c "import secrets; print(secrets.token_hex(32))"
+```
 
-# （可选）迁移示例数据
+> 如果尚未绑定域名，`CORS_ORIGINS` 暂时填写 `http://<你的服务器IP>`，绑定域名后再更新。
+
+初始化数据库并创建管理员：
+
+```bash
+# 建表 + 写入默认分类
+flask db init
+
+# 创建管理员账号
+flask admin create
+
+# （可选）导入示例文章和演示数据
+# ⚠️ 此操作会清空 Article、Category、Friend、Artwork 表，仅用于首次迁移
 python init_db.py
 ```
 
 ---
 
-## 五、第四步：配置后台服务（Systemd）
-
-我们需要让后端程序在后台持续运行，并开机自启。
+## 五、配置 Systemd 后台服务
 
 ```bash
 sudo nano /etc/systemd/system/blog.service
 ```
 
-写入以下内容（注意替换占位符）：
+写入以下内容（替换所有 `<占位符>`）：
 
 ```properties
 [Unit]
@@ -274,27 +266,45 @@ Description=Gunicorn instance for Blog
 After=network.target
 
 [Service]
-User=[你的用户名]
+User=<你的用户名>
 Group=www-data
-WorkingDirectory=/home/[你的用户名]/[项目文件夹名]/backend
-Environment="PATH=/home/[你的用户名]/[项目文件夹名]/backend/venv/bin"
-ExecStart=/home/[你的用户名]/[项目文件夹名]/backend/venv/bin/gunicorn --workers 3 --bind unix:blog.sock -m 007 app:app
+WorkingDirectory=/home/<你的用户名>/<项目文件夹名>/backend
+Environment="PATH=/home/<你的用户名>/<项目文件夹名>/backend/venv/bin"
+ExecStart=/home/<你的用户名>/<项目文件夹名>/backend/venv/bin/gunicorn --workers 3 --bind unix:blog.sock -m 007 app:app
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-启动服务：
+> **参数说明：**
+> - `Group=www-data`：让 socket 文件所属组为 `www-data`，使 Nginx 有权访问。
+> - `-m 007`：socket 文件权限为 `srwxrwx---`，仅组内成员（`www-data`）可读写。
+
+启动并设置开机自启：
 
 ```bash
+sudo systemctl daemon-reload
 sudo systemctl start blog
 sudo systemctl enable blog
-sudo systemctl status blog  # 看到绿色的 active (running) 就成功了！
+sudo systemctl status blog
+# 出现绿色 active (running) 即为成功
 ```
 
 ---
 
-## 六、第五步：配置 Nginx 反向代理
+## 六、目录穿越权限（关键踩坑点）
+
+Nginx worker 进程（`nginx` 用户）要访问 socket 文件，路径上**每一层目录**都必须有执行权限（`x`）。仅修改 socket 文件本身的权限不够，目录链路的每一环都要通。
+
+```bash
+chmod o+x /home/<你的用户名>
+chmod o+x /home/<你的用户名>/<项目文件夹名>
+chmod o+x /home/<你的用户名>/<项目文件夹名>/backend
+```
+
+---
+
+## 七、配置 Nginx 反向代理
 
 ### 方案 A：纯 HTTP（无域名 / 测试用）
 
@@ -305,19 +315,19 @@ sudo nano /etc/nginx/conf.d/blog.conf
 ```nginx
 server {
     listen 80;
-    server_name [你的IP或域名];
+    server_name <你的服务器IP>;
 
-    root /home/[你的用户名]/[项目文件夹名]/frontend/dist;
+    root /home/<你的用户名>/<项目文件夹名>/frontend/dist;
     index index.html;
 
     location /static/ {
-        alias /home/[你的用户名]/[项目文件夹名]/backend/static/;
+        alias /home/<你的用户名>/<项目文件夹名>/backend/static/;
         expires 30d;
     }
 
-    location /api {
+    location /api/ {
         include proxy_params;
-        proxy_pass http://unix:/home/[你的用户名]/[项目文件夹名]/backend/blog.sock;
+        proxy_pass http://unix:/home/<你的用户名>/<项目文件夹名>/backend/blog.sock;
     }
 
     location / {
@@ -326,11 +336,11 @@ server {
 }
 ```
 
-### 方案 B：HTTPS + Cloudflare 源站证书（推荐！）
+### 方案 B：HTTPS + Cloudflare 源站证书（推荐）
 
-如果你使用 Cloudflare 代理（SSL 模式设为"完全（严格）"），可以使用 Cloudflare 免费的源站证书（有效期长达 15 年，无需续期）。
+如果使用 Cloudflare 代理（SSL 模式设为"完全（严格）"），可使用 Cloudflare 免费的源站证书（有效期长达 15 年，无需续期）。
 
-1. 在 Cloudflare 面板 → SSL/TLS → 源服务器 → 创建证书
+1. 进入 Cloudflare 面板 → SSL/TLS → 源服务器 → 创建证书。
 2. 将证书和私钥保存到服务器：
 
 ```bash
@@ -340,7 +350,7 @@ sudo nano /etc/nginx/ssl/cloudflare-origin.key   # 粘贴私钥内容
 sudo chmod 600 /etc/nginx/ssl/cloudflare-origin.key
 ```
 
-3. Nginx 配置：
+3. 编写 Nginx 配置：
 
 ```bash
 sudo nano /etc/nginx/conf.d/blog.conf
@@ -349,28 +359,28 @@ sudo nano /etc/nginx/conf.d/blog.conf
 ```nginx
 server {
     listen 80;
-    server_name [你的域名];
+    server_name <你的域名>;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name [你的域名];
+    server_name <你的域名>;
 
     ssl_certificate /etc/nginx/ssl/cloudflare-origin.pem;
     ssl_certificate_key /etc/nginx/ssl/cloudflare-origin.key;
 
-    root /home/[你的用户名]/[项目文件夹名]/frontend/dist;
+    root /home/<你的用户名>/<项目文件夹名>/frontend/dist;
     index index.html;
 
     location /static/ {
-        alias /home/[你的用户名]/[项目文件夹名]/backend/static/;
+        alias /home/<你的用户名>/<项目文件夹名>/backend/static/;
         expires 30d;
     }
 
-    location /api {
+    location /api/ {
         include proxy_params;
-        proxy_pass http://unix:/home/[你的用户名]/[项目文件夹名]/backend/blog.sock;
+        proxy_pass http://unix:/home/<你的用户名>/<项目文件夹名>/backend/blog.sock;
     }
 
     location / {
@@ -379,69 +389,103 @@ server {
 }
 ```
 
+> **注意**：`location /api/` 末尾的斜杠不能省略。使用 `location /api`（无斜杠）在某些 URL 模式下会导致路由匹配失败，接口返回 404。
+
 ### 激活配置
 
 ```bash
-# 确保 Nginx 能访问你的 home 目录
-sudo chmod 755 /home/[你的用户名]
-
 # 删除默认配置（避免冲突）
 sudo rm -f /etc/nginx/conf.d/default.conf
 
-# 测试并重载
+# 测试配置语法
 sudo nginx -t
+
+# 重载 Nginx
 sudo systemctl restart nginx
 ```
 
 ---
 
-## 七、大功告成！
+## 八、验证部署
 
-现在，打开浏览器，输入你的域名（或服务器 IP）。
-如果一切顺利，你应该能看到那个**你亲手装修过**的博客首页了！🎉
+在浏览器中访问你的域名或服务器 IP，若能看到博客首页，则部署成功。
 
 ---
 
-## 附录：安全加固清单
+## 附录 A：部署检查清单
 
-部署完成后，请确认以下事项全部打勾：
+完成部署后，逐项确认以下内容：
 
 - [ ] SSH 密钥登录已配置
-- [ ] 密码登录已禁用
-- [ ] Root 远程登录已禁用
-- [ ] 防火墙已开启（仅开放 22/80/443）
-- [ ] Nginx 版本 >= 1.30.1
-- [ ] algif_aead 内核模块已禁用
+- [ ] 密码登录已禁用（`PasswordAuthentication no`）
+- [ ] Root 远程登录已禁用（`PermitRootLogin no`）
+- [ ] 防火墙已开启，仅放行 22 / 80 / 443
+- [ ] `libmagic1` 系统库已安装
+- [ ] Nginx 版本 >= 1.30.1（官方源安装）
+- [ ] `algif_aead` 内核模块已禁用
+- [ ] `nginx` 用户已加入 `www-data` 组
+- [ ] `/home/<用户名>`、`/<项目>`、`/<项目>/backend` 三层目录均已 `chmod o+x`
+- [ ] `nginx.conf` 中使用的是 `location /api/`（含末尾斜杠）
+- [ ] `proxy_params` 包含 `X-Forwarded-For` 等必要请求头
 - [ ] `.env` 中 `FLASK_DEBUG=False`
-- [ ] `JWT_SECRET_KEY` 足够复杂
-- [ ] `CORS_ORIGINS` 设置为你的实际域名
+- [ ] `.env` 中 `JWT_SECRET_KEY` 不少于 32 字符
+- [ ] `.env` 中 `CORS_ORIGINS` 设置为实际域名（含 `https://` 前缀）
 
 ---
 
-## 附录：常见问题
+## 附录 B：常见问题
 
-**Q: 访问网站显示 502 Bad Gateway？**
-A: 通常是 Nginx 连不上 Gunicorn 的 socket。检查：
+**Q：访问网站显示 502 Bad Gateway？**
+
+通常是 Nginx 无法连接到 Gunicorn socket。按顺序检查：
 
 ```bash
-# 确认 blog 服务在运行
+# 1. 确认后端服务在运行
 sudo systemctl status blog
 
-# 确认 socket 文件存在
-ls -la ~/[项目文件夹名]/backend/blog.sock
+# 2. 确认 socket 文件存在
+ls -la ~/blog.sock 2>/dev/null || ls -la ~/<项目文件夹名>/backend/blog.sock
 
-# 确认 nginx 用户在 www-data 组中
+# 3. 确认目录权限（三层都要有 o+x）
+ls -ld /home/<你的用户名>
+ls -ld /home/<你的用户名>/<项目文件夹名>
+ls -ld /home/<你的用户名>/<项目文件夹名>/backend
+
+# 4. 确认 nginx 用户在 www-data 组
 groups nginx
-# 如果没有，执行：sudo usermod -aG www-data nginx && sudo systemctl restart nginx
 ```
 
-**Q: API 返回 CORS 错误？**
-A: 检查 `.env` 中的 `CORS_ORIGINS` 是否与你实际访问的域名完全一致（包括 `https://` 前缀），修改后重启服务： `sudo systemctl restart blog`
+**Q：API 返回 CORS 错误？**
 
-**Q: 使用 Nginx 官方源后找不到** `sites-available`\*\* 目录？\*\*
-A: Nginx 官方包使用 `/etc/nginx/conf.d/` 目录存放站点配置，直接在里面创建 `.conf` 文件即可，不需要软链接。
+检查 `backend/.env` 中的 `CORS_ORIGINS` 是否与实际访问的域名完全一致（包含 `https://` 前缀）。修改后重启服务：
+
+```bash
+sudo systemctl restart blog
+```
+
+**Q：文件上传失败，日志报 `magic` 相关错误？**
+
+系统缺少 `libmagic1` 依赖：
+
+```bash
+sudo apt install -y libmagic1
+sudo systemctl restart blog
+```
+
+**Q：使用 Nginx 官方源后找不到 `sites-available` 目录？**
+
+Nginx 官方包使用 `/etc/nginx/conf.d/` 目录存放站点配置，直接在该目录下创建 `.conf` 文件即可，无需软链接。
+
+**Q：后端启动失败，日志提示环境变量缺失？**
+
+```bash
+# 查看详细日志
+sudo journalctl -u blog -n 50 --no-pager
+```
+
+确认 `backend/.env` 中 `JWT_SECRET_KEY` 和 `CORS_ORIGINS` 均已正确填写，缺少任意一项服务将拒绝启动。
 
 ---
 
-> 没有未来的小风酱 敬上  
-> 2026.05 安全加固版
+> 没有未来的小风酱 敬上
+> 2026.08 重构版
