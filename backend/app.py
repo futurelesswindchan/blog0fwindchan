@@ -652,6 +652,7 @@ def hello() -> str:
 
 
 @app.route("/api/articles/index")
+@limiter.limit("120 per minute")
 def get_article_index() -> Response:
     """
     获取文章索引：按分类返回文章的简化信息，并附加连载合集数据。
@@ -690,6 +691,7 @@ def get_article_index() -> Response:
 
 
 @app.route("/api/article/<category_slug>/<article_slug>")
+@limiter.limit("60 per minute")
 def get_article_content(category_slug: str, article_slug: str) -> Response:
     """
     获取指定分类下的文章内容。
@@ -727,6 +729,7 @@ def get_article_content(category_slug: str, article_slug: str) -> Response:
 
 
 @app.route("/api/collection/<collection_slug>")
+@limiter.limit("60 per minute")
 def get_collection_detail(collection_slug: str) -> Response:
     """
     获取指定合集的详情，以及该合集下的所有文章列表。
@@ -747,6 +750,7 @@ def get_collection_detail(collection_slug: str) -> Response:
 
 
 @app.route("/api/friends")
+@limiter.limit("60 per minute")
 def get_friends() -> Response:
     """返回站点友链列表（friends）。"""
 
@@ -755,6 +759,7 @@ def get_friends() -> Response:
 
 
 @app.route("/api/sponsors")
+@limiter.limit("60 per minute")
 def get_sponsors() -> Response:
     """获取所有投喂感谢列表。
 
@@ -767,6 +772,7 @@ def get_sponsors() -> Response:
 
 
 @app.route("/api/artworks")
+@limiter.limit("60 per minute")
 def get_artworks() -> Response:
     """返回插画 / 作品集。"""
 
@@ -775,6 +781,7 @@ def get_artworks() -> Response:
 
 
 @app.route("/api/contributions")
+@limiter.limit("60 per minute")
 def get_contributions() -> Response:
     """获取所有历史贡献数据，用于前端热力图展示。
 
@@ -787,6 +794,7 @@ def get_contributions() -> Response:
 
 
 @app.route("/api/plans")
+@limiter.limit("60 per minute")
 def get_plans() -> Response:
     """获取计划看板列表，并应用“7天自动隐藏”逻辑。
     
@@ -1334,6 +1342,7 @@ def delete_artwork(id: int):
 
 @app.route("/api/admin/plans", methods=["POST"])
 @jwt_required()
+@limiter.limit("30 per minute")
 def add_plan():
     """新增一条计划事项（需要 access_token）。
 
@@ -1341,23 +1350,26 @@ def add_plan():
         成功创建的计划项字典。
 
     """
-    data: dict[str, Any] = request.json or {}
-    if not data.get("content"):
-        return jsonify({"error": "Content is required"}), 400
+    try:
+        data: dict[str, Any] = request.json or {}
+        validated = PlanSchema().load(data)
+    except ValidationError as e:
+        return jsonify({"error": "Input validation failed", "details": e.messages}), 400
     
     # 获取前端创建时传来的状态，如果未提供则默认为 'todo'
-    status = data.get("status", "todo")
+    status = validated.get("status", "todo")
     
     # 自动计算新计划的排序（排在最末尾）
     max_order = db.session.query(db.func.max(Plan.sort_order)).scalar() or 0
     
-    new_plan = Plan(content=data["content"], status=status, sort_order=max_order + 1)
+    new_plan = Plan(content=validated["content"], status=status, sort_order=max_order + 1)
     db.session.add(new_plan)
     db.session.commit()
     return jsonify(new_plan.to_dict())
 
 @app.route("/api/admin/plans/<int:id>", methods=["PUT"])
 @jwt_required()
+@limiter.limit("30 per minute")
 def update_plan(id: int):
     """更新计划内容或状态（需要 access_token）。
 
@@ -1368,23 +1380,30 @@ def update_plan(id: int):
         更新后的计划项字典。
 
     """
-    data: dict[str, Any] = request.json or {}
+    try:
+        data: dict[str, Any] = request.json or {}
+        validated = PlanSchema(partial=True).load(data)
+    except ValidationError as e:
+        return jsonify({"error": "Input validation failed", "details": e.messages}), 400
+    
     plan = db.session.get(Plan, id)
     if not plan:
         return jsonify({"error": "Plan not found"}), 404
     
     # 如果状态发生了改变，同步更新 update_date
-    if "status" in data and data["status"] != plan.status:
-        plan.status = data["status"]
+    if "status" in validated and validated["status"] != plan.status:
+        plan.status = validated["status"]
         plan.update_date = datetime.now().strftime("%Y-%m-%d")
         
-    plan.content = data.get("content", plan.content)
+    if "content" in validated:
+        plan.content = validated["content"]
     
     db.session.commit()
     return jsonify(plan.to_dict())
 
 @app.route("/api/admin/plans/<int:id>", methods=["DELETE"])
 @jwt_required()
+@limiter.limit("30 per minute")
 def delete_plan(id: int):
     """删除指定的计划项（需要 access_token）。
 
@@ -1395,13 +1414,18 @@ def delete_plan(id: int):
         操作成功的提示信息。
 
     """
-    plan = db.session.get(Plan, id)
-    if not plan:
-        return jsonify({"error": "Plan not found"}), 404
-    
-    db.session.delete(plan)
-    db.session.commit()
-    return jsonify({"message": "Plan deleted"})
+    try:
+        plan = db.session.get(Plan, id)
+        if not plan:
+            return jsonify({"error": "Plan not found"}), 404
+        
+        db.session.delete(plan)
+        db.session.commit()
+        return jsonify({"message": "Plan deleted"})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting plan {id}: {str(e)}")
+        return jsonify({"error": "Failed to delete plan"}), 500
 
 @app.route("/api/admin/plans/reorder", methods=["PUT"])
 @jwt_required()
@@ -1434,6 +1458,7 @@ def reorder_plans() -> Response:
 # ==========================================
 @app.route("/api/sponsors", methods=["POST"])
 @jwt_required()
+@limiter.limit("30 per minute")
 def add_sponsor():
     """添加一条投喂感谢记录。
 
@@ -1441,16 +1466,18 @@ def add_sponsor():
         成功创建的投喂记录字典。
 
     """
-    data: dict[str, Any] = request.json or {}
-    if not data.get("name"):
-        return jsonify({"message": "Name is Required"}), 400
+    try:
+        data: dict[str, Any] = request.json or {}
+        validated = SponsorSchema().load(data)
+    except ValidationError as e:
+        return jsonify({"error": "Input validation failed", "details": e.messages}), 400
     
     new_responsors = Sponsor(
-        name=data["name"],
-        avatar=data.get("avatar"),
-        url=data.get("url"),
-        message=data.get("message"),
-        date=data.get("date")
+        name=validated["name"],
+        avatar=validated.get("avatar"),
+        url=validated.get("url"),
+        message=validated.get("message"),
+        date=validated.get("date")
     )
 
     db.session.add(new_responsors)
@@ -1459,6 +1486,7 @@ def add_sponsor():
 
 @app.route("/api/sponsors/<int:id>", methods=["PUT"])
 @jwt_required()
+@limiter.limit("30 per minute")
 def update_sponsor(id: int):
     """更新指定的投喂感谢记录。
 
@@ -1469,21 +1497,33 @@ def update_sponsor(id: int):
         更新后的投喂记录字典。
 
     """
-    data: dict[str, Any] = request.json or {}
+    try:
+        data: dict[str, Any] = request.json or {}
+        validated = SponsorSchema(partial=True).load(data)
+    except ValidationError as e:
+        return jsonify({"error": "Input validation failed", "details": e.messages}), 400
+    
     sponsor = db.session.get(Sponsor, id)
     if not sponsor:
         return jsonify({"message": "Sponsor not found"}), 404
-    sponsor.name = data.get("name", sponsor.name)
-    sponsor.avatar = data.get("avatar", sponsor.avatar)
-    sponsor.url = data.get("url", sponsor.url)
-    sponsor.message = data.get("message", sponsor.message)
-    sponsor.date = data.get("date", sponsor.date)
+    
+    if "name" in validated:
+        sponsor.name = validated["name"]
+    if "avatar" in validated:
+        sponsor.avatar = validated["avatar"]
+    if "url" in validated:
+        sponsor.url = validated["url"]
+    if "message" in validated:
+        sponsor.message = validated["message"]
+    if "date" in validated:
+        sponsor.date = validated["date"]
 
     db.session.commit()
     return jsonify({"message": "Sponsor updated", "sponsor": sponsor.to_dict()})
 
 @app.route("/api/sponsors/<int:id>", methods=["DELETE"])
 @jwt_required()
+@limiter.limit("30 per minute")
 def delete_sponsor(id: int):
     """删除指定的投喂感谢记录。
 
@@ -1494,13 +1534,61 @@ def delete_sponsor(id: int):
         操作成功的提示信息。
 
     """
-    sponsor = db.session.get(Sponsor, id)
-    if not sponsor:
-        return jsonify({"message": "Sponsor not found"}), 404
-    
-    db.session.delete(sponsor)
-    db.session.commit()
-    return jsonify({"message": "Sponsor deleted"})
+    try:
+        sponsor = db.session.get(Sponsor, id)
+        if not sponsor:
+            return jsonify({"message": "Sponsor not found"}), 404
+        
+        db.session.delete(sponsor)
+        db.session.commit()
+        return jsonify({"message": "Sponsor deleted"})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting sponsor {id}: {str(e)}")
+        return jsonify({"error": "Failed to delete sponsor"}), 500
+
+# endregion
+
+
+# ==========================================
+# region 🏁 启动逻辑与数据初始化
+# ==========================================
+
+# ==========================================
+# region 🛡️ 全局异常处理器
+# ==========================================
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """捕获所有未处理的异常，避免向客户端泄露敏感信息。"""
+    app.logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
+    return jsonify({
+        "error": "Internal server error",
+        "message": "An unexpected error occurred. Please try again later."
+    }), 500
+
+@app.errorhandler(404)
+def not_found(e):
+    """处理 404 资源未找到错误。"""
+    return jsonify({"error": "Resource not found"}), 404
+
+@app.errorhandler(400)
+def bad_request(e):
+    """处理 400 请求错误。"""
+    return jsonify({"error": "Bad request", "message": str(e)}), 400
+
+@app.errorhandler(ValidationError)
+def validation_error(e):
+    """处理 marshmallow 校验错误，统一返回 400。"""
+    return jsonify({"error": "Validation failed", "details": e.messages}), 400
+
+@app.errorhandler(413)
+def request_entity_too_large(e):
+    """处理上传文件过大错误（413）。"""
+    return jsonify({
+        "error": "File too large",
+        "message": f"The uploaded file exceeds the maximum allowed size ({MAX_FILE_SIZE // 1024 // 1024}MB)."
+    }), 413
 
 # endregion
 
