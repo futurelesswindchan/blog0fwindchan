@@ -72,5 +72,3 @@ backend/.env
 
 # Ignore uploaded files in static folder, but keep the directory structure
 backend/static/*
-
-lyric.md
