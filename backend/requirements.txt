@@ -5,5 +5,7 @@ Flask-SQLAlchemy
 Flask-JWT-Extended
 python-dotenv
 Werkzeug
-python-magic-bin
 marshmallow
+# libmagic 绑定：Windows 用 python-magic-bin（自带 DLL），Linux/macOS 用 python-magic（依赖系统库 libmagic）
+python-magic-bin; sys_platform == "win32"
+python-magic; sys_platform != "win32"
