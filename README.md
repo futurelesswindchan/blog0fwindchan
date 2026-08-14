@@ -12,189 +12,185 @@
 
 <table>
   <tr>
-    <td><img width="445" alt="preview_light" src="https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview1.png" /></td>
-    <td><img width="445" alt="preview_dark" src="https://github.com/futurelesswindchan/blog0fwindchan/blob/main/.github/images/blog_preview2.png" /></td>
+    <td><img width="445" alt="preview_light" src=".github/images/blog_preview1.png" /></td>
+    <td><img width="445" alt="preview_dark" src=".github/images/blog_preview2.png" /></td>
   </tr>
   <tr>
     <td align="center">☀️ 浅色模式</td>
     <td align="center">🌙 深色模式</td>
   </tr>
 </table>
----
-
-## 📖 项目简介 (Introduction)
-
-你好——！👋 欢迎来到「风风博客」的世界！
-
-这不仅仅是一个简单的个人博客。我希望把它打造成一个兼具 **美术风格** 与 **流畅交互** 的个人内容创作平台。  
-整个项目从 UI 设计到全栈开发，都是我亲手一个像素、一行代码构建起来的。 ヽ( ^ω^ ゞ )
-
-项目采用了现代化的 **前后端分离** 架构，并且已经实现了一个功能完整的 **在线后台管理系统 (CMS)**，让你可以在浏览器里优雅地创作和管理你的所有文章！
-
-- **前端 [Frontend]**: 基于 Vue 3 全家桶，负责所有赏心悦目的视觉效果与用户交互。
-- **后端 [Backend]**: 基于 Python Flask，提供安全、稳定的数据 API 服务。
-
-## 💖 核心亮点 (Core Features)
-
-- **🎨 赛博玻璃拟态美学 (Aero Glassmorphism)**
-  项目 UI 深度定制，实现了类似 Windows Aero 的磨砂玻璃质感~~ 也许吧 OAO... ~~ 。  
-  支持动态光影反射 (`ReflectionLayer`)、亮/暗主题一键切换，带来沉浸式的视觉享受！ヾ(_´∀ ˋ_)ﾉ
-
-- **✍️ 所见即所得的创作体验 (In-place Editing)**
-  后台编辑器摒弃了传统的左右分栏预览。  
-  你可以在一个界面里无缝切换“编辑模式”与“预览模式”，在提交前就能看到文章最终的渲染效果，就像在直接修改网页一样！
-
-- **🔐 企业级 JWT 认证**
-  后台所有敏感操作均由 `Flask-JWT-Extended` 保护。  
-  通过 Access Token + Refresh Token 机制，以及 Axios 拦截器实现的**无感刷新**，在保证安全的同时提供了流畅的登录体验。
-
-- **🔌 开箱即用的演示环境**
-  别担心 `clone` 下来是个空架子！Σ(°Д°;  
-  项目内置了 **数据迁移脚本** (`init_db.py`)，可以一键将 `frontend/legacy_data/` 目录下的示例文章和资源导入数据库，让你瞬间拥有一个内容完整的本地站点。
 
 ---
 
-## 🚀 风风博客，启动！新手村大冒险 (Getting Started)
+## 📖 项目简介
 
-> **想立刻体验？或者自己动手部署？**
->
-> 我们把最详细的教程、开发心得都写成了博客里的**预制文章**！  
-> 你只需要在本地把博客跑起来，再运行刚刚说的**数据迁移脚本**，就能在文章列表里找到它们啦！这样学习起来是不是更有趣？(o ゜ ▽ ゜)o☆
->
-> 下面是让你跑起项目的“快速通道”~
+这是一个兼具美术风格与流畅交互的个人内容创作平台，从 UI 设计到全栈开发均为独立完成。项目采用前后端分离架构，内置功能完整的在线后台管理系统（CMS），支持在浏览器中直接创作和管理文章。
 
-### 1. 本地部署 vs 线上部署？有什么不同？
+**核心亮点：**
 
-- **本地部署 (你现在要做的！)**：在你的电脑上运行。优点是简单、快速，可以随心所欲地修改代码和测试其效果，是开发和体验的最佳方式。
-- **线上部署 (下一步的目标！)**：把项目放到有公网 IP 的服务器上。优点是全世界都能访问你的网站，但流程更复杂，一般需要配置 Nginx、Gunicorn 和域名等。
+- **赛博玻璃拟态美学**：深度定制 UI，实现类 Windows Aero 磨砂玻璃质感，支持动态光影反射与亮/暗主题切换。
+- **所见即所得编辑器**：编辑模式与预览模式无缝切换，提交前即可看到最终渲染效果。
+- **企业级 JWT 认证**：Access Token + Refresh Token 双令牌机制，Axios 拦截器实现无感刷新。
+- **开箱即用的演示环境**：内置数据迁移脚本，可一键将 `frontend/legacy_data/` 下的示例文章和资源导入数据库。
 
-**我们先从本地部署开始吧！**
+---
 
-### 2. 在你的电脑上启动博客 (本地部署指南)
+## 🚀 本地开发启动
 
-#### 准备工作 (Prerequisites)
+> 本节面向在本地运行、体验或二次开发的场景。
+> 如需部署到公网服务器，请参阅 [教程文章](#-教程引流) 部分。
 
-- `Node.js` (v16.0 或更高版本)
-- `Python` (v3.10 或更高版本)
+### 前置依赖
+
+- `Node.js` v18.0+
+- `Python` 3.10+
 - `Git`
 
-#### Step 1: 后端先行！(Backend First!)
-
-我们需要先让数据“心脏”跳动起来~ (`・ω・´)
+### Step 1：启动后端
 
 ```bash
-# 1. 把项目抱回家
+# 克隆项目
 git clone https://github.com/futurelesswindchan/blog0fwindchan.git
-cd blog0fwindchan
+cd blog0fwindchan/backend
 
-# 2. 进入后端的秘密基地
-cd backend
-
-# 3. 创建一个干净的“小房间”（Python虚拟环境）
+# 创建并激活虚拟环境
 python3 -m venv venv
 
-# 4. 激活这个小房间
-#    Windows:
+# Windows
 .\venv\Scripts\activate
-#    Linux/Mac:
+# Linux / macOS
 source venv/bin/activate
 
-# 5. 安装所有魔法咒语（依赖）
+# 安装依赖
 pip install -r requirements.txt
-
-# 6. 【超重要】配置环境变量！
-#    在 backend 目录下新建一个名为 `.env` 的文件，并写入以下内容：
-
-FLASK_DEBUG=True  # 本地开发时开启，线上部署时请务必删除或设为 False！
-JWT_SECRET_KEY=你的专属超级复杂密钥（随便脸滚键盘打一串）
-CORS_ORIGINS=http://localhost:5173
-#    关于 CORS 跨域配置 (CORS_ORIGINS) 的填写指南：
-#    - [本地开发]: 填入本地前端地址 -> CORS_ORIGINS=http://localhost:5173
-#    - [线上部署-场景A]: 前后端分离部署，后端在独立域名/端口 -> CORS_ORIGINS=https://你的前端域名.com
-#    - [线上部署-场景B]: Nginx 反向代理 (前后端同域名) -> 不触发跨域，填前端域名或本地地址均可
-
-# 7. 【超重要】创建你的专属管理员账号！
-#    按照提示输入用户名和密码
-flask create-admin
-# 8. 【可选】一键让博客内容满满当当！
-#    这个脚本会把所有教程和示例文章都导入数据库
-python init_db.py
-# 9. 启动后端服务！
-python app.py
 ```
 
-当你看到终端显示 `Running on http://127.0.0.1:5000` 时，说明后端已经成功启动啦！🎉
+在 `backend/` 目录下新建 `.env` 文件：
 
-#### Step 2: 前端点火！(Frontend Power On!)
+```properties
+FLASK_DEBUG=True
+JWT_SECRET_KEY=<至少32字符的随机字符串，可用下方命令生成>
+CORS_ORIGINS=http://localhost:5173
+```
 
-只有心脏当然是...不行的 OAO！**请打开一个新的终端窗口**！
+生成安全密钥：
 
 ```bash
-# 1. 确保你在项目【根目录】下 (blog0fwindchan/)
-
-# 2. 进入前端目录 (关键步骤！)
-cd frontend
-
-# 3. 安装前端依赖
-npm install
-
-# 4. 启动！
-npm run dev
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-前端开发服务器会启动在 `http://localhost:5173`。它会自动和 `5000` 端口的后端“秘密通信”，你什么都不用担心~
+初始化数据库并创建管理员账号：
 
-### 3. 开始你的教程之旅！
+```bash
+# 建表 + 写入默认分类
+flask db init
 
-现在，在浏览器里打开 `http://localhost:5173`。
+# 创建管理员账号（按提示输入用户名和密码）
+flask admin create
+```
 
-- 如果你想学习网站开发经验，去 **“技术手记”** 分类，你会找到关于 **此博客开发** 的详细心得文章。
-- 如果你只想开箱即用，把项目修改为属于自己的博客并部署到公网，去 **“奇思妙想”** 分类，你会找到你想要的！
+（可选）导入示例文章和演示数据：
+
+```bash
+python init_db.py
+```
+
+> ⚠️ `init_db.py` 会**清空** Article、Category、Friend、Artwork 表后重新导入，仅适用于首次从 `legacy_data/` 迁移数据。生产环境请勿重复执行。
+
+启动后端：
+
+```bash
+python app.py
+# 看到 Running on http://127.0.0.1:5000 即为成功
+```
+
+### Step 2：启动前端
+
+另开一个终端窗口：
+
+```bash
+cd frontend
+npm install
+npm run dev
+# 前端运行于 http://localhost:5173
+```
 
 ---
 
-## 🛠️ 技术细节与未来 (For Geeks)
-
-### 技术栈全家桶
+## 🛠️ 技术栈
 
 <details>
-<summary>点击展开  nerdy 的技术细节 (´・ω・`)</summary>
+<summary>展开查看完整技术细节</summary>
 
-#### Frontend
+### Frontend
 
-| 技术         | 描述                               |
-| :----------- | :--------------------------------- |
-| `Vue 3`      | 核心框架，全面拥抱 Composition API |
-| `TypeScript` | 全程类型支持，代码更健壮!(ﾟ д⊙)    |
-| `Vite`       | 闪电般 ⚡ 的构建与开发体验         |
-| `Pinia`      | 新一代状态管理，轻量且符合直觉     |
+| 技术                           | 描述                                   |
+| :----------------------------- | :------------------------------------- |
+| `Vue 3`                        | 核心框架，全面使用 Composition API     |
+| `TypeScript`                   | 全程类型支持                           |
+| `Vite`                         | 构建与开发服务器                       |
+| `Pinia`                        | 状态管理                               |
+| `Vue Router 4`                 | 路由与后台权限守卫                     |
+| `Axios`                        | HTTP 客户端，配置了 JWT 自动刷新拦截器 |
+| `Sass (SCSS)`                  | 样式预处理                             |
+| `markdown-it` + `highlight.js` | Markdown 渲染与代码高亮                |
 
-- **HTTP**: `Axios` (配置了拦截器，用于自动化 JWT 处理)
-- **Router**: `Vue Router 4` (包含路由守卫，实现后台权限控制)
-- **Styling**: `Sass (SCSS)`
-- **UI/UX**: `FontAwesome`, `markdown-it` + `highlight.js`
+### Backend
 
-#### Backend
+| 技术                 | 描述                       |
+| :------------------- | :------------------------- |
+| `Python 3.10+`       | 后端开发语言               |
+| `Flask`              | Web 框架                   |
+| `SQLite`             | 嵌入式数据库               |
+| `SQLAlchemy 2.0`     | ORM，模型定义              |
+| `Flask-JWT-Extended` | JWT 认证与 Token 管理      |
+| `Flask-Limiter`      | 全局 API 限流              |
+| `Marshmallow`        | 请求数据序列化与校验       |
+| `python-dotenv`      | 环境变量管理               |
+| `Werkzeug ProxyFix`  | Nginx 反向代理真实 IP 透传 |
 
-| 技术                 | 描述                                       |
-| :------------------- | :----------------------------------------- |
-| `Python 3.10+`       | 后端开发语言                               |
-| `Flask`              | 轻量级 Web 框架，灵活易扩展                |
-| `SQLite`             | 无需配置的嵌入式数据库，方便又快捷(/´∀`)~♥ |
-| `SQLAlchemy`         | ORM 库，使用 2.0 风格进行模型定义          |
-| `Flask-JWT-Extended` | 提供标准的 JWT 认证与 Token 管理           |
-| `python-dotenv`      | 安全地管理环境变量（如密钥）               |
+后端采用模块化蓝图结构：
+
+```
+backend/
+├── app.py          # 应用工厂 create_app() + CLI 命令注册
+├── extensions.py   # db / jwt / limiter 扩展实例
+├── models.py       # SQLAlchemy 模型
+├── schemas.py      # Marshmallow Schema
+└── routes/
+    ├── __init__.py # register_routes() 蓝图注册
+    ├── public.py   # 公开只读接口
+    ├── auth.py     # 登录 / Token 刷新 / 验证
+    ├── admin.py    # 管理写入接口
+    └── assets.py   # 文件上传
+```
 
 </details>
 
-## 📄 使用许可 (License)
+---
 
-本项目**代码部分**采用 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh) 协议进行许可。  
-简单来说：欢迎学习、分享和修改代码，但请**注明出处**，并且**不要用于商业用途**哦 awa。
+## 📚 教程引流
 
-⚠️ **【特别的美术资产版权声明】**  
-博客仓库中包含的**所有美术资产**（包括但不限于示例源文件中的角色立绘、网站 Logo/Icon、动态背景壁纸等）均受版权严格保护，**不适用**开源协议。  
-您可以 Clone 它们用于**本地运行、学习和测试**。但在将博客正式部署为**您的公开个人站点**时，**必须**将这些美术资产替换为您自己拥有版权或合法使用权的素材。切勿直接二次分发或将其混作开源素材哦！
+想把博客改成自己的？想部署到公网服务器？
+
+项目内置了完整的教程文章，导入示例数据（`python init_db.py`）后可在博客的"奇怪杂谈"分类中找到；也可以直接在 GitHub 仓库的 `frontend/legacy_data/article/topics/` 目录下查看 Markdown 源文件。
+
+| 教程                                                                                | 内容                                                |
+| :---------------------------------------------------------------------------------- | :-------------------------------------------------- |
+| [个性化你的博客](frontend/legacy_data/article/topics/how-to-customize-blog.md)      | Fork 仓库、修改站名、头像、壁纸、主题色等           |
+| [部署到云服务器](frontend/legacy_data/article/topics/how-to-deploy-on-vps.md)       | Nginx + Gunicorn 生产部署，含完整安全加固与踩坑指南 |
+| [日常更新与维护](frontend/legacy_data/article/topics/how-to-update-and-maintain.md) | 代码更新流程、CLI 命令速查、常见问题排错            |
+
+---
+
+## 📄 使用许可
+
+本项目**代码部分**采用 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh) 协议进行许可。欢迎学习、分享和修改，但请注明出处，且不得用于商业用途。
+
+⚠️ **美术资产版权声明**
+
+仓库中包含的所有美术资产（角色立绘、网站 Logo/Icon 等）均受版权保护，**不适用**开源协议。你可以 Clone 用于本地运行、学习和测试，但在将博客正式部署为公开个人站点时，**必须**将这些资产替换为你自己拥有版权或合法使用权的素材。
 
 ---
 
