@@ -159,7 +159,7 @@ def migrate_artworks() -> None:
 def migrate_articles() -> None:
     CATEGORY_MAP: Dict[str, str] = {
         "frontend": "技术手记",
-        "topics": "奇思妙想",
+        "topics": "奇怪杂谈",
         "novels": "幻想物语",
         "tools": "工具箱",
     }
