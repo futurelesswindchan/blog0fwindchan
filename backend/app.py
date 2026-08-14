@@ -19,6 +19,7 @@ from werkzeug.security import (
     check_password_hash,
     generate_password_hash,
 )
+from werkzeug.utils import secure_filename
 
 from flask_jwt_extended import (
     JWTManager,
@@ -29,6 +30,10 @@ from flask_jwt_extended import (
 
 from sqlalchemy import JSON, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
+
+import magic  # 用于检测文件真实 MIME 类型
+
+from marshmallow import Schema, fields, validate, ValidationError
 
 
 # ==========================================
@@ -69,7 +74,24 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # JWT（JSON Web Token）相关配置
 # - 密钥从环境变量 `JWT_SECRET_KEY` 读取（建议在生产环境设置该变量）
 # - Access Token 过期设置为 1 小时，Refresh Token 过期设置为 30 天
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+
+# 🔒 安全检查：强制要求配置 JWT 密钥，且密钥长度必须 >= 32 字符
+jwt_secret = os.getenv("JWT_SECRET_KEY")
+if not jwt_secret:
+    print("❌ [呜哇！致命错误] 没有找到 JWT_SECRET_KEY 环境变量！")
+    print("👉 请在 backend 目录下的 `.env` 文件中添加：")
+    print("   JWT_SECRET_KEY=<至少32字符的随机密钥>")
+    print("\n生成安全密钥的方法：")
+    print("   python -c \"import secrets; print(secrets.token_hex(32))\"")
+    sys.exit(1)
+
+if len(jwt_secret) < 32:
+    print(f"❌ [呜哇！安全错误] JWT_SECRET_KEY 太短啦！当前 {len(jwt_secret)} 字符，最低要求 32 字符")
+    print("👉 请使用以下命令生成足够强度的密钥：")
+    print("   python -c \"import secrets; print(secrets.token_hex(32))\"")
+    sys.exit(1)
+
+app.config["JWT_SECRET_KEY"] = jwt_secret
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 
@@ -77,6 +99,10 @@ app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 # 存放在 backend/static/uploads 下
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_MIME_TYPES = {
+    'image/png', 'image/jpeg', 'image/gif', 'image/webp'
+}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 # 确保上传目录存在
 if not os.path.exists(UPLOAD_FOLDER):
@@ -88,14 +114,111 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 jwt = JWTManager(app)
 db = SQLAlchemy(app)
 
-# 辅助函数：检查文件扩展名
-def allowed_file(filename: str | None) -> bool:
-    if filename is None:
+# 辅助函数：严格的文件类型检查（扩展名 + MIME + 魔数三重验证）
+def allowed_file(file) -> tuple[bool, str]:
+    """
+    严格校验文件：扩展名 + MIME + 魔数三重检查
+    
+    Args:
+        file: Flask 上传的文件对象
+        
+    Returns:
+        (是否允许, 错误信息)
+    """
+    if not file or not file.filename:
+        return False, "No file provided"
+    
+    filename = file.filename
+    
+    # 1. 扩展名检查
+    if '.' not in filename:
+        return False, "Invalid filename"
+    
+    ext = filename.rsplit('.', 1)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        return False, f"Extension .{ext} not allowed"
+    
+    # 2. 读取文件头检查 MIME（前 2048 字节足够识别图片类型）
+    file.seek(0)
+    header = file.read(2048)
+    file.seek(0)  # 重置指针供后续保存使用
+    
+    try:
+        mime = magic.from_buffer(header, mime=True)
+    except Exception as e:
+        app.logger.error(f"MIME detection failed: {str(e)}")
+        return False, f"Failed to detect file type"
+    
+    if mime not in ALLOWED_MIME_TYPES:
+        return False, f"MIME type {mime} not allowed (expected image/*)"
+    
+    # 3. 文件大小检查
+    file.seek(0, 2)  # 移到文件末尾
+    size = file.tell()
+    file.seek(0)  # 重置
+    
+    if size > MAX_FILE_SIZE:
+        return False, f"File too large (max {MAX_FILE_SIZE//1024//1024}MB)"
+    
+    if size == 0:
+        return False, "Empty file not allowed"
+    
+    return True, ""
 
-        return False
+# endregion
 
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# ==========================================
+# region 📋 请求校验 Schema
+# ==========================================
+
+class ArticleSchema(Schema):
+    """文章创建/更新请求校验"""
+    slug = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    title = fields.Str(required=True, validate=validate.Length(min=1, max=200))
+    category = fields.Str(required=True, validate=validate.OneOf(['frontend', 'topics', 'novels']))
+    date = fields.Str(validate=validate.Regexp(r'^\d{4}-\d{2}-\d{2}$'), allow_none=True)
+    content = fields.Str(allow_none=True)
+    collection_id = fields.Str(allow_none=True, validate=validate.Length(max=100))
+    isNew = fields.Bool(missing=False)
+    uid = fields.Str(allow_none=True, validate=validate.Length(max=50))
+
+class FriendSchema(Schema):
+    """友链添加/更新请求校验"""
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    url = fields.Url(required=True)
+    desc = fields.Str(validate=validate.Length(max=200), allow_none=True)
+    avatar = fields.Url(allow_none=True)
+    tags = fields.List(fields.Str(validate=validate.Length(max=50)), allow_none=True)
+
+class ArtworkSchema(Schema):
+    """画廊作品添加/更新请求校验"""
+    title = fields.Str(validate=validate.Length(max=100), allow_none=True)
+    thumbnail = fields.Url(required=True)
+    fullsize = fields.Url(required=True)
+    description = fields.Str(validate=validate.Length(max=300), allow_none=True)
+    date = fields.Str(validate=validate.Regexp(r'^\d{4}-\d{2}-\d{2}$'), allow_none=True)
+
+class PlanSchema(Schema):
+    """计划项添加/更新请求校验"""
+    content = fields.Str(required=True, validate=validate.Length(min=1, max=200))
+    status = fields.Str(validate=validate.OneOf(['todo', 'doing', 'done']), missing='todo')
+    sort_order = fields.Int(validate=validate.Range(min=0), allow_none=True)
+
+class SponsorSchema(Schema):
+    """赞助者添加/更新请求校验"""
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    avatar = fields.Url(allow_none=True)
+    url = fields.Url(allow_none=True)
+    message = fields.Str(validate=validate.Length(max=500), allow_none=True)
+    date = fields.Str(validate=validate.Regexp(r'^\d{4}-\d{2}-\d{2}$'), allow_none=True)
+
+class CollectionSchema(Schema):
+    """合集添加/更新请求校验"""
+    slug = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    description = fields.Str(validate=validate.Length(max=300), allow_none=True)
+    category = fields.Str(required=True, validate=validate.OneOf(['frontend', 'topics', 'novels']))
 
 # endregion
 
@@ -446,56 +569,74 @@ class Plan(db.Model):
 
 @app.route("/api/upload", methods=["POST"])
 @jwt_required()
+@limiter.limit("10 per minute")  # 每分钟最多 10 次上传
+@limiter.limit("100 per hour")   # 每小时最多 100 次上传
 def upload_file():
     """
-    通用文件上传接口。
+    通用文件上传接口（已加固：MIME检测 + 魔数校验 + 大小限制）。
     - file: 文件对象
-    - type: (可选) 上传类型，支持 'article' | 'artwork' | 'friend'
+    - type: (可选) 上传类型，支持 'article' | 'artwork' | 'friend' | 'misc'
     """
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
         
     file = request.files['file']
-    # 获取上传类型，默认为 'misc' (杂项)
     upload_type = request.form.get('type', 'misc')
 
-    if file.filename == '':
+    if not file or file.filename == '':
         return jsonify({"error": "No selected file"}), 400
     
-    if file and allowed_file(file.filename):
-        # 1. 确定存储子目录
-        # 为了安全，只允许特定的子目录名
-        allowed_types = {'article', 'artwork', 'friend', 'misc'}
-        if upload_type not in allowed_types:
-            upload_type = 'misc'
-            
-        # 2. 构建保存路径: static/uploads/<type>/
-        upload_folder = cast(str, app.config['UPLOAD_FOLDER'])
-
-        save_dir = os.path.join(upload_folder, upload_type)
+    # 三重校验：扩展名 + MIME + 魔数
+    is_allowed, err_msg = allowed_file(file)
+    if not is_allowed:
+        return jsonify({"error": err_msg}), 400
+    
+    # 1. 确定存储子目录（白名单检查）
+    allowed_types = {'article', 'artwork', 'friend', 'misc'}
+    if upload_type not in allowed_types:
+        upload_type = 'misc'
         
-        # 确保目录存在
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
+    # 2. 构建保存路径: static/uploads/<type>/
+    upload_folder = cast(str, app.config['UPLOAD_FOLDER'])
+    save_dir = os.path.join(upload_folder, upload_type)
+    
+    # 确保目录存在
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
-        # 3. 生成文件名
-        if file.filename is not None:
-            ext = file.filename.rsplit('.', 1)[1].lower()
-            filename = f"{uuid.uuid4().hex}.{ext}"
-        
-            # 4. 保存文件
-            save_path = os.path.join(save_dir, filename)
-            file.save(save_path)
+    # 3. 生成安全文件名（完全丢弃原文件名）
+    ext = file.filename.rsplit('.', 1)[1].lower()
     
-            # 5. 返回 URL
-            # URL 格式: /static/uploads/<type>/<filename>
-            url = f"/static/uploads/{upload_type}/{filename}"
+    # 再次验证扩展名（双重保险）
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({"error": "Invalid extension"}), 400
     
-            return jsonify({"message": "Upload successful", "url": url})
-        else:
-            return jsonify({"message": "Upload failed, filename is none."})
+    filename = f"{uuid.uuid4().hex}.{ext}"
     
-    return jsonify({"error": "File type not allowed"}), 400
+    # 使用 secure_filename 进一步清洗（虽然已经用 UUID，双重保险）
+    filename = secure_filename(filename)
+    
+    # 4. 构建完整路径并检查路径穿越
+    save_path = os.path.join(save_dir, filename)
+    
+    # 最终路径安全检查：确保在 uploads 目录内
+    upload_folder_abs = os.path.abspath(upload_folder)
+    save_path_abs = os.path.abspath(save_path)
+    
+    if not save_path_abs.startswith(upload_folder_abs):
+        return jsonify({"error": "Path traversal detected"}), 400
+    
+    # 5. 保存文件
+    try:
+        file.save(save_path_abs)
+    except Exception as e:
+        app.logger.error(f"File save failed: {str(e)}")
+        return jsonify({"error": "Failed to save file"}), 500
+
+    # 6. 返回 URL
+    url = f"/static/uploads/{upload_type}/{filename}"
+    
+    return jsonify({"message": "Upload successful", "url": url})
 
 # endregion
 
@@ -768,6 +909,7 @@ def create_admin():
 
 @app.route("/api/articles", methods=["POST"])
 @jwt_required()
+@limiter.limit("30 per minute")  # 每分钟最多 30 次创建/更新
 def save_article():
     """
     新增或更新文章（需要 access_token）。
@@ -780,22 +922,25 @@ def save_article():
 
     data: dict[str, Any] = request.json or {}
     is_new = data.get("isNew", False)
+    
+    # 输入校验
+    schema = ArticleSchema()
+    try:
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": "Validation failed", "details": err.messages}), 400
 
     # 初始化默认分类数据
     init_default_data()
 
-    # 必填校验
-    if not data.get("title") or not data.get("slug") or not data.get("category"):
-        return jsonify({"error": "Missing required fields"}), 400
-
     try:
         # 根据前端传入的 category slug 查询分类
-        category = cast(Optional[Category], Category.query.filter_by(slug=data["category"]).first())
+        category = cast(Optional[Category], Category.query.filter_by(slug=validated_data["category"]).first())
         if not category:
             return jsonify({"error": "Invalid category"}), 400
         
         # 处理连载合集逻辑
-        collection_slug = data.get("collection_id")
+        collection_slug = validated_data.get("collection_id")
         real_collection_id: Optional[int] = None
         if collection_slug:
             # 根据 slug 查出真正的合集 ID
@@ -805,14 +950,14 @@ def save_article():
 
         if is_new:
             # 新增文章，先检查 slug 是否重复
-            if Article.query.filter_by(slug=data["slug"]).first():
+            if Article.query.filter_by(slug=validated_data["slug"]).first():
                 return jsonify({"error": "Slug already exists"}), 400
 
             article = Article(
-                slug=data["slug"],
-                title=data["title"],
-                date=data.get("date", datetime.now().strftime("%Y-%m-%d")),
-                content=data.get("content", ""),
+                slug=validated_data["slug"],
+                title=validated_data["title"],
+                date=validated_data.get("date", datetime.now().strftime("%Y-%m-%d")),
+                content=validated_data.get("content", ""),
                 category_id=category.id,
                 uid=str(uuid.uuid4())[:8],
                 collection_id=real_collection_id
@@ -822,13 +967,13 @@ def save_article():
 
         else:
             # 更新已有文章
-            article = cast(Optional[Article], Article.query.filter_by(slug=data["slug"]).first())
+            article = cast(Optional[Article], Article.query.filter_by(slug=validated_data["slug"]).first())
             if not article:
                 return jsonify({"error": "Article not found"}), 404
 
-            article.title = data["title"]
-            article.date = str(data.get("date", article.date))
-            article.content = data.get("content", "")
+            article.title = validated_data["title"]
+            article.date = str(validated_data.get("date", article.date))
+            article.content = validated_data.get("content", "")
             article.category_id = category.id
             article.collection_id = real_collection_id
 
@@ -946,27 +1091,39 @@ def delete_article_asset():
 
 @app.route("/api/admin/collections", methods=["POST"])
 @jwt_required()
+@limiter.limit("30 per minute")  # 每分钟最多 30 次创建
 def add_collection():
     """新增合集"""
     data: dict[str, Any] = request.json or {}
-    category_slug = data.get("category")
     
-    category = cast(Optional[Category], Category.query.filter_by(slug=category_slug).first())
-    if not category or not data.get("slug") or not data.get("name"):
-        return jsonify({"error": "Missing required fields (category, slug, name)"}), 400
+    # 输入校验
+    schema = CollectionSchema()
+    try:
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": "Validation failed", "details": err.messages}), 400
+    
+    category = cast(Optional[Category], Category.query.filter_by(slug=validated_data["category"]).first())
+    if not category:
+        return jsonify({"error": "Invalid category"}), 400
         
-    if Collection.query.filter_by(slug=data["slug"]).first():
+    if Collection.query.filter_by(slug=validated_data["slug"]).first():
         return jsonify({"error": "Collection slug already exists"}), 400
 
-    new_col = Collection(
-        slug=data["slug"],
-        name=data["name"],
-        description=data.get("description", ""),
-        category_id=category.id
-    )
-    db.session.add(new_col)
-    db.session.commit()
-    return jsonify({"message": "Collection created"})
+    try:
+        new_col = Collection(
+            slug=validated_data["slug"],
+            name=validated_data["name"],
+            description=validated_data.get("description", ""),
+            category_id=category.id
+        )
+        db.session.add(new_col)
+        db.session.commit()
+        return jsonify({"message": "Collection created"})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to create collection: {str(e)}")
+        return jsonify({"error": "Failed to create collection"}), 500
 
 
 @app.route("/api/admin/collections/<slug>", methods=["DELETE"])
@@ -1012,41 +1169,66 @@ def update_collection(slug: str):
 
 @app.route("/api/friends", methods=["POST"])
 @jwt_required()
+@limiter.limit("20 per minute")  # 每分钟最多 20 次添加
 def add_friend():
     """添加友链（需要 access_token）。"""
     data: dict[str, Any] = request.json or {}
-    if not data.get("name") or not data.get("url"):
-        return jsonify({"error": "Name and URL are required"}), 400
     
-    new_friend = Friend(
-        name=data["name"],
-        desc=data.get("desc", ""),
-        url=data["url"],
-        avatar=data.get("avatar", ""),
-        tags=data.get("tags", []) # 前端传数组过来
-    )
-    db.session.add(new_friend)
-    db.session.commit()
-    return jsonify({"message": "Friend added", "friend": new_friend.to_dict()})
+    # 输入校验
+    schema = FriendSchema()
+    try:
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": "Validation failed", "details": err.messages}), 400
+    
+    try:
+        new_friend = Friend(
+            name=validated_data["name"],
+            desc=validated_data.get("desc", ""),
+            url=validated_data["url"],
+            avatar=validated_data.get("avatar", ""),
+            tags=validated_data.get("tags", [])
+        )
+        db.session.add(new_friend)
+        db.session.commit()
+        return jsonify({"message": "Friend added", "friend": new_friend.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to add friend: {str(e)}")
+        return jsonify({"error": "Failed to add friend"}), 500
 
 
 @app.route("/api/friends/<int:id>", methods=["PUT"])
 @jwt_required()
+@limiter.limit("30 per minute")  # 每分钟最多 30 次更新
 def update_friend(id: int):
     """更新友链（需要 access_token）。"""
     data: dict[str, Any] = request.json or {}
+    
+    # 输入校验（部分字段可选）
+    schema = FriendSchema(partial=True)
+    try:
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": "Validation failed", "details": err.messages}), 400
+    
     friend = db.session.get(Friend, id)
     if not friend:
         return jsonify({"error": "Friend not found"}), 404
     
-    friend.name = data.get("name", friend.name)
-    friend.desc = data.get("desc", friend.desc)
-    friend.url = data.get("url", friend.url)
-    friend.avatar = data.get("avatar", friend.avatar)
-    friend.tags = data.get("tags", friend.tags)
-    
-    db.session.commit()
-    return jsonify({"message": "Friend updated", "friend": friend.to_dict()})
+    try:
+        friend.name = validated_data.get("name", friend.name)
+        friend.desc = validated_data.get("desc", friend.desc)
+        friend.url = validated_data.get("url", friend.url)
+        friend.avatar = validated_data.get("avatar", friend.avatar)
+        friend.tags = validated_data.get("tags", friend.tags)
+        
+        db.session.commit()
+        return jsonify({"message": "Friend updated", "friend": friend.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to update friend: {str(e)}")
+        return jsonify({"error": "Failed to update friend"}), 500
 
 
 @app.route("/api/friends/<int:id>", methods=["DELETE"])
@@ -1070,42 +1252,66 @@ def delete_friend(id: int):
 
 @app.route("/api/artworks", methods=["POST"])
 @jwt_required()
+@limiter.limit("20 per minute")  # 每分钟最多 20 次添加
 def add_artwork():
     """添加插画 / 作品（需要 access_token）。"""
     data: dict[str, Any] = request.json or {}
-    # 假设目前图片是填 URL 的形式
-    if not data.get("thumbnail") or not data.get("fullsize"):
-        return jsonify({"error": "Images are required"}), 400
+    
+    # 输入校验
+    schema = ArtworkSchema()
+    try:
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": "Validation failed", "details": err.messages}), 400
         
-    new_work = Artwork(
-        title=data.get("title", "Untitled"),
-        thumbnail=data["thumbnail"],
-        fullsize=data["fullsize"],
-        description=data.get("description", ""),
-        date=data.get("date", datetime.now().strftime("%Y-%m-%d"))
-    )
-    db.session.add(new_work)
-    db.session.commit()
-    return jsonify({"message": "Artwork added", "artwork": new_work.to_dict()})
+    try:
+        new_work = Artwork(
+            title=validated_data.get("title", "Untitled"),
+            thumbnail=validated_data["thumbnail"],
+            fullsize=validated_data["fullsize"],
+            description=validated_data.get("description", ""),
+            date=validated_data.get("date", datetime.now().strftime("%Y-%m-%d"))
+        )
+        db.session.add(new_work)
+        db.session.commit()
+        return jsonify({"message": "Artwork added", "artwork": new_work.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to add artwork: {str(e)}")
+        return jsonify({"error": "Failed to add artwork"}), 500
 
 
 @app.route("/api/artworks/<int:id>", methods=["PUT"])
 @jwt_required()
+@limiter.limit("30 per minute")  # 每分钟最多 30 次更新
 def update_artwork(id: int):
     """更新插画 / 作品（需要 access_token）。"""
     data: dict[str, Any] = request.json or {}
+    
+    # 输入校验（部分字段可选）
+    schema = ArtworkSchema(partial=True)
+    try:
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": "Validation failed", "details": err.messages}), 400
+    
     work = db.session.get(Artwork, id)
     if not work:
         return jsonify({"error": "Artwork not found"}), 404
         
-    work.title = data.get("title", work.title)
-    work.thumbnail = data.get("thumbnail", work.thumbnail)
-    work.fullsize = data.get("fullsize", work.fullsize)
-    work.description = data.get("description", work.description)
-    work.date = data.get("date", work.date)
-    
-    db.session.commit()
-    return jsonify({"message": "Artwork updated", "artwork": work.to_dict()})
+    try:
+        work.title = validated_data.get("title", work.title)
+        work.thumbnail = validated_data.get("thumbnail", work.thumbnail)
+        work.fullsize = validated_data.get("fullsize", work.fullsize)
+        work.description = validated_data.get("description", work.description)
+        work.date = validated_data.get("date", work.date)
+        
+        db.session.commit()
+        return jsonify({"message": "Artwork updated", "artwork": work.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to update artwork: {str(e)}")
+        return jsonify({"error": "Failed to update artwork"}), 500
 
 
 @app.route("/api/artworks/<int:id>", methods=["DELETE"])
