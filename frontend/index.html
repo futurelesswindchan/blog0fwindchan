@@ -4,7 +4,6 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>风风博客</title>
-    <!-- 添加字体预加载，提升排版稳定性 -->
     <link
       rel="preload"
       href="/fonts/QingNingYouYuan-2.ttf"
@@ -27,26 +26,20 @@
       crossorigin="anonymous"
     />
 
-    <!--
-      开屏页首屏加载样式
-    -->
     <style>
-      /* 基础重置，确保全屏填充并拦截滚动 */
       body,
       html {
         margin: 0;
         padding: 0;
         background-color: #e6f7ff;
       }
-
-      /* 开屏容器：固定占满全屏，居中内容 */
       #feng-splash {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background-color: #e6f7ff; /* 淡淡的天蓝色 */
+        background-color: #e6f7ff;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -60,18 +53,11 @@
           -apple-system,
           sans-serif;
       }
-
-      /* 离场动画：淡出并稍微放大，营造梦幻般散开的效果 */
       #feng-splash.fade-out {
         opacity: 0;
         transform: scale(1.05);
         pointer-events: none;
       }
-
-      /*
-       * 背景流体色块 (CSS Blob) 
-       * 利用不规则圆角与无限旋转，模拟云朵变幻
-       */
       .bg-blob {
         position: absolute;
         border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
@@ -106,11 +92,6 @@
           transform: rotate(45deg) scale(1.1);
         }
       }
-
-      /*
-       * 纸飞机与悬浮动画 
-       * 使用原生的正弦运动营造漂浮感
-       */
       .plane-wrapper {
         position: relative;
         z-index: 1;
@@ -125,7 +106,6 @@
           transform: translateY(-15px);
         }
       }
-      /* 纯 CSS 组合三角形构成的纸飞机主体 */
       .paper-plane {
         width: 0;
         height: 0;
@@ -136,7 +116,6 @@
         transform: rotate(45deg);
         filter: drop-shadow(0 4px 6px rgba(30, 58, 138, 0.15));
       }
-      /* 侧翼产生的叠层立体感 */
       .paper-plane::after {
         content: '';
         position: absolute;
@@ -148,14 +127,12 @@
         top: 10px;
         left: -25px;
       }
-
-      /* 加载文案与排列 */
       .splash-text-container {
         position: relative;
         z-index: 1;
         margin-top: 40px;
         text-align: center;
-        color: #1e3a8a; /* 深蓝色 */
+        color: #1e3a8a;
       }
       .kaomoji {
         font-size: 1.5rem;
@@ -167,7 +144,6 @@
         font-size: 0.95rem;
         opacity: 0.8;
       }
-      /* CSS 驱动的省略号律动，无需 JS 处理状态 */
       .loading-dots {
         display: inline-block;
         width: 24px;
@@ -195,7 +171,6 @@
   </head>
 
   <body>
-    <!-- 风风定制版极速开屏页模板 -->
     <div id="feng-splash">
       <div class="bg-blob blob-1"></div>
       <div class="bg-blob blob-2"></div>
@@ -211,11 +186,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 
-      内联彩蛋抽签逻辑
-      不阻塞解析，瞬间加载并随机挑选打气文案
-    -->
     <script>
       ;(function () {
         const eggs = [
@@ -251,8 +221,6 @@
         }
       })()
     </script>
-
-    <!-- 原本的 Vue 挂载容器 -->
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
