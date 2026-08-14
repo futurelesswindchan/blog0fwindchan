@@ -6,7 +6,9 @@ import os
 import json
 import shutil
 from typing import Any, Dict
-from app import app, db, Category, Article, Friend, Artwork
+from app import app
+from extensions import db
+from models import Category, Article, Friend, Artwork
 from sqlalchemy import text
 
 
