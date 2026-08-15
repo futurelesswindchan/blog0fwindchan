@@ -349,6 +349,8 @@ server {
 <summary><b>🛡️ 方案 B：HTTPS + Cloudflare 终极装甲方案 (强烈推荐！)</b></summary>
 <br>
 
+_对啦对啦，此方案还是专门面向 SEO 有优化的哦，配合博客后端的 SEO 优化模块一起生效0w0_
+
 如果你用了 Cloudflare，可以去领一张**有效期长达 15 年**的免费源站证书哦！
 
 1. 去 Cloudflare 面板 → SSL/TLS → 源服务器 → 创建证书。
@@ -394,6 +396,38 @@ server {
         proxy_pass http://unix:/home/<你的用户名>/<项目文件夹名>/backend/blog.sock;
     }
 
+    # 站点地图导航：让爬虫直接去找 Flask 后端拿 sitemap
+    location = /sitemap.xml {
+        include proxy_params;
+        proxy_pass http://unix:/home/<你的用户名>/<项目文件夹名>/backend/blog.sock;
+    }
+
+    # 蜘蛛照妖镜 (文章详情页)：
+    # 爬虫走 Flask (获取带 SEO 信息的轻量 HTML)，普通人类访客走 SPA！
+    location ~* ^/articles/[^/]+/[^/]+ {
+        set $is_bot 0;
+        if ($http_user_agent ~* "(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|ia_archiver)") {
+            set $is_bot 1;
+        }
+        if ($is_bot = 1) {
+            proxy_pass http://unix:/home/<你的用户名>/<项目文件夹名>/backend/blog.sock;
+        }
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 蜘蛛照妖镜 (分类列表页)：同上原理
+    location ~* ^/articles/[^/]+$ {
+        set $is_bot 0;
+        if ($http_user_agent ~* "(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|ia_archiver)") {
+            set $is_bot 1;
+        }
+        if ($is_bot = 1) {
+            proxy_pass http://unix:/home/<你的用户名>/<项目文件夹名>/backend/blog.sock;
+        }
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 其余的普通页面，统统回前端 SPA 橱窗
     location / {
         try_files $uri $uri/ /index.html;
     }
