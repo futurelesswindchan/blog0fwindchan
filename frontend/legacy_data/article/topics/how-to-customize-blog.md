@@ -27,148 +27,162 @@ cd <项目文件夹名>
 
 ---
 
-## 一、修改"门面"：全局基础信息
+## 一、定位代码的好帮手：Vue DevTools
 
-这些是访客无论在哪个页面都能看到的东西。
+在进行任何修改之前，先认识一个重要工具。
 
-### 1. 网站标题与 Logo
+用 `npm run dev` 启动前端后，浏览器页面右下角（或底部）会出现一个 Vue 的小图标——这是 **Vue DevTools**。点击它，可以进入组件树视图，直接在页面上点选任意 UI 元素，工具会自动定位到对应的 `.vue` 文件并在 VSCode 中打开。
 
-- **找到文件**：`src/components/layout/MainLayout.vue`
-- **修改站名**：
-  在 `<template>` 区域（大约第 26 行）：
-  ```html
-  <div class="left-group">
-    <img :src="logo" class="logo" />
-    <h1>风风博客</h1>
-    <!-- 把这里改成你的博客名字 -->
-  </div>
-  ```
-- **修改 Logo**：
-  在 `<script setup>` 区域（大约第 150 行）：
-  ```ts
-  const logo = '/favicon.png' // 默认使用 favicon 作为 logo
-  ```
-  如果想使用其他图片，将图片放到 `public/assets/images/` 下，修改此处路径即可。
-
-### 2. 浏览器标签页图标（Favicon）
-
-- **找到文件**：`public/favicon.png`
-- **操作**：准备一张正方形图片（推荐 PNG 格式），重命名为 `favicon.png`，直接替换该文件。
+如果你不确定某个文字或样式对应哪个文件，用这个工具点一下比翻目录快得多。
 
 ---
 
-## 二、定制首页：你的个人名片
+## 二、核心个性化：站点配置文件
 
-首页对应文件 `src/views/HomeView.vue`。
+**绝大多数个性化内容都集中在一个文件里：**
 
-### 1. 头像与二维码
-
-找到 `<script setup>` 区域（大约第 165 行）：
-
-```ts
-const avatarUrl = '/assets/images/logo.webp'   // 头像图片路径
-const qrCodeUrl = '/assets/images/qrcode.svg'  // 翻转后的二维码路径
+```
+frontend/src/site.config.ts
 ```
 
-将你的头像和二维码图片放到 `public/assets/images/` 目录下替换原有文件。
+打开这个文件，你会看到以下几个配置块，逐一修改即可。
 
-### 2. 个性化标语
-
-在 `<script setup>` 区域（大约第 175 行）修改打字机文字：
+### 2.1 站点标题
 
 ```ts
-const sloganText = '唔...这都被你发现啦？(*/ω＼*)'
+export const siteConfig = {
+  title: '风风博客',  // 改成你的博客名
+}
 ```
 
-在 `<template>` 区域（大约第 44 行）修改副标题：
-
-```html
-<p class="slogan-sub">
-  欢迎来到风风的赛博小屋 ~\(≧▽≦)/~<br />
-  这里记录着代码、故事和...忘了还有什么了！QAQ
-</p>
-```
-
-### 3. 社交链接
-
-在 `<script setup>` 里（大约第 228 行）找到 `socialLinks` 数组：
+### 2.2 首页展示信息
 
 ```ts
-const socialLinks = [
+export const homeInfo = {
+  pageTitle: 'Blog Of Windchan',          // 首页大标题
+  nickname: '没有未来的小风酱',            // 你的昵称
+  statusText: '正在摸鱼中awa...',          // 状态栏文字
+  sloganText: '唔...这都被你发现啦？',      // 打字机动效文字
+  sloganSub1: '欢迎来到风风的赛博小屋...',  // 副标题第一行
+  sloganSub2: '⬆️联系方式⬆️ 欢迎交流',     // 副标题第二行
+}
+```
+
+### 2.3 社交链接
+
+```ts
+export const socialLinks: SocialLink[] = [
   {
     name: 'GitHub',
     icon: 'fab fa-github',
-    link: 'https://github.com/<你的用户名>',
+    link: 'https://github.com/<你的用户名>',  // 换成你的链接
     color: '#24292e',
   },
-  // B 站和邮箱同理
+  // Bilibili 和 Email 同理
 ]
 ```
 
-### 4. 首页传送门卡片
+图标使用 [FontAwesome](https://fontawesome.com/icons) 的类名，可以在官网搜索替换。
 
-紧接 `socialLinks` 的下方找到 `features` 数组：
+### 2.4 首页传送门卡片
 
 ```ts
-const features = [
+export const portalItems: PortalItem[] = [
   {
     icon: 'fa-laptop-code',
-    title: '技术手札',
-    desc: '代码与Bug的爱恨情仇',
+    title: '技术手札',           // 卡片标题
+    desc: '代码与Bug的爱恨情仇',  // 卡片描述
     route: '/articles/frontend', // 跳转路径，通常不需要改
   },
   // 其他卡片同理
 ]
 ```
 
----
-
-## 三、定制壁纸与主题色
-
-### 1. 更换背景壁纸
-
-找到 `src/components/layout/MainLayout.vue` 的 `<script setup>` 区域（大约第 151 行）：
+### 2.5 文章分类名称与描述
 
 ```ts
-const lightWallpaper = '/assets/images/wallpaper.webp'           // 亮色模式壁纸
-const darkWallpaper = '/assets/images/dark-theme-wallpaper.webp' // 暗色模式壁纸
+export const ARTICLE_CATEGORIES: ArticleCategory[] = [
+  {
+    id: 'frontend',
+    title: '技术手札',
+    desc: '这里是咱的开发笔记与心得...',
+    // ...
+  },
+  // 其他分类同理
+]
 ```
 
-准备两张壁纸（推荐 `.webp` 格式，体积小、加载快），放到 `public/assets/images/` 目录下替换原有文件。
+> **注意**：`id` 和 `routeName` 字段与数据库分类的 `slug` 对应，修改时需同步更新数据库中的分类数据，否则文章列表会读不到内容。如果只是改显示文字，只需修改 `title` 和 `desc`。
 
-### 2. 修改主题色
+---
 
-找到 `src/styles/theme.css`，修改以下变量：
+## 三、更换头像、壁纸与 Favicon
+
+这些资源文件放在 `frontend/public/assets/images/` 目录下，直接替换对应文件即可，**文件名保持不变**：
+
+| 文件名 | 用途 |
+| :--- | :--- |
+| `logo.webp` | 首页头像 + 导航栏 Logo |
+| `wallpaper.webp` | 亮色模式背景壁纸 |
+| `dark-theme-wallpaper.webp` | 暗色模式背景壁纸 |
+| `favicon.png`（位于 `public/`） | 浏览器标签页图标 |
+
+推荐使用 `.webp` 格式的壁纸，体积小、加载快。壁纸建议分辨率不低于 1920×1080。
+
+> **版权提示**：仓库中预置的两张壁纸未包含在版本控制中，你需要自行准备。将图片以上述文件名放入对应目录即可。
+
+---
+
+## 四、修改主题色
+
+主题色控制全站的高亮、按钮、光效等视觉元素，只需修改一个文件：
+
+```
+frontend/src/styles/theme/theme.css
+```
+
+找到文件顶部 `:root` 块中的以下变量：
 
 ```css
-:root {
-  /* 主题色，影响高亮、按钮和光效 */
-  --accent-color: #0077ff;
-}
+/* 💙 核心主题色 */
+--accent-color: #0077ff;          /* 亮色模式主题色 */
+--accent-color-rgb: 0, 119, 255;  /* 对应的 RGB 值，保持与上方一致 */
+--dark-accent-color: #1a85ff;     /* 暗色模式主题色 */
+--dark-accent-color-rgb: 26, 133, 255;
 ```
+
+修改这四个变量即可全局替换主题色。`-rgb` 变量用于其他地方的半透明写法（如 `rgba(var(--accent-color-rgb), 0.5)`），需要与十六进制值保持一致。
 
 ---
 
-## 四、定制页面标题（Router Meta）
+## 五、修改导航栏与页面标题
 
-切换页面时，浏览器标签页标题和顶部打字机文字会随之变化。找到 `src/router/index.ts` 中的 `routes` 数组，每个 `meta: { title: '...' }` 对应一个页面的标题文字：
+### 导航菜单
+
+导航项也在 `site.config.ts` 中，找到 `navItems` 数组，修改 `label` 字段即可更改显示文字：
 
 ```ts
-// 首页
-meta: { title: '欢迎回家 ~\(≧▽≦)/~ 正在首页发呆中...' }
-
-// 文章列表页
-meta: { title: '这里是全部的文章哦 ( •̀ ω •́ )✧' }
-
-// 分类页
-meta: { title: '正在翻阅网站开发笔记... 努力学习中！' }
+export const navItems: NavItem[] = [
+  { path: '/home', label: '这是首页', ... },
+  { path: '/articles', label: '文章导航', ... },
+  // ...
+]
 ```
 
----
+### 页面打字机标题
 
-## 五、修改文章分类卡片文案
+切换页面时，浏览器标签页标题和顶部打字机文字会随之变化。这些文字在路由配置中：
 
-在"文章总览"页面，有三个分类卡片。找到 `src/views/ArticleView.vue` 的 `<template>` 区域，直接修改卡片的标题和描述文字即可。
+```
+frontend/src/router/index.ts
+```
+
+找到 `routes` 数组，修改每个路由的 `meta.title` 字段：
+
+```ts
+{ path: 'home', meta: { title: '欢迎回家...' } }
+{ path: 'articles', meta: { title: '这里是全部的文章哦' } }
+```
 
 ---
 
@@ -182,7 +196,7 @@ git commit -m "Customize my blog"
 git push origin main
 ```
 
-推送成功后，代码已保存到你的 GitHub 仓库。接下来可以进行生产部署了。
+推送成功后，代码已保存到你的 GitHub 仓库，可以进行生产部署了。
 
 **下一步：[部署到云服务器](./how-to-deploy-on-vps.md)**
 
