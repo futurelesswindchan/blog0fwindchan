@@ -14,6 +14,26 @@ export default defineConfig({
     },
   },
   base: '/',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // highlight.js 核心 + 语言包 → 独立异步 chunk
+          if (id.includes('highlight.js')) {
+            return 'highlight'
+          }
+          // Vue 生态基础库 → 独立 chunk，利用浏览器缓存
+          if (id.includes('node_modules/vue') || id.includes('node_modules/@vue') || id.includes('node_modules/pinia')) {
+            return 'vue-vendor'
+          }
+          // marked（Markdown 渲染）→ 独立 chunk
+          if (id.includes('node_modules/marked')) {
+            return 'marked'
+          }
+        },
+      },
+    },
+  },
   // 添加开发服务器配置
   server: {
     proxy: {

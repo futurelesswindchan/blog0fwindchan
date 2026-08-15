@@ -1,5 +1,52 @@
 // frontend\src\composables\useCodeHighlight.ts
-import hljs from 'highlight.js'
+// NOTE: 按需导入语言，避免打包全量 highlight.js（全量约 1.1 MB）
+import hljs from 'highlight.js/lib/core'
+import langTypeScript from 'highlight.js/lib/languages/typescript'
+import langJavaScript from 'highlight.js/lib/languages/javascript'
+import langXml from 'highlight.js/lib/languages/xml' // 同时覆盖 html / vue
+import langCss from 'highlight.js/lib/languages/css'
+import langScss from 'highlight.js/lib/languages/scss'
+import langJson from 'highlight.js/lib/languages/json'
+import langBash from 'highlight.js/lib/languages/bash'
+import langPython from 'highlight.js/lib/languages/python'
+import langMarkdown from 'highlight.js/lib/languages/markdown'
+import langSql from 'highlight.js/lib/languages/sql'
+import langYaml from 'highlight.js/lib/languages/yaml'
+import langDiff from 'highlight.js/lib/languages/diff'
+import langCpp from 'highlight.js/lib/languages/cpp'
+import langJava from 'highlight.js/lib/languages/java'
+import langCsharp from 'highlight.js/lib/languages/csharp'
+import langGo from 'highlight.js/lib/languages/go'
+import langRust from 'highlight.js/lib/languages/rust'
+import langKotlin from 'highlight.js/lib/languages/kotlin'
+
+// 注册所有需要高亮的语言
+hljs.registerLanguage('typescript', langTypeScript)
+hljs.registerLanguage('ts', langTypeScript)
+hljs.registerLanguage('javascript', langJavaScript)
+hljs.registerLanguage('js', langJavaScript)
+hljs.registerLanguage('xml', langXml)
+hljs.registerLanguage('html', langXml)
+hljs.registerLanguage('vue', langXml)
+hljs.registerLanguage('css', langCss)
+hljs.registerLanguage('scss', langScss)
+hljs.registerLanguage('json', langJson)
+hljs.registerLanguage('bash', langBash)
+hljs.registerLanguage('sh', langBash)
+hljs.registerLanguage('python', langPython)
+hljs.registerLanguage('py', langPython)
+hljs.registerLanguage('markdown', langMarkdown)
+hljs.registerLanguage('md', langMarkdown)
+hljs.registerLanguage('sql', langSql)
+hljs.registerLanguage('yaml', langYaml)
+hljs.registerLanguage('yml', langYaml)
+hljs.registerLanguage('diff', langDiff)
+hljs.registerLanguage('cpp', langCpp)
+hljs.registerLanguage('java', langJava)
+hljs.registerLanguage('csharp', langCsharp)
+hljs.registerLanguage('go', langGo)
+hljs.registerLanguage('rust', langRust)
+hljs.registerLanguage('kotlin', langKotlin)
 
 /**
  * 极简的 HTML 实体转义函数
@@ -31,6 +78,12 @@ export function useCodeHighlight() {
     bash: 'Bash',
     sh: 'Shell',
     py: 'Python',
+    cpp: 'C++',
+    java: 'Java',
+    csharp: 'C#',
+    go: 'Go',
+    rust: 'Rust',
+    kotlin: 'Kotlin',
     // 可以继续添加更多语言映射
   }
 
