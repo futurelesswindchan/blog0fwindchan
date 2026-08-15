@@ -27,7 +27,7 @@ export const useActivityStore = defineStore('activity', () => {
   const fetchContributions = async () => {
     try {
       const { data } = await getContributions()
-      contributions.value = data
+      contributions.value = data.contributions
     } catch (error) {
       console.error('获取贡献数据失败:', error)
     }
@@ -42,7 +42,7 @@ export const useActivityStore = defineStore('activity', () => {
     try {
       isLoadingPlans.value = true
       const { data } = await getPlans()
-      plans.value = data
+      plans.value = data.plans
     } catch (error) {
       console.error('获取计划数据失败:', error)
     } finally {
