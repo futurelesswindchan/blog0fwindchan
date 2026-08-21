@@ -106,7 +106,7 @@ def get_article_assets():
             # allowed_file 只接受文件名字符串，跳过非图片文件
             if entry.is_file():
                 mtime = entry.stat().st_mtime
-                url = f"/api/static/uploads/article/{entry.name}"
+                url = f"/static/uploads/article/{entry.name}"
                 assets.append({
                     "name": entry.name,
                     "url": url,
