@@ -97,5 +97,5 @@ def upload_file():
         current_app.logger.error(f"File save failed: {str(e)}")
         return jsonify({"error": "Failed to save file"}), 500
 
-    url = f"/api/static/uploads/{upload_type}/{filename}"
+    url = f"/static/uploads/{upload_type}/{filename}"
     return jsonify({"message": "Upload successful", "url": url})
