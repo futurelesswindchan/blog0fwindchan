@@ -382,16 +382,21 @@ const reset = async () => {
 
   if (!isConfirmed) return
 
-  settingsStore.resetTypeWriterSettings()
-  settingsStore.resetParticleSettings()
-  settingsStore.resetPaginationSettings()
-  settingsStore.resetToastSettings()
+  const results = [
+    settingsStore.resetTypeWriterSettings(),
+    settingsStore.resetParticleSettings(),
+    settingsStore.resetPaginationSettings(),
+    settingsStore.resetToastSettings(),
+  ]
+  const allPersisted = results.every(Boolean)
 
   syncDraftWithStore()
 
   notify({
-    message: '已恢复默认设置',
-    type: 'success',
+    message: allPersisted
+      ? '已恢复默认设置'
+      : '已临时恢复默认设置，但无法写入浏览器存储，刷新后可能丢失 QAQ',
+    type: allPersisted ? 'success' : 'warning',
   })
 }
 </script>

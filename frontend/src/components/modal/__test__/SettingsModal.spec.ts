@@ -104,6 +104,32 @@ describe('SettingsModal.vue 开关持久化', () => {
     expect(mockNotify).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'success' }))
   })
 
+  it('恢复默认写入成功时给出 success 提示，刷新后为默认值', async () => {
+    useSettingsStore().setParticleSettings({ enabled: false })
+    const wrapper = mountModal()
+
+    await wrapper.find('.modal-btn-text').trigger('click')
+    // reset 内部 await confirm()，需等待微任务执行完
+    await flushPromises()
+
+    expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({ type: 'success' }))
+    expect(reloadStore().particles.enabled).toBe(true)
+  })
+
+  it('恢复默认时写入浏览器存储失败，给出 warning 提示而非 success', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const wrapper = mountModal()
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota exceeded', 'QuotaExceededError')
+    })
+
+    await wrapper.find('.modal-btn-text').trigger('click')
+    await flushPromises()
+
+    expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({ type: 'warning' }))
+    expect(mockNotify).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'success' }))
+  })
+
   it('只关开关、不点保存直接关闭弹窗：不会写入 localStorage，刷新后恢复启用', async () => {
     const wrapper = mountModal()
     await toggles(wrapper)[PARTICLE_TOGGLE].trigger('click')
