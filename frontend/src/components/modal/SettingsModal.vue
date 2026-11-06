@@ -355,14 +355,19 @@ const scrollToSection = (id: string) => {
 
 // 保存逻辑
 const save = () => {
-  settingsStore.setTypeWriterSettings(settings)
-  settingsStore.setParticleSettings(particleSettings)
-  settingsStore.setPaginationSettings(paginationSettings)
-  settingsStore.setToastSettings(toastSettings)
+  const results = [
+    settingsStore.setTypeWriterSettings(settings),
+    settingsStore.setParticleSettings(particleSettings),
+    settingsStore.setPaginationSettings(paginationSettings),
+    settingsStore.setToastSettings(toastSettings),
+  ]
+  const allPersisted = results.every(Boolean)
 
   notify({
-    message: '设置已保存并生效了(☆▽☆)！',
-    type: 'success',
+    message: allPersisted
+      ? '设置已保存并生效了(☆▽☆)！'
+      : '设置已临时生效，但无法写入浏览器存储，刷新后可能丢失 QAQ',
+    type: allPersisted ? 'success' : 'warning',
   })
 
   setTimeout(() => modalStore.closeSettings(), 600)

@@ -90,6 +90,20 @@ describe('SettingsModal.vue 开关持久化', () => {
     expect(useGlobalModalStore().showSettings).toBe(false)
   })
 
+  it('写入浏览器存储失败时，保存给出 warning 提示而非 success', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const wrapper = mountModal()
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota exceeded', 'QuotaExceededError')
+    })
+
+    await toggles(wrapper)[PARTICLE_TOGGLE].trigger('click')
+    await wrapper.find('.modal-btn-primary').trigger('click')
+
+    expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({ type: 'warning' }))
+    expect(mockNotify).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'success' }))
+  })
+
   it('只关开关、不点保存直接关闭弹窗：不会写入 localStorage，刷新后恢复启用', async () => {
     const wrapper = mountModal()
     await toggles(wrapper)[PARTICLE_TOGGLE].trigger('click')

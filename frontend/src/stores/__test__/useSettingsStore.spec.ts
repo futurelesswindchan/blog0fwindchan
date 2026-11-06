@@ -144,6 +144,48 @@ describe('useSettingsStore 持久化', () => {
     })
   })
 
+  describe('边界：旧缓存不是普通对象时仍能保存', () => {
+    /**
+     * 回归场景：persistGroup 以存储中的旧值为合并基底。
+     * 旧值为 "null"、数组、裸字符串或损坏的 JSON 时，应丢弃旧值并从空对象重建，
+     * 而不是在赋值时抛错，导致之后的每次保存都静默失败。
+     */
+    it.each([
+      ['字符串 "null"', 'null'],
+      ['数组', '[1,2,3]'],
+      ['JSON 字符串', '"legacy"'],
+      ['数字', '42'],
+      ['损坏的 JSON', '{not json'],
+    ])('旧缓存为%s时，保存成功且刷新后保留新值', (_label, legacy) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      seedStorage(legacy)
+      const store = reload()
+
+      expect(store.setParticleSettings({ enabled: false })).toBe(true)
+      expect(console.warn).not.toHaveBeenCalled()
+      expect(readStorage()).toEqual({ particles: expect.objectContaining({ enabled: false }) })
+      expect(reload().particles.enabled).toBe(false)
+    })
+
+    it('旧缓存被重建后，后续保存其他分组不会丢失已写入的分组', () => {
+      seedStorage('null')
+      const store = reload()
+      store.setParticleSettings({ enabled: false })
+      store.setTypeWriterSettings({ enabled: false })
+
+      const after = reload()
+      expect(after.particles.enabled).toBe(false)
+      expect(after.typeWriter.enabled).toBe(false)
+    })
+
+    it('写入成功时 set / reset action 返回 true', () => {
+      const store = useSettingsStore()
+      expect(store.setToastSettings({ duration: 3000 })).toBe(true)
+      expect(store.resetToastSettings()).toBe(true)
+    })
+  })
+
   describe('多标签页：互不覆盖与同步', () => {
     /**
      * 回归场景：
@@ -212,6 +254,16 @@ describe('useSettingsStore 持久化', () => {
 
       expect(() => store.setParticleSettings({ enabled: false })).not.toThrow()
       expect(console.warn).toHaveBeenCalled()
+    })
+
+    it('setItem 抛错时 set / reset action 返回 false，供调用方提示用户', () => {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('quota exceeded', 'QuotaExceededError')
+      })
+      const store = useSettingsStore()
+
+      expect(store.setParticleSettings({ enabled: false })).toBe(false)
+      expect(store.resetParticleSettings()).toBe(false)
     })
 
     it('setItem 抛错时变更只在当前会话生效，刷新后回到写入前的值', () => {

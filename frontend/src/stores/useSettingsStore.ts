@@ -150,24 +150,49 @@ function loadPersistedSettings() {
 }
 
 /**
+ * 读取存储中的设置对象，作为按分组写入的合并基底。
+ *
+ * 旧值缺失、JSON 损坏或解析结果不是普通对象时返回空对象。
+ * `getItem` 自身抛出的异常（如浏览器禁用存储）不在此处捕获，交由调用方处理。
+ */
+function readStoredObject(): Record<string, unknown> {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (!raw) return {}
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>
+    }
+  } catch {
+    // JSON 损坏时丢弃旧值，由本次写入重建
+  }
+  return {}
+}
+
+/**
  * 按分组将单组设置写入 localStorage（read-merge-write）。
  *
  * 每次只覆盖指定的 `groupKey` 分组，其余分组保持 localStorage 中的现有值不变。
  * 这样即使多个标签页同时操作不同分组，也不会互相覆盖对方刚保存的设置。
  *
+ * 若存储中的旧值无法解析，或解析结果不是普通对象（如 `"null"`、数组、裸字符串），
+ * 会丢弃旧值并从空对象重新构建，确保后续写入不会被历史脏数据阻断。
+ *
  * @param groupKey 要写入的分组键名（如 `'particles'`、`'typeWriter'`）
  * @param value 该分组的完整设置对象
+ * @returns 写入是否成功；`false` 时变更仅在当前页面会话内生效
  */
-function persistGroup(groupKey: string, value: unknown) {
+function persistGroup(groupKey: string, value: unknown): boolean {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const current = raw ? JSON.parse(raw) : {}
+    const current = readStoredObject()
     current[groupKey] = value
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current))
+    return true
   } catch (e) {
     // 隐私模式或配额满时 setItem 会抛 DOMException，
     // 静默降级：本次变更仅在当前页面会话内生效，刷新后丢失
     console.warn('站点设置写入 localStorage 失败，本次变更仅在当前页面生效:', e)
+    return false
   }
 }
 
@@ -224,16 +249,21 @@ export const useSettingsStore = defineStore('settings', () => {
    * 增量更新打字机设置并按分组同步至本地存储。
    *
    * @param settings 待覆盖的打字机配置片段
+   * @returns 是否成功写入本地存储；`false` 时内存已更新，但刷新后会丢失
    */
-  function setTypeWriterSettings(settings: Partial<TypeWriterSettings>) {
+  function setTypeWriterSettings(settings: Partial<TypeWriterSettings>): boolean {
     typeWriter.value = { ...typeWriter.value, ...settings }
-    persistGroup('typeWriter', typeWriter.value)
+    return persistGroup('typeWriter', typeWriter.value)
   }
 
-  /** 将打字机设置恢复为默认值并同步至本地存储。 */
-  function resetTypeWriterSettings() {
+  /**
+   * 将打字机设置恢复为默认值并同步至本地存储。
+   *
+   * @returns 是否成功写入本地存储
+   */
+  function resetTypeWriterSettings(): boolean {
     typeWriter.value = { ...defaultTypeWriterSettings }
-    persistGroup('typeWriter', typeWriter.value)
+    return persistGroup('typeWriter', typeWriter.value)
   }
 
   // --- Particle Actions ---
@@ -242,16 +272,21 @@ export const useSettingsStore = defineStore('settings', () => {
    * 增量更新背景粒子设置并按分组同步至本地存储。
    *
    * @param settings 待覆盖的粒子配置片段
+   * @returns 是否成功写入本地存储；`false` 时内存已更新，但刷新后会丢失
    */
-  function setParticleSettings(settings: Partial<ParticleSettings>) {
+  function setParticleSettings(settings: Partial<ParticleSettings>): boolean {
     particles.value = { ...particles.value, ...settings }
-    persistGroup('particles', particles.value)
+    return persistGroup('particles', particles.value)
   }
 
-  /** 将背景粒子设置恢复为默认值并同步至本地存储。 */
-  function resetParticleSettings() {
+  /**
+   * 将背景粒子设置恢复为默认值并同步至本地存储。
+   *
+   * @returns 是否成功写入本地存储
+   */
+  function resetParticleSettings(): boolean {
     particles.value = { ...defaultParticleSettings }
-    persistGroup('particles', particles.value)
+    return persistGroup('particles', particles.value)
   }
 
   // --- Pagination Actions ---
@@ -260,16 +295,21 @@ export const useSettingsStore = defineStore('settings', () => {
    * 增量更新前后台分页容量设置并按分组同步至本地存储。
    *
    * @param settings 待覆盖的分页容量配置片段
+   * @returns 是否成功写入本地存储；`false` 时内存已更新，但刷新后会丢失
    */
-  function setPaginationSettings(settings: Partial<PaginationSettings>) {
+  function setPaginationSettings(settings: Partial<PaginationSettings>): boolean {
     pagination.value = { ...pagination.value, ...settings }
-    persistGroup('pagination', pagination.value)
+    return persistGroup('pagination', pagination.value)
   }
 
-  /** 将前后台分页容量设置恢复为默认值并同步至本地存储。 */
-  function resetPaginationSettings() {
+  /**
+   * 将前后台分页容量设置恢复为默认值并同步至本地存储。
+   *
+   * @returns 是否成功写入本地存储
+   */
+  function resetPaginationSettings(): boolean {
     pagination.value = { ...defaultPaginationSettings }
-    persistGroup('pagination', pagination.value)
+    return persistGroup('pagination', pagination.value)
   }
 
   // --- Toast Actions ---
@@ -278,16 +318,21 @@ export const useSettingsStore = defineStore('settings', () => {
    * 增量更新吐司通知设置并按分组同步至本地存储。
    *
    * @param settings 待覆盖的吐司配置片段
+   * @returns 是否成功写入本地存储；`false` 时内存已更新，但刷新后会丢失
    */
-  function setToastSettings(settings: Partial<ToastSettings>) {
+  function setToastSettings(settings: Partial<ToastSettings>): boolean {
     toast.value = { ...toast.value, ...settings }
-    persistGroup('toast', toast.value)
+    return persistGroup('toast', toast.value)
   }
 
-  /** 将吐司通知设置恢复为默认值并同步至本地存储。 */
-  function resetToastSettings() {
+  /**
+   * 将吐司通知设置恢复为默认值并同步至本地存储。
+   *
+   * @returns 是否成功写入本地存储
+   */
+  function resetToastSettings(): boolean {
     toast.value = { ...defaultToastSettings }
-    persistGroup('toast', toast.value)
+    return persistGroup('toast', toast.value)
   }
 
   // --- 全量持久化 ---
