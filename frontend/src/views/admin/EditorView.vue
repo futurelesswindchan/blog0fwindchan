@@ -312,11 +312,14 @@ const availableCollections = computed(() => {
   return articleStore.getCollectionList(form.category) || []
 })
 
-// 当切换大分类时，自动清空合集选择，防止把 A 分类的文章塞进 B 分类的合集里！
+// 切换大分类时，若已选合集不属于新分类则清空，防止把 A 分类的文章塞进 B 分类的合集里！
+// 不能无条件清空：onMounted 回填文章数据时也会改 category，watch 回调在回填完成后才执行，
+// 无条件清空会把刚读到的合集冲掉（非 frontend 分类的文章必现）
 watch(
   () => form.category,
   () => {
-    form.collection_id = ''
+    const stillValid = availableCollections.value.some((col) => col.id === form.collection_id)
+    if (!stillValid) form.collection_id = ''
   },
 )
 

@@ -46,12 +46,19 @@ def get_article_content(category_slug: str, article_slug: str) -> Response:
     if not article:
         return make_response(jsonify({"error": "Article not found"}), 404)
 
+    # 前端以合集 slug 作为合集标识（索引里的合集 id、保存接口的 collection_id 都是 slug），
+    # 这里也返回 slug 而不是数据库主键，否则编辑器无法匹配下拉选项，保存时文章会被移出合集
+    collection_slug = None
+    if article.collection_id is not None:
+        collection = db.session.get(Collection, article.collection_id)
+        collection_slug = collection.slug if collection else None
+
     return jsonify({
         "id": article.slug,
         "title": article.title,
         "date": article.date,
         "content": article.content,
-        "collection_id": article.collection_id, 
+        "collection_id": collection_slug,
         "uid": article.uid
     })
 
