@@ -36,6 +36,9 @@ export default defineConfig({
   },
   // 添加开发服务器配置
   server: {
+    port: 5173,
+    // 端口被占用时直接报错退出，不静默切换到其他端口，防止跑错实例
+    strictPort: true,
     proxy: {
       // 只要请求路径是以 /api 开头
       '/api': {

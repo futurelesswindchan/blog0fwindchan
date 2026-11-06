@@ -1,13 +1,11 @@
 /**
  * @file useSettingsStore.spec.ts
- * @description 站点设置 Store 的持久化测试，排查「关闭开关后刷新又被重新启用」问题
+ * @description 站点设置 Store 的持久化测试，防止「关闭开关后刷新又被重新启用」问题回归
  *
  * 测试策略：
  * 1. 用「新建 Pinia 实例」模拟页面刷新：state 工厂会重新执行 loadPersistedSettings()
  * 2. 用两个独立 Pinia 实例模拟同时打开的两个标签页（共享同一个 localStorage）
  * 3. 覆盖：正常读写往返、旧版本/损坏缓存、异常类型值、存储写入失败、多标签页互相覆盖
- *
- * 标注【预期失败】的用例对应当前代码中的疑似缺陷，修复后应转为通过
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -146,16 +144,17 @@ describe('useSettingsStore 持久化', () => {
     })
   })
 
-  describe('疑似缺陷：多标签页互相覆盖', () => {
+  describe('多标签页：互不覆盖与同步', () => {
     /**
-     * 复现路径：
+     * 回归场景：
      * 1. 同时开着标签页 A 和 B（两个 Pinia 实例，共享 localStorage）
      * 2. 在 B 里关闭粒子并保存 → localStorage 中 enabled=false
-     * 3. 回到 A（内存里仍是旧的 enabled=true），保存任意设置
-     * 4. saveToLocalStorage() 会把 A 内存中的「全部分组」整体写回 → enabled 被改回 true
-     * 5. 刷新任意标签页，粒子重新出现
+     * 3. 回到 A（内存里仍是旧的 enabled=true），保存其他分组的设置
+     * 4. persistGroup 只写 A 修改的那一组，B 写入的 enabled=false 应保留
+     *
+     * NOTE: 若持久化退回「整块写回全部分组」，这组用例会失败。
      */
-    it('【预期失败】B 关闭粒子后，A 保存其他分组不应把 enabled 写回 true', () => {
+    it('B 关闭粒子后，A 保存其他分组不会把 enabled 写回 true', () => {
       setActivePinia(createPinia())
       const tabA = useSettingsStore()
       setActivePinia(createPinia())
@@ -169,7 +168,7 @@ describe('useSettingsStore 持久化', () => {
       expect(reload().particles.enabled).toBe(false)
     })
 
-    it('【预期失败】B 关闭打字机后，A 保存粒子设置不应把打字机重新启用', () => {
+    it('B 关闭打字机后，A 保存粒子设置不会把打字机重新启用', () => {
       setActivePinia(createPinia())
       const tabA = useSettingsStore()
       setActivePinia(createPinia())
@@ -181,7 +180,7 @@ describe('useSettingsStore 持久化', () => {
       expect(reload().typeWriter.enabled).toBe(false)
     })
 
-    it('【预期失败】A 收到其他标签页的 storage 事件后，内存状态应同步为最新值', () => {
+    it('A 收到其他标签页的 storage 事件后，内存状态同步为最新值', () => {
       const tabA = useSettingsStore()
       const newValue = JSON.stringify({
         ...readStorageOrDefault(),
@@ -194,31 +193,33 @@ describe('useSettingsStore 持久化', () => {
     })
   })
 
-  describe('疑似缺陷：localStorage 写入失败', () => {
+  describe('localStorage 写入失败时的降级', () => {
     /**
      * 隐私模式 / 配额满 / 浏览器禁用存储时 setItem 会抛 DOMException。
-     * 当前 saveToLocalStorage 没有 try/catch：内存里开关已关闭（界面看起来生效），
-     * 但持久化失败，且异常会中断 SettingsModal.save() 后续的提示与关闭逻辑。
+     * persistGroup 会捕获异常并 console.warn，action 不向外抛出，
+     * 以免中断 SettingsModal.save() 后续的提示与关闭逻辑。
      */
-    it('【预期失败】setItem 抛错时 action 不应向外抛出异常', () => {
+    beforeEach(() => {
+      // 屏蔽 persistGroup 预期内的 warn 输出，保持测试日志干净
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+    })
+
+    it('setItem 抛错时 action 不向外抛出异常', () => {
       vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
         throw new DOMException('quota exceeded', 'QuotaExceededError')
       })
       const store = useSettingsStore()
 
       expect(() => store.setParticleSettings({ enabled: false })).not.toThrow()
+      expect(console.warn).toHaveBeenCalled()
     })
 
-    it('setItem 抛错时内存状态已变更但刷新后丢失（记录现状，说明用户看到的「生效」是假象）', () => {
+    it('setItem 抛错时变更只在当前会话生效，刷新后回到写入前的值', () => {
       const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
         throw new DOMException('quota exceeded', 'QuotaExceededError')
       })
       const store = useSettingsStore()
-      try {
-        store.setParticleSettings({ enabled: false })
-      } catch {
-        /* 当前实现会抛出，这里只关心状态 */
-      }
+      store.setParticleSettings({ enabled: false })
       expect(store.particles.enabled).toBe(false)
 
       spy.mockRestore()

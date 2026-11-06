@@ -90,7 +90,7 @@ describe('SettingsModal.vue 开关持久化', () => {
     expect(useGlobalModalStore().showSettings).toBe(false)
   })
 
-  it('只关开关、不点保存直接关闭弹窗：刷新后恢复启用（交互陷阱，记录现状）', async () => {
+  it('只关开关、不点保存直接关闭弹窗：不会写入 localStorage，刷新后恢复启用', async () => {
     const wrapper = mountModal()
     await toggles(wrapper)[PARTICLE_TOGGLE].trigger('click')
     expect(toggles(wrapper)[PARTICLE_TOGGLE].classes()).not.toContain('active')
